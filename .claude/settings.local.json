@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(flutter analyze:*)",
+      "Bash(flutter build:*)",
+      "Bash(flutter pub get:*)",
+      "Bash(flutter doctor:*)",
+      "Bash(flutter devices:*)",
+      "Bash(flutter run:*)",
+      "Bash(flutter test:*)",
+      "Bash(taskkill:*)",
+      "Bash(ls d:/FLUTTER/barber_app/*.sql)",
+      "Bash(curl -s \"https://bhtuixbuzaqmlofcchej.supabase.co/rest/v1/profiles?role=eq.employee&select=id,full_name\" -H \"apikey: sb_publishable_glXU-vkriT23vY84GPSTbg_MBzMxS6O\" -H \"Authorization: Bearer sb_publishable_glXU-vkriT23vY84GPSTbg_MBzMxS6O\")",
+      "Bash(curl --version)",
+      "Bash(curl -v \"https://bhtuixbuzaqmlofcchej.supabase.co/rest/v1/profiles?role=eq.employee&select=id,full_name\" -H \"apikey: sb_publishable_glXU-vkriT23vY84GPSTbg_MBzMxS6O\" -H \"Authorization: Bearer sb_publishable_glXU-vkriT23vY84GPSTbg_MBzMxS6O\")",
+      "Bash(dart pub cache repair)",
+      "Bash(flutter clean)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

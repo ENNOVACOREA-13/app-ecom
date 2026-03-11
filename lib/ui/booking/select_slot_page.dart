@@ -55,7 +55,6 @@ class _PaginaSeleccionarTurnoState extends State<PaginaSeleccionarTurno> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Elige un horario'),
         leading: BackButton(onPressed: () => context.pop()),
       ),
       bottomNavigationBar: proveedor.turnoSeleccionado != null

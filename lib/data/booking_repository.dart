@@ -12,6 +12,12 @@ class RepositorioReserva {
     required DateTime fecha,
     required int duracionMin,
   }) async {
+    final hoy = DateTime.now();
+    final soloHoy = DateTime(hoy.year, hoy.month, hoy.day);
+    final soloFecha = DateTime(fecha.year, fecha.month, fecha.day);
+    if (soloFecha.isBefore(soloHoy)) {
+      throw Exception('DATE_IN_PAST');
+    }
     final fechaTexto = '${fecha.year}-${fecha.month.toString().padLeft(2, '0')}-${fecha.day.toString().padLeft(2, '0')}';
     final resultado = await _client.rpc('get_available_slots', params: {
       'p_employee_id': idEmpleado,
@@ -32,6 +38,12 @@ class RepositorioReserva {
     String? notas,
     List<String> idsExtras = const [],
   }) async {
+    final hoy = DateTime.now();
+    final soloHoy = DateTime(hoy.year, hoy.month, hoy.day);
+    final soloFecha = DateTime(fecha.year, fecha.month, fecha.day);
+    if (soloFecha.isBefore(soloHoy)) {
+      throw Exception('DATE_IN_PAST');
+    }
     final fechaTexto = '${fecha.year}-${fecha.month.toString().padLeft(2, '0')}-${fecha.day.toString().padLeft(2, '0')}';
     final resultado = await _client.rpc('crear_reserva', params: {
       'p_employee_id': idEmpleado,
@@ -94,11 +106,12 @@ class RepositorioReserva {
     });
   }
 
-  /// Cambiar estado de reserva (para empleados/admin)
+  /// Cambiar estado de reserva (para empleados/admin) — usa RPC para bypassear RLS
   Future<void> actualizarEstado(String idReserva, EstadoReserva nuevoEstado) async {
-    await _client.from('bookings').update({
-      'status': nuevoEstado.toDbString(),
-    }).eq('id', idReserva);
+    await _client.rpc('actualizar_estado_reserva', params: {
+      'p_booking_id': idReserva,
+      'p_status': nuevoEstado.toDbString(),
+    });
   }
 
   /// Estadísticas de empleado

@@ -30,7 +30,6 @@ class _PaginaSeleccionarServicioState extends State<PaginaSeleccionarServicio> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Elige servicios'),
         leading: BackButton(onPressed: () => context.pop()),
       ),
       body: Stack(

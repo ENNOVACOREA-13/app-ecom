@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 enum EstadoReserva {
   pending,
   confirmed,
@@ -26,9 +28,22 @@ enum EstadoReserva {
       case EstadoReserva.confirmed:
         return 'Confirmada';
       case EstadoReserva.completed:
-        return 'Completada';
+        return 'Pagada';
       case EstadoReserva.cancelled:
         return 'Cancelada';
+    }
+  }
+
+  Color get color {
+    switch (this) {
+      case EstadoReserva.pending:
+        return Colors.orange;
+      case EstadoReserva.confirmed:
+        return Colors.blue;
+      case EstadoReserva.completed:
+        return const Color(0xFF34C759);
+      case EstadoReserva.cancelled:
+        return Colors.red;
     }
   }
 }

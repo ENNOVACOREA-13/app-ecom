@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../domain/enums/booking_status.dart';
@@ -29,19 +30,31 @@ class _PaginaTodasReservasState extends State<PaginaTodasReservas> {
   @override
   Widget build(BuildContext context) {
     final proveedor = context.watch<ProveedorReserva>();
-    final filtradas = _filtro == null
-        ? proveedor.reservas
-        : proveedor.reservas.where((b) => b.estado == _filtro).toList();
+    final filtradas = (_filtro == null
+        ? proveedor.reservas.toList()
+        : proveedor.reservas.where((b) => b.estado == _filtro).toList())
+      ..sort((a, b) => b.fechaReserva.compareTo(a.fechaReserva));
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Todas las Reservas'),
+        title: const Text('Reservas',
+            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 22)),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () => proveedor.cargarTodasLasReservas(),
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        heroTag: null,
+        onPressed: () => context.push('/booking/service'),
+        backgroundColor: kPrimary,
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: const Text(
+          'Nueva reserva',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+        ),
       ),
       body: Column(
         children: [
@@ -88,13 +101,83 @@ class _PaginaTodasReservasState extends State<PaginaTodasReservas> {
                         icono: Icons.calendar_today_outlined,
                         titulo: 'Sin reservas',
                       )
-                    : ListView.separated(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: filtradas.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 12),
-                        itemBuilder: (context, i) => _TarjetaReservaAdmin(reserva: filtradas[i]),
-                      ),
+                    : _ListaConSeparadores(reservas: filtradas),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ListaConSeparadores extends StatelessWidget {
+  final List<Reserva> reservas;
+  const _ListaConSeparadores({required this.reservas});
+
+  String _etiquetaDia(DateTime fecha) {
+    final hoy = DateTime.now();
+    final ayer = hoy.subtract(const Duration(days: 1));
+    if (_mismoDia(fecha, hoy)) return 'Hoy';
+    if (_mismoDia(fecha, ayer)) return 'Ayer';
+    return DateFormat('dd MMM yyyy', 'es_ES').format(fecha);
+  }
+
+  bool _mismoDia(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month && a.day == b.day;
+
+  @override
+  Widget build(BuildContext context) {
+    // Build mixed list: [header, card, card, header, card, ...]
+    final items = <dynamic>[];
+    String? lastLabel;
+    for (final r in reservas) {
+      final label = _etiquetaDia(r.fechaReserva);
+      if (label != lastLabel) {
+        items.add(label); // separator header
+        lastLabel = label;
+      }
+      items.add(r);
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      itemCount: items.length,
+      itemBuilder: (context, i) {
+        final item = items[i];
+        if (item is String) {
+          return _SeparadorDia(etiqueta: item);
+        }
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: _TarjetaReservaAdmin(reserva: item as Reserva),
+        );
+      },
+    );
+  }
+}
+
+class _SeparadorDia extends StatelessWidget {
+  final String etiqueta;
+  const _SeparadorDia({required this.etiqueta});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+        children: [
+          Expanded(child: Divider(color: const Color(0xFFD1D1D6), thickness: 0.8)),
+          const SizedBox(width: 10),
+          Text(
+            etiqueta,
+            style: const TextStyle(
+              color: Color(0xFF6E6E73),
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.3,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(child: Divider(color: const Color(0xFFD1D1D6), thickness: 0.8)),
         ],
       ),
     );
@@ -134,117 +217,218 @@ class _ChipFiltro extends StatelessWidget {
   }
 }
 
-class _TarjetaReservaAdmin extends StatelessWidget {
+class _TarjetaReservaAdmin extends StatefulWidget {
   final Reserva reserva;
   const _TarjetaReservaAdmin({required this.reserva});
 
-  Color _colorEstado(EstadoReserva s) {
-    switch (s) {
-      case EstadoReserva.pending:
-        return Colors.orange;
-      case EstadoReserva.confirmed:
-        return Colors.blue;
-      case EstadoReserva.completed:
-        return Colors.green;
-      case EstadoReserva.cancelled:
-        return Colors.red;
-    }
-  }
+  @override
+  State<_TarjetaReservaAdmin> createState() => _TarjetaReservaAdminState();
+}
+
+class _TarjetaReservaAdminState extends State<_TarjetaReservaAdmin> {
+  bool _expandida = false;
 
   @override
   Widget build(BuildContext context) {
-    final fechaTexto = DateFormat('dd MMM yyyy', 'es_ES').format(reserva.fechaReserva);
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: const BoxDecoration(
-        color: kCard,
-        borderRadius: BorderRadius.all(Radius.circular(12)),
-        boxShadow: kNeumorphicShadows,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  reserva.nombreServicio ?? 'Servicio',
-                  style: const TextStyle(color: kText, fontWeight: FontWeight.bold),
+    final r = widget.reserva;
+    final fechaTexto = DateFormat('dd MMM yyyy', 'es_ES').format(r.fechaReserva);
+    final inicial = (r.nombreCliente ?? '?')[0].toUpperCase();
+
+    return GestureDetector(
+      onTap: () => setState(() => _expandida = !_expandida),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withOpacity(0.07), blurRadius: 10, offset: const Offset(0, 3)),
+          ],
+        ),
+        child: Column(
+          children: [
+            // ── Fila principal (siempre visible) ──────────
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              child: Row(
+                children: [
+                  // Icono de servicio
+                  Container(
+                    width: 46, height: 46,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1C1C1E),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.content_cut_rounded,
+                        color: context.colorPrimario, size: 22),
+                  ),
+                  const SizedBox(width: 12),
+
+                  // Servicio + fecha
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${r.nombreServicio ?? 'Servicio'} — ${(r.nombreEmpleado ?? '—').split(' ').first}',
+                          style: const TextStyle(
+                              color: Color(0xFF1C1C1E),
+                              fontWeight: FontWeight.w700,
+                              fontSize: 14),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          fechaTexto,
+                          style: const TextStyle(color: Color(0xFF6E6E73), fontSize: 12),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Avatar del cliente
+                  CircleAvatar(
+                    radius: 18,
+                    backgroundColor: context.colorPrimario.withOpacity(0.15),
+                    child: Text(inicial,
+                        style: TextStyle(
+                            color: context.colorPrimario,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14)),
+                  ),
+                  const SizedBox(width: 10),
+
+                  // Estado
+                  ChipEstado(etiqueta: r.estado.label, color: r.estado.color),
+                  const SizedBox(width: 8),
+
+                  // Flecha
+                  AnimatedRotation(
+                    turns: _expandida ? 0.5 : 0,
+                    duration: const Duration(milliseconds: 200),
+                    child: const Icon(Icons.keyboard_arrow_down_rounded,
+                        color: Color(0xFF6E6E73), size: 20),
+                  ),
+                ],
+              ),
+            ),
+
+            // ── Detalle expandible ─────────────────────────
+            AnimatedCrossFade(
+              duration: const Duration(milliseconds: 200),
+              crossFadeState: _expandida
+                  ? CrossFadeState.showSecond
+                  : CrossFadeState.showFirst,
+              firstChild: const SizedBox.shrink(),
+              secondChild: Container(
+                decoration: const BoxDecoration(
+                  border: Border(top: BorderSide(color: Color(0xFFE5E5EA))),
+                ),
+                padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _FilaDetalle(Icons.person_outline,
+                        'Cliente: ${r.nombreCliente ?? '—'}'),
+                    const SizedBox(height: 6),
+                    _FilaDetalle(Icons.badge_outlined,
+                        'Empleado: ${r.nombreEmpleado ?? '—'}'),
+                    const SizedBox(height: 6),
+                    _FilaDetalle(Icons.access_time_outlined,
+                        '${r.horaInicio} – ${r.horaFin}'),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        const Icon(Icons.attach_money_rounded,
+                            size: 14, color: Color(0xFF6E6E73)),
+                        const SizedBox(width: 6),
+                        Text(
+                          '\$${r.precioTotal.toStringAsFixed(0)}',
+                          style: TextStyle(
+                              color: context.colorPrimario,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 13),
+                        ),
+                      ],
+                    ),
+                    if (r.estado == EstadoReserva.pending) ...[
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () => context
+                                  .read<ProveedorReserva>()
+                                  .actualizarEstado(r.id, EstadoReserva.confirmed),
+                              style: OutlinedButton.styleFrom(
+                                  foregroundColor: context.colorPrimario,
+                                  side: BorderSide(color: context.colorPrimario)),
+                              child: const Text('Confirmar'),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () {
+                                final perfil = context.read<ProveedorAuth>().perfil!;
+                                context.read<ProveedorReserva>().cancelarReserva(
+                                      r.id, perfil.id,
+                                      motivo: 'Cancelada por admin');
+                              },
+                              style: OutlinedButton.styleFrom(
+                                  foregroundColor: Colors.red,
+                                  side: const BorderSide(color: Colors.red)),
+                              child: const Text('Cancelar'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                    if (r.estado == EstadoReserva.confirmed) ...[
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () => context
+                              .read<ProveedorReserva>()
+                              .actualizarEstado(r.id, EstadoReserva.completed),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF34C759),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10)),
+                          ),
+                          icon: const Icon(Icons.payments_rounded, size: 18),
+                          label: const Text('Marcar como pagada',
+                              style: TextStyle(fontWeight: FontWeight.w700)),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ),
-              ChipEstado(etiqueta: reserva.estado.label, color: _colorEstado(reserva.estado)),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              const Icon(Icons.person_outline, size: 14, color: kTextMuted),
-              const SizedBox(width: 6),
-              Expanded(
-                  child: Text('Cliente: ${reserva.nombreCliente ?? '—'}',
-                      style: const TextStyle(color: kTextSub, fontSize: 12))),
-            ],
-          ),
-          Row(
-            children: [
-              const Icon(Icons.content_cut, size: 14, color: kTextMuted),
-              const SizedBox(width: 6),
-              Expanded(
-                  child: Text('Empleado: ${reserva.nombreEmpleado ?? '—'}',
-                      style: const TextStyle(color: kTextSub, fontSize: 12))),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              const Icon(Icons.calendar_today_outlined, size: 14, color: kTextMuted),
-              const SizedBox(width: 6),
-              Text(fechaTexto, style: const TextStyle(color: kTextMuted, fontSize: 12)),
-              const SizedBox(width: 16),
-              const Icon(Icons.access_time_outlined, size: 14, color: kTextMuted),
-              const SizedBox(width: 6),
-              Text('${reserva.horaInicio} – ${reserva.horaFin}',
-                  style: const TextStyle(color: kTextMuted, fontSize: 12)),
-              const Spacer(),
-              Text('\$${reserva.precioTotal.toStringAsFixed(0)}',
-                  style: const TextStyle(color: kPrimary, fontWeight: FontWeight.bold)),
-            ],
-          ),
-          if (reserva.estado == EstadoReserva.pending) ...[
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () {
-                      context
-                          .read<ProveedorReserva>()
-                          .actualizarEstado(reserva.id, EstadoReserva.confirmed);
-                    },
-                    style: OutlinedButton.styleFrom(foregroundColor: kPrimary, side: const BorderSide(color: kDivider)),
-                    child: const Text('Confirmar'),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () {
-                      final perfil = context.read<ProveedorAuth>().perfil!;
-                      context.read<ProveedorReserva>().cancelarReserva(
-                            reserva.id,
-                            perfil.id,
-                            motivo: 'Cancelada por admin',
-                          );
-                    },
-                    style: OutlinedButton.styleFrom(foregroundColor: kTextSub, side: const BorderSide(color: kDivider)),
-                    child: const Text('Cancelar'),
-                  ),
-                ),
-              ],
             ),
           ],
-        ],
+        ),
       ),
+    );
+  }
+}
+
+class _FilaDetalle extends StatelessWidget {
+  final IconData icono;
+  final String texto;
+  const _FilaDetalle(this.icono, this.texto);
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icono, size: 14, color: const Color(0xFF6E6E73)),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(texto,
+              style: const TextStyle(color: Color(0xFF3C3C43), fontSize: 12)),
+        ),
+      ],
     );
   }
 }

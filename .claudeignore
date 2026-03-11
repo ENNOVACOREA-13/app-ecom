@@ -1,0 +1,11 @@
+build/
+.dart_tool/
+ios/Pods/
+android/.gradle/
+android/app/build/
+linux/
+macos/
+windows/
+web/build/
+.git/
+*.log

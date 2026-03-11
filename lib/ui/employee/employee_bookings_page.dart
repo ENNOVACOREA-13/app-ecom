@@ -31,14 +31,23 @@ class _PaginaReservasEmpleadoState extends State<PaginaReservasEmpleado> {
   Widget build(BuildContext context) {
     final proveedor = context.watch<ProveedorReserva>();
 
-    final filtradas = _filtro == null
-        ? proveedor.reservas
-        : proveedor.reservas.where((b) => b.estado == _filtro).toList();
+    final filtradas = (_filtro == null
+        ? proveedor.reservas.toList()
+        : proveedor.reservas.where((b) => b.estado == _filtro).toList())
+      ..sort((a, b) => b.fechaReserva.compareTo(a.fechaReserva));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Mis Reservas')),
       body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          const SafeArea(
+            bottom: false,
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(20, 16, 20, 0),
+              child: Text('Reservas',
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 22)),
+            ),
+          ),
           // Filtros
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
@@ -67,14 +76,7 @@ class _PaginaReservasEmpleadoState extends State<PaginaReservasEmpleado> {
                         icono: Icons.calendar_today_outlined,
                         titulo: 'Sin reservas',
                       )
-                    : ListView.separated(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: filtradas.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 12),
-                        itemBuilder: (context, i) {
-                          return _TarjetaReservaEmpleado(reserva: filtradas[i]);
-                        },
-                      ),
+                    : _ListaConSeparadores(reservas: filtradas),
           ),
         ],
       ),
@@ -119,82 +121,216 @@ class _ChipFiltro extends StatelessWidget {
   }
 }
 
-class _TarjetaReservaEmpleado extends StatelessWidget {
-  final Reserva reserva;
-  const _TarjetaReservaEmpleado({required this.reserva});
+class _ListaConSeparadores extends StatelessWidget {
+  final List<Reserva> reservas;
+  const _ListaConSeparadores({required this.reservas});
 
-  Color _colorEstado(EstadoReserva s) {
-    switch (s) {
-      case EstadoReserva.pending:
-        return Colors.orange;
-      case EstadoReserva.confirmed:
-        return Colors.blue;
-      case EstadoReserva.completed:
-        return Colors.green;
-      case EstadoReserva.cancelled:
-        return Colors.red;
-    }
+  String _etiquetaDia(DateTime fecha) {
+    final hoy = DateTime.now();
+    final ayer = hoy.subtract(const Duration(days: 1));
+    if (_mismoDia(fecha, hoy)) return 'Hoy';
+    if (_mismoDia(fecha, ayer)) return 'Ayer';
+    return DateFormat('dd MMM yyyy', 'es_ES').format(fecha);
   }
+
+  bool _mismoDia(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month && a.day == b.day;
 
   @override
   Widget build(BuildContext context) {
-    final fechaTexto = DateFormat('EEE dd MMM', 'es_ES').format(reserva.fechaReserva);
+    final items = <dynamic>[];
+    String? lastLabel;
+    for (final r in reservas) {
+      final label = _etiquetaDia(r.fechaReserva);
+      if (label != lastLabel) {
+        items.add(label);
+        lastLabel = label;
+      }
+      items.add(r);
+    }
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      itemCount: items.length,
+      itemBuilder: (context, i) {
+        final item = items[i];
+        if (item is String) return _SeparadorDia(etiqueta: item);
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: _TarjetaReservaEmpleado(reserva: item as Reserva),
+        );
+      },
+    );
+  }
+}
 
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: const BoxDecoration(
-        color: kCard,
-        borderRadius: BorderRadius.all(Radius.circular(12)),
-        boxShadow: kNeumorphicShadows,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+class _SeparadorDia extends StatelessWidget {
+  final String etiqueta;
+  const _SeparadorDia({required this.etiqueta});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  reserva.nombreCliente ?? 'Cliente',
-                  style: const TextStyle(color: kText, fontWeight: FontWeight.bold),
+          Expanded(child: Divider(color: const Color(0xFFD1D1D6), thickness: 0.8)),
+          const SizedBox(width: 10),
+          Text(etiqueta,
+              style: const TextStyle(
+                  color: Color(0xFF6E6E73),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.3)),
+          const SizedBox(width: 10),
+          Expanded(child: Divider(color: const Color(0xFFD1D1D6), thickness: 0.8)),
+        ],
+      ),
+    );
+  }
+}
+
+class _TarjetaReservaEmpleado extends StatefulWidget {
+  final Reserva reserva;
+  const _TarjetaReservaEmpleado({required this.reserva});
+
+  @override
+  State<_TarjetaReservaEmpleado> createState() => _TarjetaReservaEmpleadoState();
+}
+
+class _TarjetaReservaEmpleadoState extends State<_TarjetaReservaEmpleado> {
+  bool _expandida = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final r = widget.reserva;
+    final fechaTexto = DateFormat('dd MMM yyyy', 'es_ES').format(r.fechaReserva);
+    final inicial = (r.nombreCliente ?? '?')[0].toUpperCase();
+
+    return GestureDetector(
+      onTap: () => setState(() => _expandida = !_expandida),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withOpacity(0.07), blurRadius: 10, offset: const Offset(0, 3)),
+          ],
+        ),
+        child: Column(
+          children: [
+            // Fila principal
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              child: Row(
+                children: [
+                  Container(
+                    width: 46, height: 46,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1C1C1E),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.content_cut_rounded, color: context.colorPrimario, size: 22),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${r.nombreServicio ?? 'Servicio'} — ${(r.nombreCliente ?? '—').split(' ').first}',
+                          style: const TextStyle(
+                              color: Color(0xFF1C1C1E), fontWeight: FontWeight.w700, fontSize: 14),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(fechaTexto,
+                            style: const TextStyle(color: Color(0xFF6E6E73), fontSize: 12)),
+                      ],
+                    ),
+                  ),
+                  CircleAvatar(
+                    radius: 18,
+                    backgroundColor: context.colorPrimario.withOpacity(0.15),
+                    child: Text(inicial,
+                        style: TextStyle(
+                            color: context.colorPrimario,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14)),
+                  ),
+                  const SizedBox(width: 10),
+                  ChipEstado(etiqueta: r.estado.label, color: r.estado.color),
+                  const SizedBox(width: 8),
+                  AnimatedRotation(
+                    turns: _expandida ? 0.5 : 0,
+                    duration: const Duration(milliseconds: 200),
+                    child: const Icon(Icons.keyboard_arrow_down_rounded,
+                        color: Color(0xFF6E6E73), size: 20),
+                  ),
+                ],
+              ),
+            ),
+            // Detalle expandible
+            AnimatedCrossFade(
+              duration: const Duration(milliseconds: 200),
+              crossFadeState: _expandida ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+              firstChild: const SizedBox.shrink(),
+              secondChild: Container(
+                decoration: const BoxDecoration(
+                  border: Border(top: BorderSide(color: Color(0xFFE5E5EA))),
                 ),
-              ),
-              ChipEstado(etiqueta: reserva.estado.label, color: _colorEstado(reserva.estado)),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            reserva.nombreServicio ?? 'Servicio',
-            style: const TextStyle(color: kPrimary, fontSize: 13),
-          ),
-          const SizedBox(height: 6),
-          Row(
-            children: [
-              const Icon(Icons.calendar_today_outlined, size: 14, color: kTextMuted),
-              const SizedBox(width: 6),
-              Text(fechaTexto, style: const TextStyle(color: kTextMuted, fontSize: 12)),
-              const SizedBox(width: 16),
-              const Icon(Icons.access_time_outlined, size: 14, color: kTextMuted),
-              const SizedBox(width: 6),
-              Text(
-                '${reserva.horaInicio} – ${reserva.horaFin}',
-                style: const TextStyle(color: kTextMuted, fontSize: 12),
-              ),
-            ],
-          ),
-          if (reserva.estado == EstadoReserva.confirmed) ...[
-            const SizedBox(height: 10),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () => context
-                    .read<ProveedorReserva>()
-                    .actualizarEstado(reserva.id, EstadoReserva.completed),
-                child: const Text('Marcar como completada'),
+                padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _FilaDetalle(Icons.person_outline, 'Cliente: ${r.nombreCliente ?? '—'}'),
+                    const SizedBox(height: 6),
+                    _FilaDetalle(Icons.access_time_outlined, '${r.horaInicio} – ${r.horaFin}'),
+                    if (r.estado == EstadoReserva.confirmed) ...[
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () => context
+                              .read<ProveedorReserva>()
+                              .actualizarEstado(r.id, EstadoReserva.completed),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF34C759),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10)),
+                          ),
+                          icon: const Icon(Icons.check_circle_outline, size: 18),
+                          label: const Text('Marcar como completada',
+                              style: TextStyle(fontWeight: FontWeight.w700)),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
               ),
             ),
           ],
-        ],
+        ),
       ),
+    );
+  }
+}
+
+class _FilaDetalle extends StatelessWidget {
+  final IconData icono;
+  final String texto;
+  const _FilaDetalle(this.icono, this.texto);
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icono, size: 14, color: const Color(0xFF6E6E73)),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(texto,
+              style: const TextStyle(color: Color(0xFF3C3C43), fontSize: 12)),
+        ),
+      ],
     );
   }
 }

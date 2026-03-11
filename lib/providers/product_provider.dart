@@ -20,17 +20,17 @@ class ProveedorProducto extends ChangeNotifier {
     try {
       _productos = esVistaAdmin ? await _repo.obtenerTodosLosProductos() : await _repo.obtenerProductosActivos();
     } catch (e) {
-      _error = 'Error al cargar productos: $e';
-    } finally {
-      _cargando = false;
-      notifyListeners();
+      _error = _mapearError(e.toString());
     }
+    _cargando = false;
+    notifyListeners();
   }
 
   Future<bool> crearProducto({
     required String nombre,
     String? descripcion,
     required double precio,
+    double? precioOferta,
     required int existencias,
     required String creadoPor,
     String? urlImagen,
@@ -40,6 +40,7 @@ class ProveedorProducto extends ChangeNotifier {
         nombre: nombre,
         descripcion: descripcion,
         precio: precio,
+        precioOferta: precioOferta,
         existencias: existencias,
         creadoPor: creadoPor,
         urlImagen: urlImagen,
@@ -48,7 +49,7 @@ class ProveedorProducto extends ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
-      _error = 'Error al crear producto: $e';
+      _error = _mapearError(e.toString());
       notifyListeners();
       return false;
     }
@@ -63,5 +64,12 @@ class ProveedorProducto extends ChangeNotifier {
     await _repo.eliminarProducto(id);
     _productos = _productos.where((p) => p.id != id).toList();
     notifyListeners();
+  }
+
+  String _mapearError(String e) {
+    if (e.contains('permission') || e.contains('policy')) return 'No tienes permiso para realizar esta acción.';
+    if (e.contains('network') || e.contains('socket')) return 'Sin conexión a internet.';
+    if (e.contains('timeout')) return 'La solicitud tardó demasiado. Intenta de nuevo.';
+    return 'Ocurrió un error inesperado. Intenta de nuevo.';
   }
 }

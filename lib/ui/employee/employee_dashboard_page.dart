@@ -42,7 +42,6 @@ class _PaginaTableroEmpleadoState extends State<PaginaTableroEmpleado> {
     final perfil = context.watch<ProveedorAuth>().perfil;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Mi Panel')),
       body: _cargando
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(

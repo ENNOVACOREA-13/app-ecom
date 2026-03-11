@@ -10,6 +10,10 @@ import 'providers/auth_provider.dart';
 import 'providers/booking_provider.dart';
 import 'providers/service_provider.dart';
 import 'providers/product_provider.dart';
+import 'providers/cart_provider.dart';
+import 'providers/order_provider.dart';
+import 'providers/saved_provider.dart';
+import 'providers/config_provider.dart';
 import 'routing/app_router.dart';
 
 Future<void> main() async {
@@ -41,12 +45,18 @@ class BarberApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ProveedorReserva()),
         ChangeNotifierProvider(create: (_) => ProveedorServicio()),
         ChangeNotifierProvider(create: (_) => ProveedorProducto()),
+        ChangeNotifierProvider(create: (_) => ProveedorCarrito()),
+        ChangeNotifierProvider(create: (_) => ProveedorPedido()),
+        ChangeNotifierProvider(create: (_) => ProveedorGuardados()),
+        ChangeNotifierProvider(create: (_) => ProveedorConfig()..cargar()),
       ],
-      child: MaterialApp.router(
-        debugShowCheckedModeBanner: false,
-        title: 'BarberApp',
-        theme: temaApp,
-        routerConfig: construirEnrutador(),
+      child: Consumer<ProveedorConfig>(
+        builder: (_, config, __) => MaterialApp.router(
+          debugShowCheckedModeBanner: false,
+          title: 'BarberApp',
+          theme: crearTema(config.colorPrimario),
+          routerConfig: construirEnrutador(),
+        ),
       ),
     );
   }

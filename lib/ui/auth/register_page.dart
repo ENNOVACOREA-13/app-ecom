@@ -49,7 +49,6 @@ class _PaginaRegistroState extends State<PaginaRegistro> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Crear cuenta'),
         leading: BackButton(onPressed: () => context.go('/login')),
       ),
       body: SafeArea(
@@ -99,7 +98,8 @@ class _PaginaRegistroState extends State<PaginaRegistro> {
                       prefijo: const Icon(Icons.email_outlined, color: kTextSub),
                       validador: (v) {
                         if (v == null || v.isEmpty) return 'Ingresa tu email';
-                        if (!v.contains('@')) return 'Email inválido';
+                        if (!RegExp(r'^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$')
+                            .hasMatch(v.trim())) return 'Email inválido';
                         return null;
                       },
                     ),

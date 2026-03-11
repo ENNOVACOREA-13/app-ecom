@@ -213,7 +213,6 @@ class _PaginaGestionEmpleadosState extends State<PaginaGestionEmpleados>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Gestionar Empleados'),
         bottom: TabBar(
           controller: _pestanas,
           indicatorColor: kPrimary,
@@ -223,14 +222,13 @@ class _PaginaGestionEmpleadosState extends State<PaginaGestionEmpleados>
           ],
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.person_add_outlined, color: kPrimary),
+            tooltip: 'Nuevo empleado',
+            onPressed: _mostrarDialogoCrearEmpleado,
+          ),
           IconButton(icon: const Icon(Icons.refresh), onPressed: _cargar),
         ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _mostrarDialogoCrearEmpleado,
-        backgroundColor: kPrimary,
-        icon: const Icon(Icons.person_add_outlined),
-        label: const Text('Empleado'),
       ),
       body: _cargando
           ? const Center(child: CircularProgressIndicator())

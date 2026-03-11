@@ -29,9 +29,14 @@ class _PaginaSeleccionarEmpleadoState extends State<PaginaSeleccionarEmpleado> {
     final reserva = context.read<ProveedorReserva>();
     final idServicio = reserva.servicioSeleccionado?.id;
     try {
-      final lista = idServicio != null
-          ? await _repo.obtenerEmpleadosPorServicio(idServicio)
-          : await _repo.obtenerEmpleados();
+      List<Perfil> lista = [];
+      if (idServicio != null) {
+        lista = await _repo.obtenerEmpleadosPorServicio(idServicio);
+      }
+      // Si no hay empleados asignados al servicio, mostrar todos los activos
+      if (lista.isEmpty) {
+        lista = await _repo.obtenerEmpleados();
+      }
       setState(() {
         _empleados = lista;
         _cargando = false;
@@ -47,7 +52,6 @@ class _PaginaSeleccionarEmpleadoState extends State<PaginaSeleccionarEmpleado> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Elige un empleado'),
         leading: BackButton(onPressed: () => context.pop()),
       ),
       body: Column(

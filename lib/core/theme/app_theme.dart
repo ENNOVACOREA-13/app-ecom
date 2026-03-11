@@ -1,27 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-// ── Colores principales del nuevo diseño oscuro ─────────────────────────────
-const kPrimary      = Color(0xFF4ECDC4); // Teal acento (se mantiene)
-const kBackground   = Color(0xFFFFFFFF); // Fondo principal blanco
-const kSurface      = Color(0xFF1C1C1E); // Fondo de tarjetas y superficies
-const kCard         = Color(0xFF1C1C1E); // Tarjetas (igual que surface)
-const kCardElevated = Color(0xFF232325); // Para elementos ligeramente más claros (opcional)
-const kCardDark2    = Color(0xFF2C2C2E); // Fondo de inputs, sliders, tracks
-const kDivider      = Color(0xFF2C2C2E); // Divisor sutil
+// ── Color primario por defecto (fallback) ────────────────────────────────────
+const kPrimary      = Color(0xFF4ECDC4);
 
-// Textos
-const kText         = Color(0xFFFFFFFF); // Texto principal blanco
-const kTextSub      = Color(0xFFA1A1A6); // Texto secundario gris claro
-const kTextMuted    = Color(0xFF6E6E73); // Texto muy muted (para hints, etc.)
+// ── Colores fijos (no dinámicos) ─────────────────────────────────────────────
+const kBackground   = Color(0xFFFFFFFF);
+const kSurface      = Color(0xFF1C1C1E);
+const kCard         = Color(0xFF1C1C1E);
+const kCardElevated = Color(0xFF232325);
+const kCardDark2    = Color(0xFF2C2C2E);
+const kDivider      = Color(0xFF2C2C2E);
 
-// ── Constantes legacy para compatibilidad con código existente ──────────────
-// Ajustadas al nuevo tema oscuro (pueden refinarse más adelante)
-const kPrimaryLight = Color(0xFF2C2C2E); // Se usaba antes como fondo claro; ahora es gris medio
-const kCardDark     = Color(0xFF232325); // Ligeramente más claro que las tarjetas
-const kShadow       = Color(0x80000000); // Negro semitransparente para sombras
+const kText         = Color(0xFFFFFFFF);
+const kTextSub      = Color(0xFFA1A1A6);
+const kTextMuted    = Color(0xFF6E6E73);
 
-// ── Sombras estilo neumórfico (adaptadas a fondo oscuro) ────────────────────
+const kPrimaryLight = Color(0xFF2C2C2E);
+const kCardDark     = Color(0xFF232325);
+const kShadow       = Color(0x80000000);
+
 const kNeumorphicShadows = [
   BoxShadow(color: Color(0x80000000), blurRadius: 16, offset: Offset(0, 6)),
   BoxShadow(color: Color(0x1AFFFFFF), blurRadius: 4, offset: Offset(0, 2), spreadRadius: -1),
@@ -36,14 +34,14 @@ const kNeumorphicShadowsInset = [
   BoxShadow(color: Color(0x40000000), blurRadius: 4, offset: Offset(2, 2), spreadRadius: -1),
 ];
 
-// ── Tema principal de la aplicación ─────────────────────────────────────────
-final temaApp = ThemeData(
+// ── Tema dinámico — recibe el color primario como parámetro ──────────────────
+ThemeData crearTema(Color primario) => ThemeData(
   useMaterial3: true,
   brightness: Brightness.dark,
   scaffoldBackgroundColor: kBackground,
   colorScheme: ColorScheme.dark(
-    primary: kPrimary,
-    secondary: kPrimary,
+    primary: primario,
+    secondary: primario,
     surface: kSurface,
     onPrimary: Colors.white,
     onSurface: kText,
@@ -64,7 +62,7 @@ final temaApp = ThemeData(
   ),
   navigationBarTheme: NavigationBarThemeData(
     backgroundColor: kCard,
-    indicatorColor: kPrimary.withOpacity(0.2),
+    indicatorColor: primario.withOpacity(0.2),
     labelTextStyle: WidgetStateProperty.resolveWith((states) {
       if (states.contains(WidgetState.selected)) {
         return const TextStyle(color: kText, fontSize: 11, fontWeight: FontWeight.w600);
@@ -73,7 +71,7 @@ final temaApp = ThemeData(
     }),
     iconTheme: WidgetStateProperty.resolveWith((states) {
       if (states.contains(WidgetState.selected)) {
-        return const IconThemeData(color: kPrimary);
+        return IconThemeData(color: primario);
       }
       return const IconThemeData(color: kTextSub);
     }),
@@ -99,12 +97,12 @@ final temaApp = ThemeData(
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(12),
-      borderSide: const BorderSide(color: kPrimary, width: 2),
+      borderSide: BorderSide(color: primario, width: 2),
     ),
   ),
   elevatedButtonTheme: ElevatedButtonThemeData(
     style: ElevatedButton.styleFrom(
-      backgroundColor: kPrimary,
+      backgroundColor: primario,
       foregroundColor: Colors.white,
       elevation: 0,
       shadowColor: Colors.transparent,
@@ -114,7 +112,7 @@ final temaApp = ThemeData(
     ),
   ),
   textButtonTheme: TextButtonThemeData(
-    style: TextButton.styleFrom(foregroundColor: kPrimary),
+    style: TextButton.styleFrom(foregroundColor: primario),
   ),
   outlinedButtonTheme: OutlinedButtonThemeData(
     style: OutlinedButton.styleFrom(
@@ -126,9 +124,9 @@ final temaApp = ThemeData(
   dividerTheme: const DividerThemeData(color: kDivider, space: 1, thickness: 1),
   switchTheme: SwitchThemeData(
     thumbColor: WidgetStateProperty.resolveWith((s) =>
-        s.contains(WidgetState.selected) ? kPrimary : Colors.white),
+        s.contains(WidgetState.selected) ? primario : Colors.white),
     trackColor: WidgetStateProperty.resolveWith((s) =>
-        s.contains(WidgetState.selected) ? kPrimary.withOpacity(0.5) : kCardDark2),
+        s.contains(WidgetState.selected) ? primario.withOpacity(0.5) : kCardDark2),
   ),
   chipTheme: ChipThemeData(
     backgroundColor: kCardDark2,
@@ -152,19 +150,27 @@ final temaApp = ThemeData(
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     behavior: SnackBarBehavior.floating,
   ),
-  tabBarTheme: const TabBarThemeData(
-    labelColor: kPrimary,
+  tabBarTheme: TabBarThemeData(
+    labelColor: primario,
     unselectedLabelColor: kTextSub,
-    indicatorColor: kPrimary,
+    indicatorColor: primario,
   ),
   listTileTheme: const ListTileThemeData(
     tileColor: kCard,
     textColor: kText,
     iconColor: kTextSub,
   ),
-  floatingActionButtonTheme: const FloatingActionButtonThemeData(
-    backgroundColor: kPrimary,
+  floatingActionButtonTheme: FloatingActionButtonThemeData(
+    backgroundColor: primario,
     foregroundColor: Colors.white,
     elevation: 6,
   ),
 );
+
+// ── Tema por defecto (con kPrimary) ──────────────────────────────────────────
+final temaApp = crearTema(kPrimary);
+
+// ── Extensión para acceder al color primario dinámico desde cualquier widget ─
+extension AppColorsExt on BuildContext {
+  Color get colorPrimario => Theme.of(this).colorScheme.primary;
+}

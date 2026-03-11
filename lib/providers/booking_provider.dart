@@ -104,9 +104,10 @@ class ProveedorReserva extends ChangeNotifier {
         fecha: _fechaSeleccionada!,
         duracionMin: totalDuracionMin,
       );
+      _cargandoTurnos = false;
+      notifyListeners();
     } catch (e) {
-      _error = 'Error al cargar horarios: $e';
-    } finally {
+      _error = _mapearErrorReserva(e.toString());
       _cargandoTurnos = false;
       notifyListeners();
     }
@@ -133,16 +134,14 @@ class ProveedorReserva extends ChangeNotifier {
         precioTotal: totalPrecio,
         idsExtras: _serviciosSeleccionados.skip(1).map((s) => s.id).toList(),
       );
-      reiniciarFlujo();
+      _creando = false;
+      reiniciarFlujo(); // ya llama notifyListeners
       return true;
     } catch (e) {
-      _error = e.toString().contains('BOOKING_CONFLICT')
-          ? 'Ese horario ya no está disponible. Elige otro.'
-          : 'Error al crear la reserva: $e';
-      return false;
-    } finally {
+      _error = _mapearErrorReserva(e.toString());
       _creando = false;
       notifyListeners();
+      return false;
     }
   }
 
@@ -154,11 +153,10 @@ class ProveedorReserva extends ChangeNotifier {
     try {
       _reservas = await _repo.obtenerReservasCliente(idCliente);
     } catch (e) {
-      _error = 'Error al cargar reservas: $e';
-    } finally {
-      _cargandoReservas = false;
-      notifyListeners();
+      _error = _mapearErrorReserva(e.toString());
     }
+    _cargandoReservas = false;
+    notifyListeners();
   }
 
   Future<void> cargarReservasEmpleado(String idEmpleado) async {
@@ -167,11 +165,10 @@ class ProveedorReserva extends ChangeNotifier {
     try {
       _reservas = await _repo.obtenerReservasEmpleado(idEmpleado);
     } catch (e) {
-      _error = 'Error al cargar reservas: $e';
-    } finally {
-      _cargandoReservas = false;
-      notifyListeners();
+      _error = _mapearErrorReserva(e.toString());
     }
+    _cargandoReservas = false;
+    notifyListeners();
   }
 
   Future<void> cargarTodasLasReservas({EstadoReserva? estado}) async {
@@ -180,11 +177,10 @@ class ProveedorReserva extends ChangeNotifier {
     try {
       _reservas = await _repo.obtenerTodasLasReservas(estado: estado);
     } catch (e) {
-      _error = 'Error al cargar reservas: $e';
-    } finally {
-      _cargandoReservas = false;
-      notifyListeners();
+      _error = _mapearErrorReserva(e.toString());
     }
+    _cargandoReservas = false;
+    notifyListeners();
   }
 
   // Guarda el último idCliente/idEmpleado para recargar tras cambios
@@ -230,5 +226,14 @@ class ProveedorReserva extends ChangeNotifier {
   void limpiarError() {
     _error = null;
     notifyListeners();
+  }
+
+  String _mapearErrorReserva(String e) {
+    if (e.contains('BOOKING_CONFLICT')) return 'Ese horario ya no está disponible. Elige otro.';
+    if (e.contains('DATE_IN_PAST')) return 'No puedes reservar en una fecha pasada.';
+    if (e.contains('permission') || e.contains('policy')) return 'No tienes permiso para realizar esta acción.';
+    if (e.contains('network') || e.contains('socket')) return 'Sin conexión a internet.';
+    if (e.contains('timeout')) return 'La solicitud tardó demasiado. Intenta de nuevo.';
+    return 'Ocurrió un error inesperado. Intenta de nuevo.';
   }
 }

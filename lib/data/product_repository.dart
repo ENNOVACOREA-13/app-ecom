@@ -18,6 +18,7 @@ class RepositorioProducto {
     final datos = await _client
         .from('products')
         .select()
+        .neq('status', 'inactive')
         .order('created_at', ascending: false);
     return (datos as List).map((e) => Producto.fromMap(e)).toList();
   }
@@ -26,6 +27,7 @@ class RepositorioProducto {
     required String nombre,
     String? descripcion,
     required double precio,
+    double? precioOferta,
     required int existencias,
     required String creadoPor,
     String? urlImagen,
@@ -34,6 +36,7 @@ class RepositorioProducto {
       'name': nombre,
       'description': descripcion,
       'price': precio,
+      'sale_price': precioOferta,
       'stock': existencias,
       'created_by': creadoPor,
       'image_url': urlImagen,

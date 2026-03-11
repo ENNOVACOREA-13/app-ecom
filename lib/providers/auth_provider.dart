@@ -86,7 +86,9 @@ class ProveedorAuth extends ChangeNotifier {
     if (e.contains('already registered')) return 'Este email ya está registrado';
     if (e.contains('Password should')) return 'La contraseña debe tener al menos 6 caracteres';
     if (e.contains('valid email')) return 'Ingresa un email válido';
-    return 'Error: $e';
+    if (e.contains('network') || e.contains('socket')) return 'Sin conexión a internet';
+    if (e.contains('timeout')) return 'La solicitud tardó demasiado. Intenta de nuevo';
+    return 'Ocurrió un error inesperado. Intenta de nuevo';
   }
 
   void limpiarError() {

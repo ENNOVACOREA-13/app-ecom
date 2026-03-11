@@ -22,7 +22,7 @@ class PaginaConfirmarReserva extends StatelessWidget {
 
     if (servicios.isEmpty || empleado == null || fecha == null || turno == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Confirmar')),
+        appBar: AppBar(),
         body: const Center(child: Text('Datos incompletos', style: TextStyle(color: Color(0xFF1C1C1E)))),
       );
     }

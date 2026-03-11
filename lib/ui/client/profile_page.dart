@@ -41,10 +41,16 @@ class _PaginaPerfilState extends State<PaginaPerfil> {
 
   Future<void> _elegirAvatar() async {
     final selector = ImagePicker();
-    final xArchivo = await selector.pickImage(source: ImageSource.gallery, imageQuality: 70);
+    final xArchivo = await selector.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 90,
+      maxWidth: 400,
+      maxHeight: 400,
+    );
     if (xArchivo == null || !mounted) return;
     final Uint8List bytes = await xArchivo.readAsBytes();
-    final ext = xArchivo.path.split('.').last.toLowerCase();
+    final mimeType = xArchivo.mimeType ?? 'image/jpeg';
+    final ext = mimeType.contains('/') ? mimeType.split('/').last : 'jpeg';
     if (mounted) {
       await context.read<ProveedorAuth>().subirAvatar(bytes, ext);
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(
@@ -60,6 +66,7 @@ class _PaginaPerfilState extends State<PaginaPerfil> {
       'phone': _ctrlTelefono.text.trim(),
       'bio': _ctrlBio.text.trim(),
     });
+    if (!mounted) return;
     setState(() {
       _guardando = false;
       _editando = false;
@@ -93,7 +100,6 @@ class _PaginaPerfilState extends State<PaginaPerfil> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Perfil'),
         actions: [
           if (!_editando)
             IconButton(

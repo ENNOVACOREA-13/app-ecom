@@ -226,6 +226,7 @@ class _PaginaGestionServiciosState extends State<PaginaGestionServicios> {
     final proveedor = context.watch<ProveedorServicio>();
 
     return Scaffold(
+      appBar: AppBar(title: const Text('Servicios')),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _mostrarDialogoServicio(),
         backgroundColor: kPrimary,
@@ -258,10 +259,8 @@ class _PaginaGestionServiciosState extends State<PaginaGestionServicios> {
                           width: 40,
                           height: 40,
                           decoration: BoxDecoration(
-                            color: s.estaActivo
-                                ? kPrimaryLight
-                                : kTextMuted.withOpacity(0.15),
-                            borderRadius: BorderRadius.circular(8),
+                            color: Colors.white,
+                            shape: BoxShape.circle,
                           ),
                           child: Icon(Icons.content_cut,
                               color: s.estaActivo ? kPrimary : kTextMuted, size: 20),

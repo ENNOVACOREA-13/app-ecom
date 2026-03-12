@@ -90,7 +90,7 @@ class _PaginaPerfilState extends State<PaginaPerfil> {
     );
     if (confirmar == true && mounted) {
       await context.read<ProveedorAuth>().cerrarSesion();
-      if (mounted) context.go('/login');
+      if (mounted) context.go('/');
     }
   }
 

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../common/app_widgets.dart';
+import 'dart:math' as math;
 
 class PaginaLogin extends StatefulWidget {
   const PaginaLogin({super.key});
@@ -135,6 +136,39 @@ class _PaginaLoginState extends State<PaginaLogin> {
               ),
 
               const SizedBox(height: 24),
+
+              // ── Separador ──────────────────────────────────
+              Row(
+                children: [
+                  const Expanded(child: Divider(color: Color(0xFFD1D1D6))),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 12),
+                    child: Text('o continúa con',
+                        style: TextStyle(color: Color(0xFF6E6E73), fontSize: 12)),
+                  ),
+                  const Expanded(child: Divider(color: Color(0xFFD1D1D6))),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // ── Botón Google ────────────────────────────────
+              _BotonSocial(
+                onPressed: () => context.read<ProveedorAuth>().iniciarSesionConGoogle(),
+                logo: _LogoGoogle(),
+                etiqueta: 'Continuar con Google',
+                colorBorde: const Color(0xFFD1D1D6),
+              ),
+              const SizedBox(height: 12),
+
+              // ── Botón Facebook ──────────────────────────────
+              _BotonSocial(
+                onPressed: () => context.read<ProveedorAuth>().iniciarSesionConFacebook(),
+                logo: _LogoFacebook(),
+                etiqueta: 'Continuar con Facebook',
+                colorBorde: const Color(0xFF1877F2),
+              ),
+
+              const SizedBox(height: 24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -147,6 +181,136 @@ class _PaginaLoginState extends State<PaginaLogin> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Botón social genérico ──────────────────────────────────
+class _BotonSocial extends StatelessWidget {
+  final VoidCallback? onPressed;
+  final Widget logo;
+  final String etiqueta;
+  final Color colorBorde;
+
+  const _BotonSocial({
+    required this.onPressed,
+    required this.logo,
+    required this.etiqueta,
+    required this.colorBorde,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: 50,
+      child: OutlinedButton(
+        onPressed: onPressed,
+        style: OutlinedButton.styleFrom(
+          backgroundColor: Colors.white,
+          side: BorderSide(color: colorBorde, width: 1.5),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            logo,
+            const SizedBox(width: 10),
+            Text(
+              etiqueta,
+              style: const TextStyle(
+                color: Color(0xFF1C1C1E),
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Logo Google (colores oficiales) ───────────────────────
+class _LogoGoogle extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 20,
+      height: 20,
+      child: CustomPaint(painter: _GooglePainter()),
+    );
+  }
+}
+
+class _GooglePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final r = size.width / 2;
+    final paint = Paint()..style = PaintingStyle.fill;
+
+    // Rojo (arriba-derecha)
+    paint.color = const Color(0xFFEA4335);
+    canvas.drawArc(Rect.fromCircle(center: center, radius: r),
+        -math.pi / 2, math.pi, false, paint);
+
+    // Azul (arriba-izquierda)
+    paint.color = const Color(0xFF4285F4);
+    canvas.drawArc(Rect.fromCircle(center: center, radius: r),
+        -math.pi / 2, -math.pi / 2, false, paint);
+
+    // Verde (abajo-derecha)
+    paint.color = const Color(0xFF34A853);
+    canvas.drawArc(Rect.fromCircle(center: center, radius: r),
+        math.pi / 2, math.pi / 2, false, paint);
+
+    // Amarillo (abajo-izquierda)
+    paint.color = const Color(0xFFFBBC05);
+    canvas.drawArc(Rect.fromCircle(center: center, radius: r),
+        math.pi, math.pi / 2, false, paint);
+
+    // Centro blanco
+    paint.color = Colors.white;
+    canvas.drawCircle(center, r * 0.55, paint);
+
+    // Línea azul (barra derecha de la G)
+    paint.color = const Color(0xFF4285F4);
+    canvas.drawRect(
+      Rect.fromLTWH(center.dx, center.dy - r * 0.18, r * 0.95, r * 0.36),
+      paint,
+    );
+
+    // Centro blanco interior
+    paint.color = Colors.white;
+    canvas.drawCircle(center, r * 0.38, paint);
+  }
+
+  @override
+  bool shouldRepaint(_) => false;
+}
+
+// ── Logo Facebook (f azul) ────────────────────────────────
+class _LogoFacebook extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 20,
+      height: 20,
+      decoration: const BoxDecoration(
+        color: Color(0xFF1877F2),
+        shape: BoxShape.circle,
+      ),
+      alignment: Alignment.center,
+      child: const Text(
+        'f',
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 13,
+          fontWeight: FontWeight.w900,
+          height: 1,
         ),
       ),
     );

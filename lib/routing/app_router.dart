@@ -29,7 +29,7 @@ class _GoRouterRefreshStream extends ChangeNotifier {
 
 GoRouter construirEnrutador() {
   return GoRouter(
-    initialLocation: '/login',
+    initialLocation: '/',
     refreshListenable: _GoRouterRefreshStream(
       Supabase.instance.client.auth.onAuthStateChange,
     ),
@@ -38,8 +38,11 @@ GoRouter construirEnrutador() {
       final enPaginaAuth = state.matchedLocation == '/login' ||
           state.matchedLocation == '/register';
 
-      if (!estaConectado && !enPaginaAuth) return '/login';
+      // Si está conectado y quiere ir al login/registro → mandarlo al inicio
       if (estaConectado && enPaginaAuth) return '/';
+      // Rutas de reserva requieren auth
+      if (!estaConectado && state.matchedLocation.startsWith('/booking')) return '/';
+      // Todo lo demás (incluido '/' sin login) es permitido
       return null;
     },
     routes: [

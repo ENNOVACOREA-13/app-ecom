@@ -1,10 +1,13 @@
+import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../data/auth_repository.dart';
 import '../domain/models/profile.dart';
 
 class ProveedorAuth extends ChangeNotifier {
   final _repo = RepositorioAuth();
+  StreamSubscription<AuthState>? _authSub;
 
   Perfil? _perfil;
   bool _cargando = false;
@@ -18,6 +21,24 @@ class ProveedorAuth extends ChangeNotifier {
   Future<void> inicializar() async {
     _perfil = await _repo.obtenerPerfilActual();
     notifyListeners();
+
+    // Escuchar cambios de sesión (OAuth, logout, etc.)
+    _authSub = _repo.cambiosEstadoAuth.listen((estado) async {
+      if (estado.event == AuthChangeEvent.signedIn) {
+        _perfil = await _repo.obtenerPerfilActual();
+        _cargando = false;
+        notifyListeners();
+      } else if (estado.event == AuthChangeEvent.signedOut) {
+        _perfil = null;
+        notifyListeners();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _authSub?.cancel();
+    super.dispose();
   }
 
   Future<bool> iniciarSesion(String correo, String contrasena) async {
@@ -60,6 +81,24 @@ class ProveedorAuth extends ChangeNotifier {
       _cargando = false;
       notifyListeners();
     }
+  }
+
+  void iniciarSesionConGoogle() {
+    _error = null;
+    notifyListeners();
+    Supabase.instance.client.auth.signInWithOAuth(
+      OAuthProvider.google,
+      redirectTo: 'io.supabase.barbershop://login-callback',
+    );
+  }
+
+  void iniciarSesionConFacebook() {
+    _error = null;
+    notifyListeners();
+    Supabase.instance.client.auth.signInWithOAuth(
+      OAuthProvider.facebook,
+      redirectTo: 'io.supabase.barbershop://login-callback',
+    );
   }
 
   Future<void> cerrarSesion() async {

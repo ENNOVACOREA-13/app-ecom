@@ -10,6 +10,7 @@ import '../../providers/saved_provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/cart_provider.dart';
 import '../../data/ftp_upload_service.dart';
+import '../auth/guest_wall_page.dart';
 import '../cart/cart_page.dart';
 import '../saved/saved_page.dart';
 
@@ -255,13 +256,26 @@ class _PaginaProductosState extends State<PaginaProductos> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('Tienda',
-                        style: TextStyle(
-                          fontSize: 26,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF1C1C1E),
-                          letterSpacing: -0.5,
-                        )),
+                    Row(
+                      children: [
+                        if (Navigator.of(context).canPop())
+                          GestureDetector(
+                            onTap: () => Navigator.of(context).pop(),
+                            child: const Padding(
+                              padding: EdgeInsets.only(right: 8),
+                              child: Icon(Icons.arrow_back_ios_new_rounded,
+                                  size: 20, color: Color(0xFF1C1C1E)),
+                            ),
+                          ),
+                        const Text('Tienda',
+                            style: TextStyle(
+                              fontSize: 26,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFF1C1C1E),
+                              letterSpacing: -0.5,
+                            )),
+                      ],
+                    ),
                     _IconoCarrito(),
                   ],
                 ),
@@ -1139,7 +1153,14 @@ class _TarjetaProducto extends StatelessWidget {
                                 builder: (ctx, carrito, _) {
                                   final cant = carrito.cantidadProducto(producto.id);
                                   return GestureDetector(
-                                    onTap: () => carrito.agregar(producto),
+                                    onTap: () {
+                                      final auth = context.read<ProveedorAuth>();
+                                      if (auth.perfil == null) {
+                                        mostrarLoginRequerido(ctx);
+                                        return;
+                                      }
+                                      carrito.agregar(producto);
+                                    },
                                     child: Container(
                                       padding: const EdgeInsets.all(7),
                                       decoration: BoxDecoration(

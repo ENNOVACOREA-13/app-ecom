@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/auth_provider.dart';
@@ -207,12 +208,12 @@ class _ResumenPedidoState extends State<_ResumenPedido> {
       v % 1 == 0 ? '\$${v.toInt()}' : '\$${v.toStringAsFixed(2)}';
 
   Future<void> _confirmar() async {
-    setState(() => _procesando = true);
     final perfil = context.read<ProveedorAuth>().perfil;
     if (perfil == null) {
-      setState(() => _procesando = false);
+      context.go('/login');
       return;
     }
+    setState(() => _procesando = true);
 
     final exito = await context.read<ProveedorPedido>().realizarPedido(
           clienteId: perfil.id,

@@ -29,7 +29,7 @@ class PaginaConfigAdmin extends StatelessWidget {
     );
     if (confirmar == true && context.mounted) {
       await context.read<ProveedorAuth>().cerrarSesion();
-      if (context.mounted) context.go('/login');
+      if (context.mounted) context.go('/');
     }
   }
 

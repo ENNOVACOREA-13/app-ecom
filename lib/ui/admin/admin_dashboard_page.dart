@@ -562,9 +562,9 @@ class _TarjetaIngreso extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: kCard,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        boxShadow: kNeumorphicShadows,
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 10, offset: const Offset(0, 2))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -590,7 +590,7 @@ class _TarjetaIngreso extends StatelessWidget {
           Text(
             titulo,
             style: const TextStyle(
-              color: kText,
+              color: Color(0xFF1C1C1E),
               fontSize: 13,
               fontWeight: FontWeight.w600,
             ),
@@ -598,7 +598,7 @@ class _TarjetaIngreso extends StatelessWidget {
           const SizedBox(height: 2),
           Text(
             subtitulo,
-            style: const TextStyle(color: kTextMuted, fontSize: 11),
+            style: const TextStyle(color: Color(0xFF8E8E93), fontSize: 11),
           ),
         ],
       ),
@@ -624,9 +624,9 @@ class _TarjetaStat extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: kCard,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: kNeumorphicShadowsSmall,
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 10, offset: const Offset(0, 2))],
       ),
       child: Row(
         children: [
@@ -648,7 +648,7 @@ class _TarjetaStat extends StatelessWidget {
                 style: const TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w900,
-                  color: kText,
+                  color: Color(0xFF1C1C1E),
                   height: 1,
                 ),
               ),
@@ -657,7 +657,7 @@ class _TarjetaStat extends StatelessWidget {
                 etiqueta,
                 style: const TextStyle(
                   fontSize: 10,
-                  color: kTextMuted,
+                  color: Color(0xFF8E8E93),
                   height: 1.3,
                 ),
               ),

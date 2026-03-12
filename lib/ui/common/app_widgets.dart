@@ -182,9 +182,7 @@ class TarjetaSeccion extends StatelessWidget {
         color: kCard,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: kDivider),
-        boxShadow: const [
-          BoxShadow(color: kShadow, blurRadius: 8, offset: Offset(0, 2)),
-        ],
+        boxShadow: const [BoxShadow(color: kShadow, blurRadius: 8, offset: Offset(0, 2))],
       ),
       child: child,
     );
@@ -215,9 +213,7 @@ class TarjetaEstadistica extends StatelessWidget {
         color: kCard,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: kDivider),
-        boxShadow: const [
-          BoxShadow(color: kShadow, blurRadius: 8, offset: Offset(0, 2)),
-        ],
+        boxShadow: const [BoxShadow(color: kShadow, blurRadius: 8, offset: Offset(0, 2))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -225,7 +221,7 @@ class TarjetaEstadistica extends StatelessWidget {
           Icon(icono, color: c, size: 28),
           const SizedBox(height: 12),
           Text(valor,
-              style: TextStyle(
+              style: const TextStyle(
                   color: kText, fontSize: 24, fontWeight: FontWeight.bold)),
           const SizedBox(height: 4),
           Text(etiqueta, style: const TextStyle(color: kTextSub, fontSize: 12)),

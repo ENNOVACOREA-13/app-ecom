@@ -26,6 +26,7 @@ import '../admin/admin_settings_page.dart';
 // Carrito & Guardados
 import '../cart/cart_page.dart';
 import '../saved/saved_page.dart';
+import '../auth/guest_wall_page.dart';
 
 class CarcasaApp extends StatefulWidget {
   const CarcasaApp({super.key});
@@ -52,7 +53,14 @@ class _CarcasaAppState extends State<CarcasaApp> {
   @override
   Widget build(BuildContext context) {
     final perfil = context.watch<ProveedorAuth>().perfil;
-    if (perfil == null) return const SizedBox.shrink();
+
+    // Modo invitado: mostrar tienda sin login
+    if (perfil == null) {
+      return _ShellInvitado(
+        indiceActual: _indiceActual,
+        onTap: (i) => setState(() => _indiceActual = i),
+      );
+    }
 
     final pestanas = _pestanasPorRol(perfil.rol);
     final indiceSafe = _indiceActual.clamp(0, pestanas.length - 1);
@@ -67,7 +75,7 @@ class _CarcasaAppState extends State<CarcasaApp> {
       bottomNavigationBar: _BarraNavegacion(
         pestanas: pestanas,
         indiceSafe: indiceSafe,
-        mostrarCarrito: !esAdmin,
+        mostrarCarrito: perfil.rol == RolUsuario.client,
         onTap: (i) {
           setState(() => _indiceActual = i);
           _refrescarAlCambiarTab(i, perfil.rol);
@@ -157,6 +165,12 @@ class _BarraNavegacion extends StatelessWidget {
                   color: Color(0x33000000),
                   blurRadius: 20,
                   offset: Offset(0, 8),
+                ),
+                BoxShadow(
+                  color: Color(0x22FFFFFF),
+                  blurRadius: 12,
+                  spreadRadius: 1,
+                  offset: Offset(0, -2),
                 ),
               ],
             ),
@@ -268,4 +282,40 @@ class _Pestana {
   final String etiqueta;
   final Widget pagina;
   const _Pestana(this.icono, this.etiqueta, this.pagina);
+}
+
+// ── Shell para invitados (sin login) ─────────────────────────
+class _ShellInvitado extends StatelessWidget {
+  final int indiceActual;
+  final ValueChanged<int> onTap;
+
+  const _ShellInvitado({required this.indiceActual, required this.onTap});
+
+  static const _pestanas = [
+    _Pestana(Icons.home_outlined, 'Inicio', PaginaInicio()),
+    _Pestana(Icons.calendar_today_outlined, 'Mis Reservas',
+        PaginaMuroInvitado(mensaje: 'Inicia sesión para ver tus reservas')),
+    _Pestana(Icons.favorite_border_rounded, 'Favoritos',
+        PaginaMuroInvitado(mensaje: 'Inicia sesión para ver tus favoritos')),
+    _Pestana(Icons.person_outline, 'Perfil',
+        PaginaMuroInvitado(mensaje: 'Inicia sesión para ver tu perfil')),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final indice = indiceActual.clamp(0, _pestanas.length - 1);
+    return Scaffold(
+      extendBody: true,
+      body: IndexedStack(
+        index: indice,
+        children: _pestanas.map((t) => t.pagina).toList(),
+      ),
+      bottomNavigationBar: _BarraNavegacion(
+        pestanas: _pestanas,
+        indiceSafe: indice,
+        mostrarCarrito: true,
+        onTap: onTap,
+      ),
+    );
+  }
 }

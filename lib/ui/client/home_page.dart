@@ -11,6 +11,7 @@ import '../../providers/cart_provider.dart';
 import '../../providers/saved_provider.dart';
 import '../cart/cart_page.dart';
 import '../common/app_widgets.dart';
+import '../auth/guest_wall_page.dart';
 
 class PaginaInicio extends StatefulWidget {
   const PaginaInicio({super.key});
@@ -146,7 +147,13 @@ class _PaginaInicioState extends State<PaginaInicio> {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
                 child: GestureDetector(
-                  onTap: () => context.push('/booking/service'),
+                  onTap: () {
+                    if (context.read<ProveedorAuth>().perfil == null) {
+                      mostrarLoginRequerido(context);
+                      return;
+                    }
+                    context.push('/booking/service');
+                  },
                   child: Container(
                     height: 130,
                     decoration: BoxDecoration(
@@ -252,7 +259,13 @@ class _PaginaInicioState extends State<PaginaInicio> {
                     ),
                     if (servicios.isNotEmpty)
                       GestureDetector(
-                        onTap: () => context.push('/booking/service'),
+                        onTap: () {
+                          if (context.read<ProveedorAuth>().perfil == null) {
+                            mostrarLoginRequerido(context);
+                            return;
+                          }
+                          context.push('/booking/service');
+                        },
                         child: Text(
                           'Ver todos >',
                           style: TextStyle(
@@ -286,7 +299,13 @@ class _PaginaInicioState extends State<PaginaInicio> {
                     separatorBuilder: (_, __) => const SizedBox(width: 14),
                     itemBuilder: (context, i) => _ChipServicio(
                       servicio: servicios[i],
-                      alTap: () => context.push('/booking/service', extra: servicios[i]),
+                      alTap: () {
+                        if (context.read<ProveedorAuth>().perfil == null) {
+                          mostrarLoginRequerido(context);
+                          return;
+                        }
+                        context.push('/booking/service', extra: servicios[i]);
+                      },
                     ),
                   ),
                 ),

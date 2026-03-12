@@ -106,12 +106,25 @@ class _TarjetaPedido extends StatelessWidget {
         '${pedido.creadoEn.hour.toString().padLeft(2, '0')}:${pedido.creadoEn.minute.toString().padLeft(2, '0')}';
 
     return Container(
-      decoration: const BoxDecoration(
-        color: kCard,
-        borderRadius: BorderRadius.all(Radius.circular(16)),
-        boxShadow: kNeumorphicShadowsSmall,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: const BorderRadius.all(Radius.circular(16)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
-      child: ExpansionTile(
+      child: Theme(
+        data: ThemeData.light().copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+        backgroundColor: Colors.white,
+        collapsedBackgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        collapsedShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         tilePadding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
         childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         leading: Container(
@@ -126,10 +139,10 @@ class _TarjetaPedido extends StatelessWidget {
         title: Text(
           pedido.nombreCliente ?? 'Cliente',
           style: const TextStyle(
-              color: kText, fontWeight: FontWeight.w600, fontSize: 14),
+              color: Color(0xFF1C1C1E), fontWeight: FontWeight.w600, fontSize: 14),
         ),
         subtitle: Text(fecha,
-            style: const TextStyle(color: kTextMuted, fontSize: 11)),
+            style: const TextStyle(color: Color(0xFF8E8E93), fontSize: 11)),
         trailing: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.end,
@@ -161,19 +174,18 @@ class _TarjetaPedido extends StatelessWidget {
                 padding: const EdgeInsets.only(bottom: 8),
                 child: Row(
                   children: [
-                    const Icon(Icons.circle, size: 6, color: kTextMuted),
+                    const Icon(Icons.circle, size: 6, color: Color(0xFF8E8E93)),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         '${item.cantidad}x ${item.nombreProducto}',
-                        style:
-                            const TextStyle(color: kTextSub, fontSize: 13),
+                        style: const TextStyle(color: Color(0xFF3C3C43), fontSize: 13),
                       ),
                     ),
                     Text(
                       _fmtPrecio(item.subtotal),
                       style: const TextStyle(
-                          color: kText,
+                          color: Color(0xFF1C1C1E),
                           fontWeight: FontWeight.w600,
                           fontSize: 13),
                     ),
@@ -183,7 +195,7 @@ class _TarjetaPedido extends StatelessWidget {
           const SizedBox(height: 8),
           // Status change
           const Text('Cambiar estado:',
-              style: TextStyle(color: kTextMuted, fontSize: 12)),
+              style: TextStyle(color: Color(0xFF8E8E93), fontSize: 12)),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
@@ -213,6 +225,7 @@ class _TarjetaPedido extends StatelessWidget {
                 .toList(),
           ),
         ],
+        ),
       ),
     );
   }

@@ -22,6 +22,13 @@ import '../admin/all_bookings_page.dart';
 import '../admin/manage_employees_page.dart';
 import '../admin/admin_orders_page.dart';
 import '../admin/admin_settings_page.dart';
+import '../admin/insumos_page.dart';
+
+// Sysadmin
+import '../sysadmin/sysadmin_dashboard_page.dart';
+import '../sysadmin/sysadmin_logs_page.dart';
+import '../sysadmin/sysadmin_config_page.dart';
+import '../../data/activity_service.dart';
 
 // Carrito & Guardados
 import '../cart/cart_page.dart';
@@ -38,6 +45,7 @@ class CarcasaApp extends StatefulWidget {
 class _CarcasaAppState extends State<CarcasaApp> {
   int _indiceActual = 0;
   final _keyDashboardAdmin = GlobalKey<PaginaTableroAdminState>();
+  final _keyConfigSysadmin = GlobalKey<PaginaConfigSysadminState>();
 
   @override
   void initState() {
@@ -52,7 +60,17 @@ class _CarcasaAppState extends State<CarcasaApp> {
 
   @override
   Widget build(BuildContext context) {
-    final perfil = context.watch<ProveedorAuth>().perfil;
+    final auth = context.watch<ProveedorAuth>();
+
+    // Esperando restaurar sesión
+    if (auth.inicializando) {
+      return const Scaffold(
+        backgroundColor: Color(0xFFF2F2F7),
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    final perfil = auth.perfil;
 
     // Modo invitado: mostrar tienda sin login
     if (perfil == null) {
@@ -75,7 +93,7 @@ class _CarcasaAppState extends State<CarcasaApp> {
       bottomNavigationBar: _BarraNavegacion(
         pestanas: pestanas,
         indiceSafe: indiceSafe,
-        mostrarCarrito: perfil.rol == RolUsuario.client,
+        mostrarCarrito: perfil.rol == RolUsuario.client || perfil.rol == RolUsuario.employee,
         onTap: (i) {
           setState(() => _indiceActual = i);
           _refrescarAlCambiarTab(i, perfil.rol);
@@ -88,8 +106,15 @@ class _CarcasaAppState extends State<CarcasaApp> {
     final perfil = context.read<ProveedorAuth>().perfil;
     if (perfil == null) return;
     final reserva = context.read<ProveedorReserva>();
+    final tabs = _pestanasPorRol(rol);
+    if (indice < tabs.length) {
+      ServicioActividad.instancia.registrarPantalla(tabs[indice].etiqueta);
+    }
 
     switch (rol) {
+      case RolUsuario.sysadmin:
+        if (indice == 2) _keyConfigSysadmin.currentState?.recargar();
+        break;
       case RolUsuario.client:
         if (indice == 1) reserva.cargarReservasCliente(perfil.id);
         break;
@@ -106,12 +131,19 @@ class _CarcasaAppState extends State<CarcasaApp> {
 
   List<_Pestana> _pestanasPorRol(RolUsuario role) {
     switch (role) {
+      case RolUsuario.sysadmin:
+        return [
+          _Pestana(Icons.shield_outlined, 'Dashboard', const PaginaTableroSysadmin()),
+          _Pestana(Icons.analytics_outlined, 'Logs', const PaginaLogs()),
+          _Pestana(Icons.manage_accounts_outlined, 'Config', PaginaConfigSysadmin(key: _keyConfigSysadmin)),
+        ];
       case RolUsuario.superAdmin:
       case RolUsuario.admin:
         return [
           _Pestana(Icons.dashboard_outlined, 'Dashboard', PaginaTableroAdmin(key: _keyDashboardAdmin)),
           _Pestana(Icons.calendar_today_outlined, 'Reservas', const PaginaTodasReservas()),
           _Pestana(Icons.receipt_long_outlined, 'Pedidos', const PaginaPedidosAdmin()),
+          _Pestana(Icons.inventory_2_outlined, 'Insumos', const PaginaInsumos()),
           _Pestana(Icons.settings_outlined, 'Config', const PaginaConfigAdmin()),
         ];
       case RolUsuario.employee:

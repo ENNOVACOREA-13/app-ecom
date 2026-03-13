@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../common/app_widgets.dart';
-import 'dart:math' as math;
 
 class PaginaLogin extends StatefulWidget {
   const PaginaLogin({super.key});
@@ -233,63 +232,17 @@ class _BotonSocial extends StatelessWidget {
   }
 }
 
-// ── Logo Google (colores oficiales) ───────────────────────
+// ── Logo Google ────────────────────────────────────────────
 class _LogoGoogle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 20,
-      height: 20,
-      child: CustomPaint(painter: _GooglePainter()),
+    return Image.asset(
+      'IMG/google_logo.png',
+      width: 22,
+      height: 22,
+      fit: BoxFit.contain,
     );
   }
-}
-
-class _GooglePainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final r = size.width / 2;
-    final paint = Paint()..style = PaintingStyle.fill;
-
-    // Rojo (arriba-derecha)
-    paint.color = const Color(0xFFEA4335);
-    canvas.drawArc(Rect.fromCircle(center: center, radius: r),
-        -math.pi / 2, math.pi, false, paint);
-
-    // Azul (arriba-izquierda)
-    paint.color = const Color(0xFF4285F4);
-    canvas.drawArc(Rect.fromCircle(center: center, radius: r),
-        -math.pi / 2, -math.pi / 2, false, paint);
-
-    // Verde (abajo-derecha)
-    paint.color = const Color(0xFF34A853);
-    canvas.drawArc(Rect.fromCircle(center: center, radius: r),
-        math.pi / 2, math.pi / 2, false, paint);
-
-    // Amarillo (abajo-izquierda)
-    paint.color = const Color(0xFFFBBC05);
-    canvas.drawArc(Rect.fromCircle(center: center, radius: r),
-        math.pi, math.pi / 2, false, paint);
-
-    // Centro blanco
-    paint.color = Colors.white;
-    canvas.drawCircle(center, r * 0.55, paint);
-
-    // Línea azul (barra derecha de la G)
-    paint.color = const Color(0xFF4285F4);
-    canvas.drawRect(
-      Rect.fromLTWH(center.dx, center.dy - r * 0.18, r * 0.95, r * 0.36),
-      paint,
-    );
-
-    // Centro blanco interior
-    paint.color = Colors.white;
-    canvas.drawCircle(center, r * 0.38, paint);
-  }
-
-  @override
-  bool shouldRepaint(_) => false;
 }
 
 // ── Logo Facebook (f azul) ────────────────────────────────

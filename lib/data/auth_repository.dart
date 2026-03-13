@@ -24,10 +24,15 @@ class RepositorioAuth {
     );
     if (resultado.user == null) throw Exception('Error al crear la cuenta');
 
+    // Si Supabase requiere confirmación de email, no hay sesión activa
+    if (resultado.session == null) {
+      throw Exception('email_confirmation_required');
+    }
+
     // Esperar a que el trigger cree el perfil
     await Future.delayed(const Duration(seconds: 1));
 
-    // Si el trigger falló, crear el perfil manualmente
+    // Si el trigger falló, crear el perfil manualmente usando upsert
     final existente = await _client
         .from('profiles')
         .select()
@@ -35,7 +40,7 @@ class RepositorioAuth {
         .maybeSingle();
 
     if (existente == null) {
-      await _client.from('profiles').insert({
+      await _client.from('profiles').upsert({
         'id': resultado.user!.id,
         'full_name': nombreCompleto,
         'role': 'client',

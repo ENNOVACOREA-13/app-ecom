@@ -13,6 +13,7 @@ import '../common/app_widgets.dart';
 import '../admin/manage_services_page.dart';
 import '../admin/manage_employees_page.dart';
 import '../admin/manage_products_page.dart';
+import '../admin/commission_config_page.dart';
 import '../products/products_page.dart';
 import '../client/profile_page.dart';
 
@@ -133,6 +134,17 @@ class PaginaTableroAdminState extends State<PaginaTableroAdmin> {
                   Navigator.pop(ctx);
                   Navigator.of(context).push(MaterialPageRoute(
                       builder: (_) => const PaginaProductos()));
+                },
+              ),
+              const SizedBox(height: 10),
+              _OpcionConfig(
+                icono: Icons.percent_rounded,
+                titulo: 'Comisiones',
+                subtitulo: 'Configurar comisiones por servicio',
+                onTap: () {
+                  Navigator.pop(ctx);
+                  Navigator.of(context).push(MaterialPageRoute(
+                      builder: (_) => const PaginaConfigComisiones()));
                 },
               ),
               const SizedBox(height: 10),

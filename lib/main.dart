@@ -14,6 +14,7 @@ import 'providers/cart_provider.dart';
 import 'providers/order_provider.dart';
 import 'providers/saved_provider.dart';
 import 'providers/config_provider.dart';
+import 'providers/commission_provider.dart';
 import 'routing/app_router.dart';
 
 Future<void> main() async {
@@ -49,6 +50,7 @@ class BarberApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ProveedorPedido()),
         ChangeNotifierProvider(create: (_) => ProveedorGuardados()),
         ChangeNotifierProvider(create: (_) => ProveedorConfig()..cargar()),
+        ChangeNotifierProvider(create: (_) => ProveedorComision()),
       ],
       child: Consumer<ProveedorConfig>(
         builder: (_, config, __) => MaterialApp.router(

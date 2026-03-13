@@ -7,6 +7,7 @@ import '../../providers/config_provider.dart';
 import 'manage_services_page.dart';
 import 'manage_employees_page.dart';
 import 'manage_products_page.dart';
+import 'commission_config_page.dart';
 import '../products/products_page.dart';
 
 class PaginaConfigAdmin extends StatelessWidget {
@@ -144,6 +145,15 @@ class PaginaConfigAdmin extends StatelessWidget {
             subtitulo: 'Ver la tienda como la ven los clientes',
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const PaginaProductos()),
+            ),
+          ),
+          const SizedBox(height: 12),
+          _OpcionConfig(
+            icono: Icons.percent_rounded,
+            titulo: 'Comisiones',
+            subtitulo: 'Configurar comisiones por servicio',
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const PaginaConfigComisiones()),
             ),
           ),
           const SizedBox(height: 12),

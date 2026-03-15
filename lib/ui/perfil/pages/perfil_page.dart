@@ -14,7 +14,7 @@ class PerfilPage extends StatefulWidget {
 }
 
 class _PerfilPageState extends State<PerfilPage> {
-  final _auth = RepoAuth();
+  final _auth = RepositorioAuth();
   bool _cargando = false;
 
   Future<void> _cerrarSesion() async {

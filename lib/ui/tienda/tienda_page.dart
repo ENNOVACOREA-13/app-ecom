@@ -15,7 +15,7 @@ class TiendaPage extends StatefulWidget {
 }
 
 class _TiendaPageState extends State<TiendaPage> {
-  final _repo = RepoProductos();
+  final _repo = RepositorioProducto();
   Future<List<Producto>>? _future;
   int _lastVersion = -1;
 
@@ -29,7 +29,7 @@ class _TiendaPageState extends State<TiendaPage> {
   void _cargarProductos() {
     print('🔄 Recargando productos...');
     setState(() {
-      _future = _repo.listarTodos();
+      _future = _repo.obtenerTodosLosProductos();
     });
   }
 
@@ -100,7 +100,7 @@ class _TiendaPageState extends State<TiendaPage> {
 class _ProductCard extends StatelessWidget {
   final Producto p;
   final String rol;
-  final RepoProductos repo;
+  final RepositorioProducto repo;
   final VoidCallback onChanged;
 
   const _ProductCard({
@@ -164,7 +164,7 @@ class _ProductCard extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _StockChip(stock: p.stock),
+                    _StockChip(stock: p.existencias),
                     if (!puedeGestionar)
                       IconButton(
                         onPressed: () {},
@@ -241,7 +241,8 @@ class _ProductCard extends StatelessWidget {
     final formKey = GlobalKey<FormState>();
     final nombreController = TextEditingController(text: p.nombre);
     final precioController = TextEditingController(text: p.precio.toString());
-    final stockController = TextEditingController(text: p.stock.toString());
+    final stockController =
+        TextEditingController(text: p.existencias.toString());
 
     final resultado = await showDialog<bool>(
       context: context,
@@ -373,12 +374,11 @@ class _ProductCard extends StatelessWidget {
 
     if (resultado == true && context.mounted) {
       try {
-        await repo.actualizar(
-          id: p.id,
-          nombre: nombreController.text.trim(),
-          precio: num.tryParse(precioController.text) ?? 0,
-          stock: int.tryParse(stockController.text) ?? 0,
-        );
+        await repo.actualizarProducto(p.id, {
+          'name': nombreController.text.trim(),
+          'price': num.tryParse(precioController.text) ?? 0,
+          'stock': int.tryParse(stockController.text) ?? 0,
+        });
 
         if (context.mounted) {
           context.read<ContextoApp>().notificarProductoCreado();
@@ -445,7 +445,7 @@ class _ProductCard extends StatelessWidget {
 
     if (confirmado == true && context.mounted) {
       try {
-        await repo.eliminar(p.id);
+        await repo.eliminarProducto(p.id);
 
         if (context.mounted) {
           context.read<ContextoApp>().notificarProductoCreado();

@@ -20,7 +20,7 @@ class _LoginPageState extends State<LoginPage> {
   bool _cargando = false;
   String? _error;
 
-  final _auth = RepoAuth();
+  final _auth = RepositorioAuth();
 
   // Colores por defecto
   static const Color colorFondo = Colors.black;
@@ -33,7 +33,8 @@ class _LoginPageState extends State<LoginPage> {
       _error = null;
     });
     try {
-      await _auth.iniciarSesion(_usuario.text.trim(), _pass.text);
+      await _auth.iniciarSesion(
+          correo: _usuario.text.trim(), contrasena: _pass.text);
       if (!mounted) return;
       context.go('/');
     } catch (e) {
@@ -45,7 +46,7 @@ class _LoginPageState extends State<LoginPage> {
       } else if (e.toString().contains('network')) {
         mensajeError = 'Error de conexión. Verifica tu internet';
       } else if (e.toString().contains('Invalid API key') ||
-                 e.toString().contains('Invalid Supabase URL')) {
+          e.toString().contains('Invalid Supabase URL')) {
         mensajeError = 'Error de configuración. Contacta al administrador';
       }
       setState(() => _error = mensajeError);
@@ -64,7 +65,9 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _crearCuenta() async {
-    if (_usuario.text.isEmpty || !_usuario.text.contains('@') || _pass.text.length < 3) {
+    if (_usuario.text.isEmpty ||
+        !_usuario.text.contains('@') ||
+        _pass.text.length < 3) {
       setState(() => _error = 'Correo válido y contraseña (>=3) requeridos.');
       return;
     }
@@ -73,7 +76,10 @@ class _LoginPageState extends State<LoginPage> {
       _error = null;
     });
     try {
-      await _auth.crearCuenta(_usuario.text.trim(), _pass.text);
+      await _auth.registrarse(
+          correo: _usuario.text.trim(),
+          contrasena: _pass.text,
+          nombreCompleto: _usuario.text.trim());
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Cuenta creada.')),
@@ -131,10 +137,9 @@ class _LoginPageState extends State<LoginPage> {
                             border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12)),
                           ),
-                          validator: (v) =>
-                              (v == null || v.isEmpty)
-                                  ? 'Ingresa tu usuario o correo'
-                                  : null,
+                          validator: (v) => (v == null || v.isEmpty)
+                              ? 'Ingresa tu usuario o correo'
+                              : null,
                         ),
                         const SizedBox(height: 14),
                         TextFormField(

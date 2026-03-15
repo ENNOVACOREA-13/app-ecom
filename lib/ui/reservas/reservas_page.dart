@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 import '../../data/reservation_repository.dart';
 import '../../data/employee_repository.dart';
 import '../../domain/models/reservation.dart';
-import '../../domain/models/employee.dart';
+import '../../domain/models/profile.dart';
 import '../../domain/app_context.dart';
 import '../../domain/services/role_service.dart';
 import '../theme/app_theme.dart';
@@ -18,7 +18,7 @@ class ReservasPage extends StatefulWidget {
 
 class _ReservasPageState extends State<ReservasPage> {
   final _repo = RepoReservas();
-  final _repoEmpleados = RepoEmpleados();
+  final _repoEmpleados = RepositorioEmpleado();
   Future<List<Reserva>>? _future;
 
   @override
@@ -110,7 +110,7 @@ class _ReservasPageState extends State<ReservasPage> {
   }
 
   Future<void> _mostrarDialogoNuevaReserva(BuildContext context) async {
-    final empleados = await _repoEmpleados.listarActivos();
+    final empleados = await _repoEmpleados.obtenerEmpleados();
     if (empleados.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -148,7 +148,7 @@ class _ReservasPageState extends State<ReservasPage> {
 }
 
 class _NuevaReservaSheet extends StatefulWidget {
-  final List<Empleado> empleados;
+  final List<Perfil> empleados;
   final RepoReservas repo;
 
   const _NuevaReservaSheet({
@@ -161,7 +161,7 @@ class _NuevaReservaSheet extends StatefulWidget {
 }
 
 class _NuevaReservaSheetState extends State<_NuevaReservaSheet> {
-  Empleado? _empleadoSeleccionado;
+  Perfil? _empleadoSeleccionado;
   String? _servicioSeleccionado;
   DateTime _fechaSeleccionada = DateTime.now();
   TimeOfDay _horaSeleccionada = const TimeOfDay(hour: 11, minute: 0);
@@ -278,7 +278,7 @@ class _NuevaReservaSheetState extends State<_NuevaReservaSheet> {
                                     ? Colors.white24
                                     : AppColors.primary.withValues(alpha: 0.3),
                                 child: Text(
-                                  e.alias[0].toUpperCase(),
+                                  e.nombreCompleto.isNotEmpty ? e.nombreCompleto[0].toUpperCase() : '?',
                                   style: TextStyle(
                                     color: selected
                                         ? Colors.white
@@ -289,7 +289,7 @@ class _NuevaReservaSheetState extends State<_NuevaReservaSheet> {
                               ),
                               const SizedBox(width: 10),
                               Text(
-                                e.alias,
+                                e.nombreCompleto,
                                 style: TextStyle(
                                   color: selected
                                       ? Colors.white

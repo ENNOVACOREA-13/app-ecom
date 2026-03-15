@@ -1,5 +1,4 @@
 import '../domain/models/reservation.dart';
-import 'auth_repository.dart';
 import 'supabase_service.dart';
 
 class RepoReservas {
@@ -8,17 +7,8 @@ class RepoReservas {
     return data.map(Reserva.fromMap).toList();
   }
 
-  /// Reservas del empleado actual (por employeeId local o de Supabase)
+  /// Reservas del empleado actual
   Future<List<Reserva>> misReservasEmpleado() async {
-    // Verificar si es usuario local con employeeId
-    final usuarioLocal = SesionLocal.usuarioActual;
-    if (usuarioLocal != null && usuarioLocal.employeeId != null) {
-      final data = await sbSelect('reservations',
-          where: {'employee_id': usuarioLocal.employeeId});
-      return data.map(Reserva.fromMap).toList();
-    }
-
-    // Si no, buscar en Supabase
     final uid = sb.auth.currentUser?.id;
     if (uid == null) return [];
     final emp = await sbSingle('employees', where: {'user_id': uid});
@@ -28,17 +18,8 @@ class RepoReservas {
     return data.map(Reserva.fromMap).toList();
   }
 
-  /// Reservas del usuario actual (por userId local o de Supabase)
+  /// Reservas del usuario actual
   Future<List<Reserva>> misReservasUsuario() async {
-    // Verificar si es usuario local
-    final usuarioLocal = SesionLocal.usuarioActual;
-    if (usuarioLocal != null) {
-      final data =
-          await sbSelect('reservations', where: {'user_id': usuarioLocal.id});
-      return data.map(Reserva.fromMap).toList();
-    }
-
-    // Si no, buscar en Supabase
     final uid = sb.auth.currentUser?.id;
     if (uid == null) return [];
     final data = await sbSelect('reservations', where: {'user_id': uid});

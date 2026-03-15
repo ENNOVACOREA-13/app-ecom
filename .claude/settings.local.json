@@ -14,7 +14,8 @@
       "Bash(curl --version)",
       "Bash(curl -v \"https://bhtuixbuzaqmlofcchej.supabase.co/rest/v1/profiles?role=eq.employee&select=id,full_name\" -H \"apikey: sb_publishable_glXU-vkriT23vY84GPSTbg_MBzMxS6O\" -H \"Authorization: Bearer sb_publishable_glXU-vkriT23vY84GPSTbg_MBzMxS6O\")",
       "Bash(dart pub cache repair)",
-      "Bash(flutter clean)"
+      "Bash(flutter clean)",
+      "Bash(grep:*)"
     ],
     "deny": [],
     "ask": []

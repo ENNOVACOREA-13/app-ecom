@@ -27,8 +27,9 @@ class _GoRouterRefreshStream extends ChangeNotifier {
   }
 }
 
-GoRouter construirEnrutador() {
+GoRouter construirEnrutador({GlobalKey<NavigatorState>? navigatorKey}) {
   return GoRouter(
+    navigatorKey: navigatorKey,
     initialLocation: '/',
     refreshListenable: _GoRouterRefreshStream(
       Supabase.instance.client.auth.onAuthStateChange,

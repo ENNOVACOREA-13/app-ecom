@@ -35,6 +35,8 @@ Future<void> main() async {
   runApp(const BarberApp());
 }
 
+final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
+
 class BarberApp extends StatelessWidget {
   const BarberApp({super.key});
 
@@ -57,9 +59,69 @@ class BarberApp extends StatelessWidget {
           debugShowCheckedModeBanner: false,
           title: 'BarberApp',
           theme: crearTema(config.colorPrimario),
-          routerConfig: construirEnrutador(),
+          routerConfig: construirEnrutador(navigatorKey: rootNavigatorKey),
+          builder: (context, child) => _SesionExpiradaListener(child: child!),
         ),
       ),
     );
   }
+}
+
+class _SesionExpiradaListener extends StatefulWidget {
+  final Widget child;
+  const _SesionExpiradaListener({required this.child});
+
+  @override
+  State<_SesionExpiradaListener> createState() =>
+      _SesionExpiradaListenerState();
+}
+
+class _SesionExpiradaListenerState extends State<_SesionExpiradaListener> {
+  bool _mostrandoDialogo = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final auth = context.watch<ProveedorAuth>();
+    if (auth.sesionExpirada && !auth.inicializando && !_mostrandoDialogo) {
+      _mostrandoDialogo = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _mostrarDialogoExpiracion();
+      });
+    }
+  }
+
+  void _mostrarDialogoExpiracion() {
+    final navContext = rootNavigatorKey.currentContext;
+    if (navContext == null) return;
+    showDialog(
+      context: navContext,
+      barrierDismissible: false,
+      useRootNavigator: true,
+      builder: (ctx) => AlertDialog(
+        icon: const Icon(Icons.lock_outline, size: 48, color: Colors.red),
+        title: const Text('Sesión caducada'),
+        content: const Text(
+          'Tu sesión ha sido cerrada por el administrador.\nIntenta acceder de nuevo.',
+          textAlign: TextAlign.center,
+        ),
+        actions: [
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                context.read<ProveedorAuth>().limpiarSesionExpirada();
+                _mostrandoDialogo = false;
+              },
+              child: const Text('Aceptar'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }

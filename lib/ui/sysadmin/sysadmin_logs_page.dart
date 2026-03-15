@@ -37,6 +37,156 @@ class _PaginaLogsState extends State<PaginaLogs>
     super.dispose();
   }
 
+  Future<void> _borrarSesionesCerradas() async {
+    final cantidad = _totalCerradas;
+    if (cantidad == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No hay sesiones cerradas para borrar')),
+      );
+      return;
+    }
+
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Borrar sesiones cerradas'),
+        content: Text(
+            '¿Eliminar $cantidad sesiones cerradas? Esta acción no se puede deshacer.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Borrar todas'),
+          ),
+        ],
+      ),
+    );
+    if (confirmar != true) return;
+
+    try {
+      // Obtener IDs de sesiones cerradas
+      final cerradas = await _client
+          .from('session_logs')
+          .select('id')
+          .eq('is_active', false);
+      final ids = (cerradas as List)
+          .map((s) => s['id'] as String)
+          .toList();
+
+      if (ids.isNotEmpty) {
+        // Borrar activity_logs asociados primero (foreign key)
+        await _client
+            .from('activity_logs')
+            .delete()
+            .inFilter('session_id', ids);
+
+        // Ahora borrar las sesiones cerradas
+        await _client
+            .from('session_logs')
+            .delete()
+            .inFilter('id', ids);
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('$cantidad sesiones cerradas eliminadas'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+      _cargarSesiones();
+      _cargarActividad();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al borrar: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _cerrarSesionIndividual(String sessionId) async {
+    try {
+      await _client.from('session_logs').update({
+        'is_active': false,
+        'logout_at': DateTime.now().toIso8601String(),
+      }).eq('id', sessionId);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Sesión cerrada'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+      _cargarSesiones();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  Future<void> _cerrarTodasLasSesiones() async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Cerrar todas las sesiones'),
+        content: const Text(
+            '¿Estás seguro? Esto cerrará todas las sesiones activas de todos los usuarios.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Cerrar todas'),
+          ),
+        ],
+      ),
+    );
+    if (confirmar != true) return;
+
+    try {
+      await _client.from('session_logs').update({
+        'is_active': false,
+        'logout_at': DateTime.now().toIso8601String(),
+      }).eq('is_active', true);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Todas las sesiones han sido cerradas'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+      _cargarSesiones();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _cargarSesiones() async {
     setState(() => _cargandoSesiones = true);
     try {
@@ -132,6 +282,16 @@ class _PaginaLogsState extends State<PaginaLogs>
                   ),
                 ),
                 IconButton(
+                  onPressed: _borrarSesionesCerradas,
+                  icon: const Icon(Icons.delete_sweep_outlined, color: Colors.red),
+                  tooltip: 'Borrar sesiones cerradas',
+                ),
+                IconButton(
+                  onPressed: _cerrarTodasLasSesiones,
+                  icon: const Icon(Icons.power_settings_new, color: Colors.red),
+                  tooltip: 'Cerrar todas las sesiones',
+                ),
+                IconButton(
                   onPressed: () { _cargarSesiones(); _cargarActividad(); },
                   icon: const Icon(Icons.refresh_outlined, color: kTextSub),
                 ),
@@ -223,7 +383,8 @@ class _PaginaLogsState extends State<PaginaLogs>
                                       itemCount: _sesionesFiltradas.length,
                                       itemBuilder: (_, i) => _TarjetaSesion(
                                           sesion: _sesionesFiltradas[i],
-                                          color: color),
+                                          color: color,
+                                          onCerrar: _cerrarSesionIndividual),
                                     ),
                                   ),
                           ),
@@ -333,7 +494,8 @@ class _StatCard extends StatelessWidget {
 class _TarjetaSesion extends StatelessWidget {
   final Map<String, dynamic> sesion;
   final Color color;
-  const _TarjetaSesion({required this.sesion, required this.color});
+  final void Function(String sessionId)? onCerrar;
+  const _TarjetaSesion({required this.sesion, required this.color, this.onCerrar});
 
   @override
   Widget build(BuildContext context) {
@@ -413,24 +575,57 @@ class _TarjetaSesion extends StatelessWidget {
                 ]),
               ]),
             ),
-            // Badge estado
-            Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: activa
-                    ? Colors.green.withOpacity(0.12)
-                    : Colors.grey.withOpacity(0.08),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                activa ? '● ACTIVA' : '○ CERRADA',
-                style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    color: activa ? Colors.green : Colors.grey,
-                    letterSpacing: 0.5),
-              ),
+            // Badge estado + botón cerrar
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: activa
+                        ? Colors.green.withOpacity(0.12)
+                        : Colors.grey.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    activa ? '● ACTIVA' : '○ CERRADA',
+                    style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: activa ? Colors.green : Colors.grey,
+                        letterSpacing: 0.5),
+                  ),
+                ),
+                if (activa && onCerrar != null)
+                  GestureDetector(
+                    onTap: () => onCerrar!(sesion['id'] as String),
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 6),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.power_settings_new,
+                                size: 11, color: Colors.red),
+                            SizedBox(width: 3),
+                            Text('Cerrar',
+                                style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.red)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ]),
         ),

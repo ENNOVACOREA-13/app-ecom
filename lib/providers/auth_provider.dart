@@ -15,6 +15,13 @@ class ProveedorAuth extends ChangeNotifier {
   bool _cargando = false;
   bool _inicializando = true;
   String? _error;
+  bool _sesionExpirada = false;
+
+  bool get sesionExpirada => _sesionExpirada;
+  void limpiarSesionExpirada() {
+    _sesionExpirada = false;
+    notifyListeners();
+  }
 
   Perfil? get perfil => _perfil;
   bool get cargando => _cargando;
@@ -25,9 +32,23 @@ class ProveedorAuth extends ChangeNotifier {
   Future<void> inicializar() async {
     try {
       _perfil = await _repo.obtenerPerfilActual();
-      // Registrar sesión al restaurar (reinicio de app con sesión activa)
-      if (_perfil != null && !ServicioActividad.instancia.activo) {
-        await ServicioActividad.instancia.iniciarSesion(_perfil!.id);
+      if (_perfil != null) {
+        final rol = _perfil!.rol.name;
+        // Para no-sysadmin, verificar si la sesión fue cerrada remotamente
+        if (rol != 'sysadmin') {
+          final tieneActiva = await ServicioActividad.instancia
+              .tieneSesionActiva(_perfil!.id);
+          if (!tieneActiva) {
+            debugPrint('[Auth] Sesión cerrada remotamente, forzando logout');
+            _sesionExpirada = true;
+            await _repo.cerrarSesion();
+            _perfil = null;
+          }
+        }
+        // Registrar sesión al restaurar (reinicio de app con sesión activa)
+        if (_perfil != null && !ServicioActividad.instancia.activo) {
+          await ServicioActividad.instancia.iniciarSesion(_perfil!.id);
+        }
       }
     } catch (e) {
       debugPrint('[Auth] Error al restaurar sesión: $e');
@@ -37,10 +58,23 @@ class ProveedorAuth extends ChangeNotifier {
       notifyListeners();
     }
 
+    // Escuchar cierre remoto de sesión (sysadmin cerró la sesión)
+    ServicioActividad.instancia.onSesionCerradaRemotamente = () async {
+      if (_perfil == null) return;
+      final rol = _perfil!.rol.name;
+      // Solo mostrar modal a clientes, empleados y admins (no sysadmin)
+      if (rol == 'sysadmin') return;
+      _sesionExpirada = true;
+      await _repo.cerrarSesion();
+      _perfil = null;
+      notifyListeners();
+    };
+
     // Escuchar cambios de sesión (OAuth, logout, nuevos logins)
     _authSub = _repo.cambiosEstadoAuth.listen((estado) async {
       if (estado.event == AuthChangeEvent.signedIn) {
         try {
+          _sesionExpirada = false;
           _perfil = await _repo.obtenerPerfilActual();
           if (_perfil != null && !ServicioActividad.instancia.activo) {
             await ServicioActividad.instancia.iniciarSesion(_perfil!.id);
@@ -68,6 +102,7 @@ class ProveedorAuth extends ChangeNotifier {
     _error = null;
     notifyListeners();
     try {
+      _sesionExpirada = false;
       _perfil = await _repo.iniciarSesion(correo: correo, contrasena: contrasena);
       await ServicioActividad.instancia.iniciarSesion(_perfil!.id);
       return true;
@@ -90,6 +125,7 @@ class ProveedorAuth extends ChangeNotifier {
     _error = null;
     notifyListeners();
     try {
+      _sesionExpirada = false;
       _perfil = await _repo.registrarse(
         correo: correo,
         contrasena: contrasena,

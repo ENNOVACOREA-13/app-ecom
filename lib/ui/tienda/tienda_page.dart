@@ -78,9 +78,9 @@ class _TiendaPageState extends State<TiendaPage> {
               child: GridView.builder(
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
-                    mainAxisSpacing: 12,
-                    crossAxisSpacing: 12,
-                    childAspectRatio: 0.80),
+                    mainAxisSpacing: 14,
+                    crossAxisSpacing: 14,
+                    childAspectRatio: 0.68),
                 itemCount: items.length,
                 itemBuilder: (_, i) => _ProductCard(
                   p: items[i],
@@ -114,70 +114,213 @@ class _ProductCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final money = NumberFormat.currency(locale: 'es_MX', symbol: '\$');
     final puedeGestionar = RoleService.puedeGestionarProductos(rol);
+    final tieneOferta = p.precioOferta != null && p.precioOferta! < p.precio;
+    final agotado = p.existencias == 0;
+
+    // Badge label y color
+    String? badgeLabel;
+    Color badgeColor = Colors.black87;
+    if (agotado) {
+      badgeLabel = 'Agotado';
+      badgeColor = Colors.red.shade700;
+    } else if (tieneOferta) {
+      badgeLabel = '−${p.porcentajeOff}%';
+      badgeColor = Colors.green.shade700;
+    }
 
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [AppColors.primary.withOpacity(0.25), Colors.black87],
-        ),
-        border: Border.all(color: AppColors.primary.withOpacity(0.25)),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.18),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(20),
-          onTap:
-              puedeGestionar ? () => _mostrarOpcionesProducto(context) : null,
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: p.urlImagen != null && p.urlImagen!.isNotEmpty
-                        ? Image.network(p.urlImagen!,
-                            fit: BoxFit.cover, width: double.infinity)
-                        : Container(
-                            color: Colors.black26,
-                            alignment: Alignment.center,
-                            child: const Icon(Icons.image,
-                                size: 48, color: Colors.white30),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── Imagen + badge ──────────────────────────────
+          Stack(
+            children: [
+              ClipRRect(
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(16)),
+                child: Container(
+                  height: 130,
+                  width: double.infinity,
+                  color: const Color(0xFFF3F3F3),
+                  child: p.urlImagen != null && p.urlImagen!.isNotEmpty
+                      ? Image.network(
+                          p.urlImagen!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => const Icon(
+                            Icons.image_not_supported_outlined,
+                            size: 40,
+                            color: Color(0xFFBBBBBB),
                           ),
+                        )
+                      : const Icon(
+                          Icons.shopping_bag_outlined,
+                          size: 48,
+                          color: Color(0xFFCCCCCC),
+                        ),
+                ),
+              ),
+              if (badgeLabel != null)
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(999),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.12),
+                          blurRadius: 4,
+                          offset: const Offset(0, 1),
+                        ),
+                      ],
+                    ),
+                    child: Text(
+                      badgeLabel,
+                      style: TextStyle(
+                        color: badgeColor,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ),
                 ),
-                const SizedBox(height: 10),
-                Text(p.nombre,
+            ],
+          ),
+
+          // ── Info ────────────────────────────────────────
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Nombre
+                  Text(
+                    p.nombre,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                        color: Colors.white, fontWeight: FontWeight.w600)),
-                const SizedBox(height: 4),
-                Text(money.format(p.precio),
-                    style:
-                        const TextStyle(color: Colors.white70, fontSize: 13)),
-                const Spacer(),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _StockChip(stock: p.existencias),
-                    if (!puedeGestionar)
-                      IconButton(
-                        onPressed: () {},
-                        icon: const Icon(Icons.add_shopping_cart,
-                            color: Colors.white70),
-                        tooltip: 'Agregar al carrito',
+                      color: Colors.black87,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+
+                  // Stock + precio
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            agotado
+                                ? Icons.remove_circle_outline
+                                : Icons.check_circle_outline,
+                            size: 12,
+                            color: agotado
+                                ? Colors.red.shade400
+                                : Colors.green.shade500,
+                          ),
+                          const SizedBox(width: 3),
+                          Text(
+                            agotado ? 'Sin stock' : '${p.existencias} uds.',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: agotado
+                                  ? Colors.red.shade400
+                                  : Colors.green.shade600,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
                       ),
-                  ],
-                ),
-              ],
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          if (tieneOferta)
+                            Text(
+                              money.format(p.precio),
+                              style: const TextStyle(
+                                fontSize: 10,
+                                color: Colors.black38,
+                                decoration: TextDecoration.lineThrough,
+                              ),
+                            ),
+                          Text(
+                            money.format(tieneOferta ? p.precioOferta! : p.precio),
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: Colors.black87,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+
+                  const Spacer(),
+
+                  // ── Botones ──────────────────────────────
+                  if (puedeGestionar)
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _BotonTarjeta(
+                            label: 'Editar',
+                            onTap: () => _mostrarOpcionesProducto(context),
+                            outlined: true,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: _BotonTarjeta(
+                            label: 'Eliminar',
+                            onTap: () => _confirmarEliminacion(context),
+                            color: Colors.red.shade700,
+                          ),
+                        ),
+                      ],
+                    )
+                  else
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _BotonTarjeta(
+                            label: 'Al carrito',
+                            onTap: agotado ? null : () {},
+                            outlined: true,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: _BotonTarjeta(
+                            label: 'Comprar',
+                            onTap: agotado ? null : () {},
+                          ),
+                        ),
+                      ],
+                    ),
+                ],
+              ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -473,21 +616,58 @@ class _ProductCard extends StatelessWidget {
   }
 }
 
-class _StockChip extends StatelessWidget {
-  final int stock;
-  const _StockChip({required this.stock});
+class _BotonTarjeta extends StatelessWidget {
+  final String label;
+  final VoidCallback? onTap;
+  final bool outlined;
+  final Color? color;
+
+  const _BotonTarjeta({
+    required this.label,
+    required this.onTap,
+    this.outlined = false,
+    this.color,
+  });
+
   @override
   Widget build(BuildContext context) {
-    final color = stock > 0 ? Colors.greenAccent : Colors.redAccent;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
-        border: Border.all(color: color.withOpacity(0.6)),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child:
-          Text('Stock: $stock', style: TextStyle(color: color, fontSize: 12)),
+    final bg = color ?? Colors.black87;
+    return SizedBox(
+      height: 32,
+      child: outlined
+          ? OutlinedButton(
+              onPressed: onTap,
+              style: OutlinedButton.styleFrom(
+                padding: EdgeInsets.zero,
+                side: BorderSide(color: onTap == null ? Colors.black26 : bg),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20)),
+              ),
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: onTap == null ? Colors.black26 : bg,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            )
+          : ElevatedButton(
+              onPressed: onTap,
+              style: ElevatedButton.styleFrom(
+                padding: EdgeInsets.zero,
+                backgroundColor: onTap == null ? Colors.black26 : bg,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20)),
+              ),
+              child: Text(
+                label,
+                style: const TextStyle(
+                    fontSize: 11, fontWeight: FontWeight.w600),
+              ),
+            ),
     );
   }
 }

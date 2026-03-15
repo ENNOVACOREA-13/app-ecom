@@ -782,7 +782,7 @@ class _FilaServicio extends StatelessWidget {
               shape: BoxShape.circle,
             ),
             child: Icon(Icons.content_cut_rounded,
-                color: context.colorPrimario, size: 16),
+                color: Colors.white, size: 16),
           ),
           const SizedBox(width: 12),
           Expanded(

@@ -75,6 +75,18 @@ flutter:
     - IMG/ANUNCIO2.png
     - IMG/CARRITO.png
     - IMG/LOGOp.png
+    - IMG/PERFIL.png
+    - IMG/RESERVAS.png
+    - IMG/FAVORITOS.png
+    - IMG/INICIO.png
+    - IMG/CARRITO_NAV.png
+    - IMG/DASHBOARD.png
+    - IMG/PEDIDOS.png
+    - IMG/INSUMOS.png
+    - IMG/CONFIGURACION.png
+    - IMG/ADMIN.png
+    - IMG/ESTADISTICAS.png
+    - IMG/PERFILESC.png
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

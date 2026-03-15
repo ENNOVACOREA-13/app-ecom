@@ -82,7 +82,8 @@ class _CarcasaAppState extends State<CarcasaApp> {
 
     final pestanas = _pestanasPorRol(perfil.rol);
     final indiceSafe = _indiceActual.clamp(0, pestanas.length - 1);
-    final esAdmin = perfil.rol == RolUsuario.admin || perfil.rol == RolUsuario.superAdmin;
+    final esAdmin =
+        perfil.rol == RolUsuario.admin || perfil.rol == RolUsuario.superAdmin;
 
     return Scaffold(
       extendBody: true,
@@ -93,7 +94,7 @@ class _CarcasaAppState extends State<CarcasaApp> {
       bottomNavigationBar: _BarraNavegacion(
         pestanas: pestanas,
         indiceSafe: indiceSafe,
-        mostrarCarrito: perfil.rol == RolUsuario.client || perfil.rol == RolUsuario.employee,
+        mostrarCarrito: false,
         onTap: (i) {
           setState(() => _indiceActual = i);
           _refrescarAlCambiarTab(i, perfil.rol);
@@ -133,32 +134,64 @@ class _CarcasaAppState extends State<CarcasaApp> {
     switch (role) {
       case RolUsuario.sysadmin:
         return [
-          _Pestana(Icons.shield_outlined, 'Dashboard', const PaginaTableroSysadmin()),
-          _Pestana(Icons.analytics_outlined, 'Logs', const PaginaLogs()),
-          _Pestana(Icons.manage_accounts_outlined, 'Config', PaginaConfigSysadmin(key: _keyConfigSysadmin)),
+          _Pestana(Icons.shield_outlined, 'Dashboard',
+              const PaginaTableroSysadmin(),
+              imagen: 'IMG/ADMIN.png'),
+          _Pestana(Icons.analytics_outlined, 'Logs', const PaginaLogs(),
+              imagen: 'IMG/ESTADISTICAS.png'),
+          _Pestana(Icons.manage_accounts_outlined, 'Config',
+              PaginaConfigSysadmin(key: _keyConfigSysadmin),
+              imagen: 'IMG/PERFILESC.png'),
         ];
       case RolUsuario.superAdmin:
       case RolUsuario.admin:
         return [
-          _Pestana(Icons.dashboard_outlined, 'Dashboard', PaginaTableroAdmin(key: _keyDashboardAdmin)),
-          _Pestana(Icons.calendar_today_outlined, 'Reservas', const PaginaTodasReservas()),
-          _Pestana(Icons.receipt_long_outlined, 'Pedidos', const PaginaPedidosAdmin()),
-          _Pestana(Icons.inventory_2_outlined, 'Insumos', const PaginaInsumos()),
-          _Pestana(Icons.settings_outlined, 'Config', const PaginaConfigAdmin()),
+          _Pestana(Icons.dashboard_outlined, 'Dashboard',
+              PaginaTableroAdmin(key: _keyDashboardAdmin),
+              imagen: 'IMG/DASHBOARD.png'),
+          _Pestana(Icons.calendar_today_outlined, 'Reservas',
+              const PaginaTodasReservas(),
+              imagen: 'IMG/RESERVAS.png'),
+          _Pestana(Icons.receipt_long_outlined, 'Pedidos',
+              const PaginaPedidosAdmin(),
+              imagen: 'IMG/PEDIDOS.png'),
+          _Pestana(Icons.inventory_2_outlined, 'Insumos', const PaginaInsumos(),
+              imagen: 'IMG/INSUMOS.png'),
+          _Pestana(Icons.settings_outlined, 'Config', const PaginaConfigAdmin(),
+              imagen: 'IMG/CONFIGURACION.png'),
         ];
       case RolUsuario.employee:
         return [
-          _Pestana(Icons.dashboard_outlined, 'Mi Panel', const PaginaTableroEmpleado()),
-          _Pestana(Icons.calendar_today_outlined, 'Mis Reservas', const PaginaReservasEmpleado()),
-          _Pestana(Icons.favorite_border_rounded, 'Favoritos', const PaginaGuardados()),
-          _Pestana(Icons.person_outline, 'Perfil', const PaginaPerfil()),
+          _Pestana(Icons.dashboard_outlined, 'Mi Panel',
+              const PaginaTableroEmpleado(),
+              imagen: 'IMG/INICIO.png'),
+          _Pestana(Icons.calendar_today_outlined, 'Mis Reservas',
+              const PaginaReservasEmpleado(),
+              imagen: 'IMG/RESERVAS.png'),
+          _Pestana(
+              Icons.shopping_cart_outlined, 'Carrito', const PaginaCarrito(),
+              imagen: 'IMG/CARRITO_NAV.png'),
+          _Pestana(Icons.favorite_border_rounded, 'Favoritos',
+              const PaginaGuardados(),
+              imagen: 'IMG/FAVORITOS.png'),
+          _Pestana(Icons.person_outline, 'Perfil', const PaginaPerfil(),
+              imagen: 'IMG/PERFIL.png'),
         ];
       case RolUsuario.client:
         return [
-          _Pestana(Icons.home_outlined, 'Inicio', const PaginaInicio()),
-          _Pestana(Icons.calendar_today_outlined, 'Mis Reservas', const PaginaMisReservas()),
-          _Pestana(Icons.favorite_border_rounded, 'Favoritos', const PaginaGuardados()),
-          _Pestana(Icons.person_outline, 'Perfil', const PaginaPerfil()),
+          _Pestana(Icons.home_outlined, 'Inicio', const PaginaInicio(),
+              imagen: 'IMG/INICIO.png'),
+          _Pestana(Icons.calendar_today_outlined, 'Mis Reservas',
+              const PaginaMisReservas(),
+              imagen: 'IMG/RESERVAS.png'),
+          _Pestana(
+              Icons.shopping_cart_outlined, 'Carrito', const PaginaCarrito(),
+              imagen: 'IMG/CARRITO_NAV.png'),
+          _Pestana(Icons.favorite_border_rounded, 'Favoritos',
+              const PaginaGuardados(),
+              imagen: 'IMG/FAVORITOS.png'),
+          _Pestana(Icons.person_outline, 'Perfil', const PaginaPerfil(),
+              imagen: 'IMG/PERFIL.png'),
         ];
     }
   }
@@ -180,118 +213,65 @@ class _BarraNavegacion extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    // Ancho disponible descontando padding lateral (20+20) y espacio entre tabs
+    final itemWidth = (screenWidth - 40) / pestanas.length;
+    // Ícono máximo 52px pero nunca más del 70% del espacio de cada tab
+    final iconSize = (itemWidth * 0.70).clamp(28.0, 52.0);
+    final barHeight = (iconSize + 44).clamp(72.0, 96.0);
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-      child: Stack(
-        clipBehavior: Clip.none,
-        alignment: Alignment.topCenter,
-        children: [
-          // Nav bar
-          Container(
-            height: 64,
-            decoration: BoxDecoration(
-              color: kCard,
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x33000000),
-                  blurRadius: 20,
-                  offset: Offset(0, 8),
-                ),
-                BoxShadow(
-                  color: Color(0x22FFFFFF),
-                  blurRadius: 12,
-                  spreadRadius: 1,
-                  offset: Offset(0, -2),
-                ),
-              ],
+      child: Container(
+        height: barHeight,
+        decoration: BoxDecoration(
+          color: kCard,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x33000000),
+              blurRadius: 20,
+              offset: Offset(0, 8),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: List.generate(pestanas.length, (i) {
-                final selected = i == indiceSafe;
-                return GestureDetector(
-                  onTap: () => onTap(i),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    curve: Curves.easeInOut,
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: selected ? kPrimary.withOpacity(0.15) : Colors.transparent,
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Icon(
-                      selected ? _iconoActivo(pestanas[i].icono) : pestanas[i].icono,
-                      color: selected ? kPrimary : const Color(0xFF6E6E73),
-                      size: 24,
-                    ),
-                  ),
-                );
-              }),
+            BoxShadow(
+              color: Color(0x22FFFFFF),
+              blurRadius: 12,
+              spreadRadius: 1,
+              offset: Offset(0, -2),
             ),
-          ),
-
-          // Carrito flotante (solo para client y employee)
-          if (mostrarCarrito)
-            Positioned(
-              top: -26,
-              child: Consumer<ProveedorCarrito>(
-                builder: (ctx, carrito, _) => GestureDetector(
-                  onTap: () => Navigator.of(ctx).push(
-                    MaterialPageRoute(builder: (_) => const PaginaCarrito()),
-                  ),
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      Container(
-                        width: 56,
-                        height: 56,
-                        decoration: BoxDecoration(
-                          color: kPrimary,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: kPrimary.withOpacity(0.45),
-                              blurRadius: 16,
-                              offset: const Offset(0, 6),
-                            ),
-                          ],
-                        ),
-                        child: const Icon(
-                          Icons.shopping_cart_rounded,
-                          color: Colors.white,
-                          size: 26,
-                        ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: List.generate(pestanas.length, (i) {
+            final selected = i == indiceSafe;
+            return GestureDetector(
+              onTap: () => onTap(i),
+              child: Container(
+                padding: EdgeInsets.zero,
+                decoration: selected
+                    ? BoxDecoration(
+                        color: kPrimary.withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                      )
+                    : null,
+                child: pestanas[i].imagen != null
+                    ? Image.asset(
+                        pestanas[i].imagen!,
+                        width: iconSize,
+                        height: iconSize,
+                      )
+                    : Icon(
+                        selected
+                            ? _iconoActivo(pestanas[i].icono)
+                            : pestanas[i].icono,
+                        color: selected ? kPrimary : const Color(0xFF6E6E73),
+                        size: iconSize * 0.85,
                       ),
-                      if (carrito.totalItems > 0)
-                        Positioned(
-                          top: -2,
-                          right: -2,
-                          child: Container(
-                            constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
-                            padding: const EdgeInsets.symmetric(horizontal: 4),
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFFF3B30),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Center(
-                              child: Text(
-                                carrito.totalItems > 99 ? '99+' : '${carrito.totalItems}',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
               ),
-            ),
-        ],
+            );
+          }),
+        ),
       ),
     );
   }
@@ -311,9 +291,10 @@ IconData _iconoActivo(IconData icono) {
 
 class _Pestana {
   final IconData icono;
+  final String? imagen; // ruta asset PNG personalizado
   final String etiqueta;
   final Widget pagina;
-  const _Pestana(this.icono, this.etiqueta, this.pagina);
+  const _Pestana(this.icono, this.etiqueta, this.pagina, {this.imagen});
 }
 
 // ── Shell para invitados (sin login) ─────────────────────────
@@ -324,13 +305,17 @@ class _ShellInvitado extends StatelessWidget {
   const _ShellInvitado({required this.indiceActual, required this.onTap});
 
   static const _pestanas = [
-    _Pestana(Icons.home_outlined, 'Inicio', PaginaInicio()),
+    _Pestana(Icons.home_outlined, 'Inicio', PaginaInicio(),
+        imagen: 'IMG/INICIO.png'),
     _Pestana(Icons.calendar_today_outlined, 'Mis Reservas',
-        PaginaMuroInvitado(mensaje: 'Inicia sesión para ver tus reservas')),
+        PaginaMuroInvitado(mensaje: 'Inicia sesión para ver tus reservas'),
+        imagen: 'IMG/RESERVAS.png'),
     _Pestana(Icons.favorite_border_rounded, 'Favoritos',
-        PaginaMuroInvitado(mensaje: 'Inicia sesión para ver tus favoritos')),
+        PaginaMuroInvitado(mensaje: 'Inicia sesión para ver tus favoritos'),
+        imagen: 'IMG/FAVORITOS.png'),
     _Pestana(Icons.person_outline, 'Perfil',
-        PaginaMuroInvitado(mensaje: 'Inicia sesión para ver tu perfil')),
+        PaginaMuroInvitado(mensaje: 'Inicia sesión para ver tu perfil'),
+        imagen: 'IMG/PERFIL.png'),
   ];
 
   @override

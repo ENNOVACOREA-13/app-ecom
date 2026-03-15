@@ -133,7 +133,7 @@ class _PaginaGuardadosState extends State<PaginaGuardados> {
                     crossAxisCount: 2,
                     crossAxisSpacing: 14,
                     mainAxisSpacing: 14,
-                    childAspectRatio: 0.72,
+                    childAspectRatio: 0.62,
                   ),
                   delegate: SliverChildBuilderDelegate(
                     (context, i) {
@@ -169,170 +169,112 @@ class _TarjetaGuardado extends StatelessWidget {
         : null;
     final pctOff = producto.porcentajeOff;
 
+    String? badgeText;
+    Color badgeTextColor = Colors.black87;
+    if (tieneOferta && pctOff != null) {
+      badgeText = '−$pctOff%';
+      badgeTextColor = const Color(0xFF1C8A4A);
+    } else if (sinStock) {
+      badgeText = 'Agotado';
+      badgeTextColor = Colors.red.shade700;
+    }
+
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
-        borderRadius: const BorderRadius.all(Radius.circular(20)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        borderRadius: BorderRadius.all(Radius.circular(20)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Imagen — cuadrada 1:1
-          AspectRatio(
-            aspectRatio: 1.0,
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: ClipRRect(
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-                    child: producto.urlImagen != null
-                        ? Image.network(
-                            producto.urlImagen!,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => _placeholder(),
-                          )
-                        : _placeholder(),
-                  ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
+            child: AspectRatio(
+              aspectRatio: 1.0,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF3F3F3),
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                if (sinStock)
-                  Positioned(
-                    top: 6,
-                    left: 6,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: Colors.red.shade700,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: const Text('AGOTADO',
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 7,
-                              fontWeight: FontWeight.w800)),
-                    ),
-                  ),
-                // Botón quitar guardado
-                Positioned(
-                  top: 6,
-                  right: 6,
-                  child: Consumer<ProveedorGuardados>(
-                    builder: (ctx, guardados, _) => GestureDetector(
-                      onTap: () => guardados.toggleGuardado(producto.id),
-                      child: Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                          boxShadow: kNeumorphicShadowsSmall,
-                        ),
-                        child: const Icon(
-                          Icons.favorite_rounded,
-                          size: 14,
-                          color: Color(0xFFFF3B30),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // Info
-          Expanded(
-            flex: 2,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    producto.nombre,
-                    style: const TextStyle(
-                        color: Color(0xFF1C1C1E),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        height: 1.3),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Stack(
                     children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (tieneOferta)
-                              Text(precio,
-                                  style: const TextStyle(
-                                      color: Color(0xFFAEAEB2),
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w500,
-                                      decoration: TextDecoration.lineThrough)),
-                            Row(
-                              children: [
-                                Text(tieneOferta ? precioOferta! : precio,
-                                    style: TextStyle(
-                                        color: tieneOferta ? const Color(0xFF1C8A4A) : context.colorPrimario,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w800)),
-                                if (tieneOferta && pctOff != null) ...[
-                                  const SizedBox(width: 4),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFF1C8A4A).withOpacity(0.12),
-                                      borderRadius: BorderRadius.circular(4),
-                                    ),
-                                    child: Text('$pctOff% OFF',
-                                        style: const TextStyle(
-                                            color: Color(0xFF1C8A4A),
-                                            fontSize: 8,
-                                            fontWeight: FontWeight.w800)),
-                                  ),
-                                ],
-                              ],
+                      Positioned.fill(
+                        child: producto.urlImagen != null
+                            ? Image.network(producto.urlImagen!, fit: BoxFit.cover, errorBuilder: (_, __, ___) => _placeholder())
+                            : _placeholder(),
+                      ),
+                      // Corazón arriba-izquierda (rojo = guardado, toca para quitar)
+                      Positioned(
+                        top: 8, left: 8,
+                        child: Consumer<ProveedorGuardados>(
+                          builder: (ctx, guardados, _) => GestureDetector(
+                            onTap: () => guardados.toggleGuardado(producto.id),
+                            child: Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.12), blurRadius: 4, offset: const Offset(0, 1))],
+                              ),
+                              child: const Icon(Icons.favorite_rounded, size: 16, color: Color(0xFFFF3B30)),
                             ),
-                          ],
+                          ),
                         ),
                       ),
-                      if (!sinStock)
-                        Consumer<ProveedorCarrito>(
-                          builder: (ctx, carrito, _) {
-                            final cant = carrito.cantidadProducto(producto.id);
-                            return GestureDetector(
-                              onTap: () => carrito.agregar(producto),
-                              child: Container(
-                                padding: const EdgeInsets.all(6),
-                                decoration: BoxDecoration(
-                                  color: cant > 0 ? ctx.colorPrimario : Colors.transparent,
-                                  shape: BoxShape.circle,
-                                  border: cant > 0 ? null : Border.all(color: ctx.colorPrimario, width: 1.5),
-                                ),
-                                child: cant > 0
-                                    ? Text('$cant',
-                                        style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.w800))
-                                    : Icon(Icons.add,
-                                        size: 13, color: ctx.colorPrimario),
-                              ),
-                            );
-                          },
+                      if (badgeText != null)
+                        Positioned(
+                          top: 8, right: 8,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(999),
+                              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.12), blurRadius: 4, offset: const Offset(0, 1))],
+                            ),
+                            child: Text(badgeText, style: TextStyle(color: badgeTextColor, fontSize: 10, fontWeight: FontWeight.w700)),
+                          ),
                         ),
                     ],
                   ),
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(producto.nombre,
+                      style: const TextStyle(color: Color(0xFF1C1C1E), fontSize: 12, fontWeight: FontWeight.w700, height: 1.3),
+                      maxLines: 1, overflow: TextOverflow.ellipsis),
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(mainAxisSize: MainAxisSize.min, children: [
+                        Icon(sinStock ? Icons.remove_circle_outline : Icons.check_circle_outline,
+                            size: 11, color: sinStock ? Colors.red.shade400 : Colors.green.shade500),
+                        const SizedBox(width: 3),
+                        Text(sinStock ? 'Sin stock' : '${producto.existencias} uds.',
+                            style: TextStyle(fontSize: 10, color: sinStock ? Colors.red.shade400 : Colors.green.shade600, fontWeight: FontWeight.w500)),
+                      ]),
+                      Column(crossAxisAlignment: CrossAxisAlignment.end, mainAxisSize: MainAxisSize.min, children: [
+                        if (tieneOferta) Text(precio, style: const TextStyle(color: Color(0xFFAEAEB2), fontSize: 9, decoration: TextDecoration.lineThrough)),
+                        Text(tieneOferta ? precioOferta! : precio,
+                            style: TextStyle(color: tieneOferta ? const Color(0xFF1C8A4A) : const Color(0xFF1C1C1E), fontSize: 14, fontWeight: FontWeight.w800)),
+                      ]),
+                    ],
+                  ),
+                  const Spacer(),
+                  Row(children: [
+                    Expanded(child: _BotonGuardado(label: 'Al carrito', onTap: sinStock ? null : () => context.read<ProveedorCarrito>().agregar(producto), outlined: true)),
+                    const SizedBox(width: 6),
+                    Expanded(child: _BotonGuardado(label: 'Comprar', onTap: sinStock ? null : () {})),
+                  ]),
                 ],
               ),
             ),
@@ -348,6 +290,56 @@ class _TarjetaGuardado extends StatelessWidget {
           child: Icon(Icons.inventory_2_outlined, size: 32, color: kTextMuted),
         ),
       );
+}
+
+class _BotonGuardado extends StatelessWidget {
+  final String label;
+  final VoidCallback? onTap;
+  final bool outlined;
+
+  const _BotonGuardado({
+    required this.label,
+    required this.onTap,
+    this.outlined = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    const bg = Color(0xFF1C1C1E);
+    return SizedBox(
+      height: 34,
+      child: outlined
+          ? OutlinedButton(
+              onPressed: onTap,
+              style: OutlinedButton.styleFrom(
+                padding: EdgeInsets.zero,
+                side: BorderSide(
+                    color: onTap == null ? Colors.black26 : bg, width: 1.5),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20)),
+              ),
+              child: Text(label,
+                  style: TextStyle(
+                      fontSize: 11,
+                      color: onTap == null ? Colors.black26 : bg,
+                      fontWeight: FontWeight.w700)),
+            )
+          : ElevatedButton(
+              onPressed: onTap,
+              style: ElevatedButton.styleFrom(
+                padding: EdgeInsets.zero,
+                backgroundColor: onTap == null ? Colors.black26 : bg,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20)),
+              ),
+              child: Text(label,
+                  style: const TextStyle(
+                      fontSize: 11, fontWeight: FontWeight.w700)),
+            ),
+    );
+  }
 }
 
 class _IconoCarrito extends StatelessWidget {

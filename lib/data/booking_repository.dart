@@ -18,7 +18,8 @@ class RepositorioReserva {
     if (soloFecha.isBefore(soloHoy)) {
       throw Exception('DATE_IN_PAST');
     }
-    final fechaTexto = '${fecha.year}-${fecha.month.toString().padLeft(2, '0')}-${fecha.day.toString().padLeft(2, '0')}';
+    final fechaTexto =
+        '${fecha.year}-${fecha.month.toString().padLeft(2, '0')}-${fecha.day.toString().padLeft(2, '0')}';
     final resultado = await _client.rpc('get_available_slots', params: {
       'p_employee_id': idEmpleado,
       'p_date': fechaTexto,
@@ -44,7 +45,8 @@ class RepositorioReserva {
     if (soloFecha.isBefore(soloHoy)) {
       throw Exception('DATE_IN_PAST');
     }
-    final fechaTexto = '${fecha.year}-${fecha.month.toString().padLeft(2, '0')}-${fecha.day.toString().padLeft(2, '0')}';
+    final fechaTexto =
+        '${fecha.year}-${fecha.month.toString().padLeft(2, '0')}-${fecha.day.toString().padLeft(2, '0')}';
     final resultado = await _client.rpc('crear_reserva', params: {
       'p_employee_id': idEmpleado,
       'p_service_id': idServicio,
@@ -68,10 +70,12 @@ class RepositorioReserva {
         .eq('client_id', idReal)
         .order('booking_date', ascending: false)
         .order('start_time', ascending: false);
-    return (datos as List).map((e) => Reserva.fromMap({
-      ...e,
-      'client_id': idReal,
-    })).toList();
+    return (datos as List)
+        .map((e) => Reserva.fromMap({
+              ...e,
+              'client_id': idReal,
+            }))
+        .toList();
   }
 
   /// Reservas del empleado (con info del cliente y servicio)
@@ -82,10 +86,12 @@ class RepositorioReserva {
         .eq('employee_id', idEmpleado)
         .order('booking_date', ascending: false)
         .order('start_time', ascending: false);
-    return (datos as List).map((e) => Reserva.fromMap({
-      ...e,
-      'employee_id': idEmpleado,
-    })).toList();
+    return (datos as List)
+        .map((e) => Reserva.fromMap({
+              ...e,
+              'employee_id': idEmpleado,
+            }))
+        .toList();
   }
 
   /// Todas las reservas (admin)
@@ -99,7 +105,8 @@ class RepositorioReserva {
   }
 
   /// Cancelar reserva (usa RPC SECURITY DEFINER para evitar bloqueo de RLS)
-  Future<void> cancelarReserva(String idReserva, String canceladoPor, String? motivo) async {
+  Future<void> cancelarReserva(
+      String idReserva, String canceladoPor, String? motivo) async {
     await _client.rpc('cancelar_reserva', params: {
       'p_booking_id': idReserva,
       'p_cancel_reason': motivo,
@@ -107,7 +114,8 @@ class RepositorioReserva {
   }
 
   /// Cambiar estado de reserva (para empleados/admin) — usa RPC para bypassear RLS
-  Future<void> actualizarEstado(String idReserva, EstadoReserva nuevoEstado) async {
+  Future<void> actualizarEstado(
+      String idReserva, EstadoReserva nuevoEstado) async {
     await _client.rpc('actualizar_estado_reserva', params: {
       'p_booking_id': idReserva,
       'p_status': nuevoEstado.toDbString(),
@@ -115,7 +123,8 @@ class RepositorioReserva {
   }
 
   /// Estadísticas de empleado
-  Future<Map<String, dynamic>> obtenerEstadisticasEmpleado(String idEmpleado) async {
+  Future<Map<String, dynamic>> obtenerEstadisticasEmpleado(
+      String idEmpleado) async {
     final datos = await _client
         .from('employee_stats')
         .select()
@@ -139,7 +148,8 @@ class RepositorioReserva {
   /// Reservas de hoy (realtime para admins)
   Future<List<Reserva>> obtenerReservasDeHoy() async {
     final hoy = DateTime.now();
-    final fechaTexto = '${hoy.year}-${hoy.month.toString().padLeft(2, '0')}-${hoy.day.toString().padLeft(2, '0')}';
+    final fechaTexto =
+        '${hoy.year}-${hoy.month.toString().padLeft(2, '0')}-${hoy.day.toString().padLeft(2, '0')}';
     final datos = await _client
         .from('bookings_detailed')
         .select()

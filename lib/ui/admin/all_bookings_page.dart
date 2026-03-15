@@ -259,7 +259,7 @@ class _TarjetaReservaAdminState extends State<_TarjetaReservaAdmin> {
                       shape: BoxShape.circle,
                     ),
                     child: Icon(Icons.content_cut_rounded,
-                        color: context.colorPrimario, size: 22),
+                        color: Colors.white, size: 22),
                   ),
                   const SizedBox(width: 12),
 

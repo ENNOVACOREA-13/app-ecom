@@ -263,7 +263,7 @@ class _PaginaGestionServiciosState extends State<PaginaGestionServicios> {
                             shape: BoxShape.circle,
                           ),
                           child: Icon(Icons.content_cut,
-                              color: s.estaActivo ? kPrimary : kTextMuted, size: 20),
+                              color: s.estaActivo ? Colors.white : kTextMuted, size: 20),
                         ),
                         title: Text(s.nombre,
                             style: TextStyle(

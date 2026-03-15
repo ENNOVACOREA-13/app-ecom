@@ -55,7 +55,7 @@ class _PaginaLoginState extends State<PaginaLogin> {
                     borderRadius: BorderRadius.all(Radius.circular(24)),
                     boxShadow: kNeumorphicShadows,
                   ),
-                  child: const Icon(Icons.content_cut, color: kPrimary, size: 36),
+                  child: const Icon(Icons.content_cut, color: Colors.white, size: 36),
                 ),
               ),
               const SizedBox(height: 32),

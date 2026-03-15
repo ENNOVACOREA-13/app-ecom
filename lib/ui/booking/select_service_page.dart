@@ -82,7 +82,7 @@ class _PaginaSeleccionarServicioState extends State<PaginaSeleccionarServicio> {
                                   boxShadow: kNeumorphicShadowsInset,
                                 ),
                                 child: const Icon(Icons.content_cut,
-                                    color: kPrimary),
+                                    color: Colors.white),
                               ),
                               title: Text(s.nombre,
                                   style: const TextStyle(

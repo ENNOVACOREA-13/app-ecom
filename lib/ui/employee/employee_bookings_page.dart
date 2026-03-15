@@ -229,7 +229,7 @@ class _TarjetaReservaEmpleadoState extends State<_TarjetaReservaEmpleado> {
                       color: const Color(0xFF1C1C1E),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(Icons.content_cut_rounded, color: context.colorPrimario, size: 22),
+                    child: const Icon(Icons.content_cut_rounded, color: Colors.white, size: 22),
                   ),
                   const SizedBox(width: 12),
                   Expanded(

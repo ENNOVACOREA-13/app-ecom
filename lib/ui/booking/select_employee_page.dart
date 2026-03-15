@@ -67,7 +67,7 @@ class _PaginaSeleccionarEmpleadoState extends State<PaginaSeleccionarEmpleado> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.content_cut, color: kPrimary, size: 18),
+                  const Icon(Icons.content_cut, color: Colors.white, size: 18),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(

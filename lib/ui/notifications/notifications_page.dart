@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/entrada_animada.dart';
 import '../../domain/models/app_notification.dart';
 import '../../providers/notification_provider.dart';
 import '../common/app_widgets.dart';
@@ -54,7 +55,10 @@ class PaginaNotificaciones extends StatelessWidget {
                   : ListView.builder(
                       padding: const EdgeInsets.fromLTRB(20, 12, 20, 100),
                       itemCount: notificaciones.length,
-                      itemBuilder: (_, i) => _FilaNotificacion(notificacion: notificaciones[i]),
+                      itemBuilder: (_, i) => EntradaAnimada(
+                        index: i,
+                        child: _FilaNotificacion(notificacion: notificaciones[i]),
+                      ),
                     ),
         ),
       ),

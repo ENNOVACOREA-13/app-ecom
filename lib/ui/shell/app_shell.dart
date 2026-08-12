@@ -45,14 +45,19 @@ class CarcasaApp extends StatefulWidget {
   State<CarcasaApp> createState() => _CarcasaAppState();
 }
 
-class _CarcasaAppState extends State<CarcasaApp> {
+class _CarcasaAppState extends State<CarcasaApp> with SingleTickerProviderStateMixin {
   int _indiceActual = 0;
   final _keyDashboardAdmin = GlobalKey<PaginaTableroAdminState>();
   final _keyConfigSysadmin = GlobalKey<PaginaConfigSysadminState>();
+  late final AnimationController _fadeController;
 
   @override
   void initState() {
     super.initState();
+    _fadeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 220),
+    )..forward();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final perfil = context.read<ProveedorAuth>().perfil;
       if (perfil != null) {
@@ -60,6 +65,17 @@ class _CarcasaAppState extends State<CarcasaApp> {
         context.read<ProveedorNotificaciones>().iniciar(perfil.id);
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _fadeController.dispose();
+    super.dispose();
+  }
+
+  void _cambiarTab(int indice) {
+    setState(() => _indiceActual = indice);
+    _fadeController.forward(from: 0);
   }
 
   @override
@@ -82,7 +98,8 @@ class _CarcasaAppState extends State<CarcasaApp> {
       return _ShellInvitado(
         indiceActual: _indiceActual,
         tiendaHabilitada: tiendaHabilitada,
-        onTap: (i) => setState(() => _indiceActual = i),
+        fadeController: _fadeController,
+        onTap: _cambiarTab,
       );
     }
 
@@ -93,16 +110,19 @@ class _CarcasaAppState extends State<CarcasaApp> {
 
     return Scaffold(
       extendBody: true,
-      body: IndexedStack(
-        index: indiceSafe,
-        children: pestanas.map((t) => t.pagina).toList(),
+      body: FadeTransition(
+        opacity: _fadeController,
+        child: IndexedStack(
+          index: indiceSafe,
+          children: pestanas.map((t) => t.pagina).toList(),
+        ),
       ),
       bottomNavigationBar: _BarraNavegacion(
         pestanas: pestanas,
         indiceSafe: indiceSafe,
         mostrarCarrito: false,
         onTap: (i) {
-          setState(() => _indiceActual = i);
+          _cambiarTab(i);
           _refrescarAlCambiarTab(i, perfil.rol);
         },
       ),
@@ -253,20 +273,25 @@ class _BarraNavegacion extends StatelessWidget {
             final selected = i == indiceSafe;
             return GestureDetector(
               onTap: () => onTap(i),
-              child: Container(
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 220),
+                curve: Curves.easeOut,
                 padding: selected ? const EdgeInsets.all(6) : EdgeInsets.zero,
-                decoration: selected
-                    ? const BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                      )
-                    : null,
-                child: Icon(
-                  selected
-                      ? _iconoActivo(pestanas[i].icono)
-                      : pestanas[i].icono,
-                  color: selected ? Colors.black : Colors.white,
-                  size: iconSize * 0.85,
+                decoration: BoxDecoration(
+                  color: selected ? Colors.white : Colors.transparent,
+                  shape: BoxShape.circle,
+                ),
+                child: AnimatedScale(
+                  duration: const Duration(milliseconds: 220),
+                  curve: Curves.easeOutBack,
+                  scale: selected ? 1.1 : 1.0,
+                  child: Icon(
+                    selected
+                        ? _iconoActivo(pestanas[i].icono)
+                        : pestanas[i].icono,
+                    color: selected ? Colors.black : Colors.white,
+                    size: iconSize * 0.85,
+                  ),
                 ),
               ),
             );
@@ -303,11 +328,13 @@ class _Pestana {
 class _ShellInvitado extends StatelessWidget {
   final int indiceActual;
   final bool tiendaHabilitada;
+  final AnimationController fadeController;
   final ValueChanged<int> onTap;
 
   const _ShellInvitado({
     required this.indiceActual,
     required this.tiendaHabilitada,
+    required this.fadeController,
     required this.onTap,
   });
 
@@ -343,9 +370,12 @@ class _ShellInvitado extends StatelessWidget {
     final indice = indiceActual.clamp(0, pestanas.length - 1);
     return Scaffold(
       extendBody: true,
-      body: IndexedStack(
-        index: indice,
-        children: pestanas.map((t) => t.pagina).toList(),
+      body: FadeTransition(
+        opacity: fadeController,
+        child: IndexedStack(
+          index: indice,
+          children: pestanas.map((t) => t.pagina).toList(),
+        ),
       ),
       bottomNavigationBar: _BarraNavegacion(
         pestanas: pestanas,

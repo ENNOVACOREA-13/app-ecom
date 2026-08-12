@@ -6,6 +6,7 @@ import '../../domain/models/booking.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/booking_provider.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/entrada_animada.dart';
 import '../common/app_widgets.dart';
 import 'booking_detail_page.dart';
 
@@ -95,12 +96,16 @@ class _ListaConSeparadores extends StatelessWidget {
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
       child: Column(
-        children: items.map((item) {
+        children: items.asMap().entries.map((entry) {
+          final item = entry.value;
           if (item is String) return _SeparadorDia(etiqueta: item);
           return Padding(
             padding: const EdgeInsets.only(bottom: 12),
-            child: _TarjetaReserva(
-                key: ValueKey((item as Reserva).id), reserva: item),
+            child: EntradaAnimada(
+              index: entry.key,
+              child: _TarjetaReserva(
+                  key: ValueKey((item as Reserva).id), reserva: item),
+            ),
           );
         }).toList(),
       ),

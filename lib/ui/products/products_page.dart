@@ -8,6 +8,8 @@ import '../../providers/product_provider.dart';
 import '../../providers/service_provider.dart';
 import '../../providers/saved_provider.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/cart_fly_animation.dart';
+import '../../core/entrada_animada.dart';
 import '../../providers/cart_provider.dart';
 import '../../data/ftp_upload_service.dart';
 import '../auth/guest_wall_page.dart';
@@ -23,6 +25,7 @@ class PaginaProductos extends StatefulWidget {
 
 class _PaginaProductosState extends State<PaginaProductos> {
   final _ctrlBusqueda = TextEditingController();
+  final _carritoKey = GlobalKey();
   String _busqueda = '';
 
   @override
@@ -278,7 +281,7 @@ class _PaginaProductosState extends State<PaginaProductos> {
                             )),
                       ],
                     ),
-                    _IconoCarrito(),
+                    _IconoCarrito(key: _carritoKey),
                   ],
                 ),
               ),
@@ -566,14 +569,18 @@ class _PaginaProductosState extends State<PaginaProductos> {
                     childAspectRatio: 0.62,
                   ),
                   delegate: SliverChildBuilderDelegate(
-                    (context, i) => _TarjetaProducto(
-                      producto: productosFiltrados[i],
-                      puedeGestionar: puedeCrear,
-                      alEditar: () => _mostrarDialogoEditar(productosFiltrados[i]),
-                      alEliminar: () => _confirmarEliminar(
-                          productosFiltrados[i].id,
-                          productosFiltrados[i].nombre,
-                          proveedor),
+                    (context, i) => EntradaAnimada(
+                      index: i,
+                      child: _TarjetaProducto(
+                        producto: productosFiltrados[i],
+                        puedeGestionar: puedeCrear,
+                        alEditar: () => _mostrarDialogoEditar(productosFiltrados[i]),
+                        alEliminar: () => _confirmarEliminar(
+                            productosFiltrados[i].id,
+                            productosFiltrados[i].nombre,
+                            proveedor),
+                        carritoKey: _carritoKey,
+                      ),
                     ),
                     childCount: productosFiltrados.length,
                   ),
@@ -953,12 +960,14 @@ class _TarjetaProducto extends StatelessWidget {
   final bool puedeGestionar;
   final VoidCallback alEliminar;
   final VoidCallback alEditar;
+  final GlobalKey? carritoKey;
 
   const _TarjetaProducto(
       {required this.producto,
       required this.puedeGestionar,
       required this.alEliminar,
-      required this.alEditar});
+      required this.alEditar,
+      this.carritoKey});
 
   @override
   Widget build(BuildContext context) {
@@ -1186,6 +1195,11 @@ class _TarjetaProducto extends StatelessWidget {
                                         mostrarLoginRequerido(ctx);
                                         return;
                                       }
+                                      AnimacionCarrito.volar(
+                                        contextOrigen: context,
+                                        destinoKey: carritoKey,
+                                        imagenUrl: producto.urlImagen,
+                                      );
                                       context
                                           .read<ProveedorCarrito>()
                                           .agregar(producto);
@@ -1324,7 +1338,7 @@ class _BotonProducto extends StatelessWidget {
 
 // ── Ícono carrito con badge ───────────────────────────────────
 class _IconoCarrito extends StatelessWidget {
-  const _IconoCarrito();
+  const _IconoCarrito({super.key});
 
   @override
   Widget build(BuildContext context) {

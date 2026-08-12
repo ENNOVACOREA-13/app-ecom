@@ -10,6 +10,8 @@ import '../../domain/models/product.dart';
 import '../../core/constants.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/service_icons.dart';
+import '../../core/cart_fly_animation.dart';
+import '../../core/entrada_animada.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/saved_provider.dart';
 import '../../providers/config_provider.dart';
@@ -27,6 +29,7 @@ class PaginaInicio extends StatefulWidget {
 
 class _PaginaInicioState extends State<PaginaInicio> {
   final _ctrlBusqueda = TextEditingController();
+  final _carritoKey = GlobalKey();
   String _busqueda = '';
   ProveedorConfig? _cfgVistaPrevia;
 
@@ -326,15 +329,18 @@ class _PaginaInicioState extends State<PaginaInicio> {
               childAspectRatio: 1,
             ),
             delegate: SliverChildBuilderDelegate(
-              (context, i) => _ChipServicioCuadrado(
-                servicio: servicios[i],
-                alTap: () {
-                  if (context.read<ProveedorAuth>().perfil == null) {
-                    mostrarLoginRequerido(context);
-                    return;
-                  }
-                  context.push('/booking/service', extra: servicios[i]);
-                },
+              (context, i) => EntradaAnimada(
+                index: i,
+                child: _ChipServicioCuadrado(
+                  servicio: servicios[i],
+                  alTap: () {
+                    if (context.read<ProveedorAuth>().perfil == null) {
+                      mostrarLoginRequerido(context);
+                      return;
+                    }
+                    context.push('/booking/service', extra: servicios[i]);
+                  },
+                ),
               ),
               childCount: servicios.length,
             ),
@@ -349,15 +355,18 @@ class _PaginaInicioState extends State<PaginaInicio> {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               itemCount: servicios.length,
               separatorBuilder: (_, __) => const SizedBox(width: 14),
-              itemBuilder: (context, i) => _ChipServicio(
-                servicio: servicios[i],
-                alTap: () {
-                  if (context.read<ProveedorAuth>().perfil == null) {
-                    mostrarLoginRequerido(context);
-                    return;
-                  }
-                  context.push('/booking/service', extra: servicios[i]);
-                },
+              itemBuilder: (context, i) => EntradaAnimada(
+                index: i,
+                child: _ChipServicio(
+                  servicio: servicios[i],
+                  alTap: () {
+                    if (context.read<ProveedorAuth>().perfil == null) {
+                      mostrarLoginRequerido(context);
+                      return;
+                    }
+                    context.push('/booking/service', extra: servicios[i]);
+                  },
+                ),
               ),
             ),
           ),
@@ -436,7 +445,10 @@ class _PaginaInicioState extends State<PaginaInicio> {
               childAspectRatio: 0.62,
             ),
             delegate: SliverChildBuilderDelegate(
-              (context, i) => _TarjetaProductoH(producto: productos[i]),
+              (context, i) => EntradaAnimada(
+                index: i,
+                child: _TarjetaProductoH(producto: productos[i], carritoKey: _carritoKey),
+              ),
               childCount: productos.length,
             ),
           ),
@@ -499,7 +511,7 @@ class _PaginaInicioState extends State<PaginaInicio> {
                     const SizedBox(width: 12),
                   ],
                   if (tiendaHabilitada) ...[
-                    _IconoCarrito(),
+                    _IconoCarrito(key: _carritoKey),
                     const SizedBox(width: 12),
                   ],
                   const CircleAvatar(
@@ -520,7 +532,7 @@ class _PaginaInicioState extends State<PaginaInicio> {
             // ── Barra de búsqueda fija ────────────────────────────
             if (tiendaHabilitada)
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
               child: TextField(
                 controller: _ctrlBusqueda,
                 onChanged: (v) => setState(() => _busqueda = v),
@@ -575,6 +587,7 @@ class _PaginaInicioState extends State<PaginaInicio> {
                 };
 
                 return CustomScrollView(
+                  physics: const ClampingScrollPhysics(),
                   slivers: [
                     // ── Banner hero (fijo, de referencia — nunca se toca) ─
                     const SliverToBoxAdapter(child: _BannerReferencia()),
@@ -919,7 +932,8 @@ class _ChipServicioCuadrado extends StatelessWidget {
 // ── Tarjeta de producto horizontal (tarjeta oscura) ───────────
 class _TarjetaProductoH extends StatelessWidget {
   final Producto producto;
-  const _TarjetaProductoH({required this.producto});
+  final GlobalKey? carritoKey;
+  const _TarjetaProductoH({required this.producto, this.carritoKey});
 
   @override
   Widget build(BuildContext context) {
@@ -1120,9 +1134,14 @@ class _TarjetaProductoH extends StatelessWidget {
                           label: 'Al carrito',
                           onTap: sinStock
                               ? null
-                              : () => context
-                                  .read<ProveedorCarrito>()
-                                  .agregar(producto),
+                              : () {
+                                  AnimacionCarrito.volar(
+                                    contextOrigen: context,
+                                    destinoKey: carritoKey,
+                                    imagenUrl: producto.urlImagen,
+                                  );
+                                  context.read<ProveedorCarrito>().agregar(producto);
+                                },
                           outlined: true,
                         ),
                       ),
@@ -1204,7 +1223,7 @@ class _BotonTarjetaH extends StatelessWidget {
 
 // ── Ícono carrito con badge ───────────────────────────────────
 class _IconoCarrito extends StatelessWidget {
-  const _IconoCarrito();
+  const _IconoCarrito({super.key});
 
   @override
   Widget build(BuildContext context) {

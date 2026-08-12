@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/cart_fly_animation.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/product_provider.dart';
 import '../../providers/cart_provider.dart';
@@ -414,6 +415,10 @@ class _TarjetaResultado extends StatelessWidget {
                                 final perfil =
                                     context.read<ProveedorAuth>().perfil;
                                 if (perfil == null) return;
+                                AnimacionCarrito.volar(
+                                  contextOrigen: context,
+                                  imagenUrl: producto.urlImagen,
+                                );
                                 context
                                     .read<ProveedorCarrito>()
                                     .agregar(producto);

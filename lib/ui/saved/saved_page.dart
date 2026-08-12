@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/cart_fly_animation.dart';
+import '../../core/entrada_animada.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/product_provider.dart';
 import '../../providers/saved_provider.dart';
@@ -15,6 +17,8 @@ class PaginaGuardados extends StatefulWidget {
 }
 
 class _PaginaGuardadosState extends State<PaginaGuardados> {
+  final _carritoKey = GlobalKey();
+
   @override
   void initState() {
     super.initState();
@@ -70,7 +74,7 @@ class _PaginaGuardadosState extends State<PaginaGuardados> {
                           ),
                       ],
                     ),
-                    _IconoCarrito(),
+                    _IconoCarrito(key: _carritoKey),
                   ],
                 ),
               ),
@@ -137,7 +141,10 @@ class _PaginaGuardadosState extends State<PaginaGuardados> {
                   delegate: SliverChildBuilderDelegate(
                     (context, i) {
                       final p = productosGuardados[i];
-                      return _TarjetaGuardado(producto: p);
+                      return EntradaAnimada(
+                        index: i,
+                        child: _TarjetaGuardado(producto: p, carritoKey: _carritoKey),
+                      );
                     },
                     childCount: productosGuardados.length,
                   ),
@@ -152,7 +159,8 @@ class _PaginaGuardadosState extends State<PaginaGuardados> {
 
 class _TarjetaGuardado extends StatelessWidget {
   final dynamic producto;
-  const _TarjetaGuardado({required this.producto});
+  final GlobalKey? carritoKey;
+  const _TarjetaGuardado({required this.producto, this.carritoKey});
 
   @override
   Widget build(BuildContext context) {
@@ -270,7 +278,10 @@ class _TarjetaGuardado extends StatelessWidget {
                   ),
                   const Spacer(),
                   Row(children: [
-                    Expanded(child: _BotonGuardado(label: 'Al carrito', onTap: sinStock ? null : () => context.read<ProveedorCarrito>().agregar(producto), outlined: true)),
+                    Expanded(child: _BotonGuardado(label: 'Al carrito', onTap: sinStock ? null : () {
+                      AnimacionCarrito.volar(contextOrigen: context, destinoKey: carritoKey, imagenUrl: producto.urlImagen);
+                      context.read<ProveedorCarrito>().agregar(producto);
+                    }, outlined: true)),
                     const SizedBox(width: 6),
                     Expanded(child: _BotonGuardado(label: 'Comprar', onTap: sinStock ? null : () {})),
                   ]),
@@ -340,7 +351,7 @@ class _BotonGuardado extends StatelessWidget {
 }
 
 class _IconoCarrito extends StatelessWidget {
-  const _IconoCarrito();
+  const _IconoCarrito({super.key});
 
   @override
   Widget build(BuildContext context) {

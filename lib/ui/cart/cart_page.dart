@@ -20,70 +20,89 @@ class PaginaCarrito extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F7),
       extendBody: false,
-      body: carrito.vacio ? _carritoVacio() : _carritoConItems(context, carrito),
+      body: carrito.vacio ? _carritoVacio(context) : _carritoConItems(context, carrito),
     );
   }
 
-  Widget _carritoVacio() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+  Widget _header(BuildContext context, {VoidCallback? onVaciar}) {
+    return Container(
+      color: Colors.white,
+      padding: EdgeInsets.only(
+        top: MediaQuery.of(context).padding.top + 12,
+        bottom: 16,
+        left: 8,
+        right: 20,
+      ),
+      child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(32),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.07),
-                  blurRadius: 20,
-                  offset: const Offset(0, 6),
-                ),
-              ],
-            ),
-            child: const Icon(Icons.shopping_cart_outlined, size: 52, color: Color(0xFFBDBDBD)),
+          if (Navigator.canPop(context))
+            IconButton(
+              icon: const Icon(Icons.arrow_back, color: Color(0xFF1C1C1E)),
+              onPressed: () => Navigator.pop(context),
+            )
+          else
+            const SizedBox(width: 12),
+          const Expanded(
+            child: Text('Mi Carrito',
+                style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF1C1C1E))),
           ),
-          const SizedBox(height: 20),
-          const Text('Tu carrito está vacío',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Color(0xFF1C1C1E))),
-          const SizedBox(height: 8),
-          const Text('Agrega productos desde la tienda',
-              style: TextStyle(color: Color(0xFF8E8E93), fontSize: 14)),
+          if (onVaciar != null)
+            TextButton.icon(
+              onPressed: onVaciar,
+              icon: const Icon(Icons.delete_outline, size: 16, color: Colors.red),
+              label: const Text('Vaciar', style: TextStyle(color: Colors.red, fontSize: 13)),
+              style: TextButton.styleFrom(padding: EdgeInsets.zero),
+            ),
         ],
       ),
+    );
+  }
+
+  Widget _carritoVacio(BuildContext context) {
+    return Column(
+      children: [
+        _header(context),
+        Expanded(
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(32),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.07),
+                        blurRadius: 20,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(Icons.shopping_cart_outlined, size: 52, color: Color(0xFFBDBDBD)),
+                ),
+                const SizedBox(height: 20),
+                const Text('Tu carrito está vacío',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Color(0xFF1C1C1E))),
+                const SizedBox(height: 8),
+                const Text('Agrega productos desde la tienda',
+                    style: TextStyle(color: Color(0xFF8E8E93), fontSize: 14)),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 
   Widget _carritoConItems(BuildContext context, ProveedorCarrito carrito) {
     return Column(
       children: [
-        // Header
-        Container(
-          color: Colors.white,
-          padding: EdgeInsets.only(
-            top: MediaQuery.of(context).padding.top + 12,
-            bottom: 16,
-            left: 20,
-            right: 20,
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text('Mi Carrito',
-                  style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF1C1C1E))),
-              TextButton.icon(
-                onPressed: () => carrito.limpiar(),
-                icon: const Icon(Icons.delete_outline, size: 16, color: Colors.red),
-                label: const Text('Vaciar', style: TextStyle(color: Colors.red, fontSize: 13)),
-                style: TextButton.styleFrom(padding: EdgeInsets.zero),
-              ),
-            ],
-          ),
-        ),
+        _header(context, onVaciar: () => carrito.limpiar()),
 
         // Lista
         Expanded(

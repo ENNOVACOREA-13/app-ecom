@@ -48,11 +48,33 @@ Future<void> main() async {
 
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 
-class BarberApp extends StatelessWidget {
+class BarberApp extends StatefulWidget {
   const BarberApp({super.key});
 
   @override
+  State<BarberApp> createState() => _BarberAppState();
+}
+
+class _BarberAppState extends State<BarberApp> {
+  bool _mostrandoSplash = true;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) setState(() => _mostrandoSplash = false);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_mostrandoSplash) {
+      return const MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: PaginaSplash(),
+      );
+    }
+
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ProveedorAuth()..inicializar()),
@@ -78,6 +100,40 @@ class BarberApp extends StatelessWidget {
           ),
           routerConfig: construirEnrutador(navigatorKey: rootNavigatorKey),
           builder: (context, child) => _SesionExpiradaListener(child: child!),
+        ),
+      ),
+    );
+  }
+}
+
+class PaginaSplash extends StatelessWidget {
+  const PaginaSplash({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ClipOval(
+              child: Image.network(
+                kUrlLogoBarberia,
+                width: 120,
+                height: 120,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const Icon(
+                    Icons.content_cut, size: 64, color: Color(0xFF1C1C1E)),
+              ),
+            ),
+            const SizedBox(height: 24),
+            const SizedBox(
+              width: 28,
+              height: 28,
+              child: CircularProgressIndicator(strokeWidth: 2.5),
+            ),
+          ],
         ),
       ),
     );

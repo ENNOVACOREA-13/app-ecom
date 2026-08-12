@@ -294,9 +294,7 @@ class RepositorioConfig {
         'updated_at': DateTime.now().toUtc().toIso8601String(),
       });
       return true;
-    } catch (e) {
-      // ignore: avoid_print
-      print('publicarBorrador ERROR: $e');
+    } catch (_) {
       return false;
     }
   }

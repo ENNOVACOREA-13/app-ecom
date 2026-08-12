@@ -1,0 +1,1093 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../../core/app_fonts.dart';
+import '../../core/theme/app_theme.dart';
+import '../../data/ftp_upload_service.dart';
+import '../../providers/config_provider.dart';
+import '../client/home_page.dart';
+import '../common/app_widgets.dart';
+import 'section_order_page.dart';
+
+class PaginaDisenadorVista extends StatelessWidget {
+  const PaginaDisenadorVista({super.key});
+
+  Future<void> _toggleTienda(BuildContext context, bool valor) async {
+    final cfg = context.read<ProveedorConfig>();
+    final exito = await cfg.actualizarTiendaHabilitada(valor);
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(exito
+            ? (valor ? 'Tienda en línea activada' : 'Tienda en línea desactivada')
+            : 'Error al guardar el cambio'),
+        backgroundColor: exito ? Colors.green : Colors.red,
+      ));
+    }
+  }
+
+  Future<Color?> _elegirColorPersonalizado(BuildContext context, Color actual) async {
+    Color temporal = actual;
+    return showDialog<Color>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        title: const Text('Color personalizado', style: TextStyle(color: Color(0xFF1C1C1E))),
+        content: SingleChildScrollView(
+          child: ColorPicker(
+            pickerColor: temporal,
+            onColorChanged: (c) => temporal = c,
+            enableAlpha: false,
+            labelTypes: const [],
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancelar')),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, temporal),
+            child: const Text('Aceptar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _mostrarSelectorColor(BuildContext context) {
+    final config = context.read<ProveedorConfig>();
+    const colores = [
+      Color(0xFF00BFA5), Color(0xFF007AFF), Color(0xFF5856D6),
+      Color(0xFFFF2D55), Color(0xFFFF9500), Color(0xFF34C759),
+      Color(0xFFFF3B30), Color(0xFF4ECDC4), Color(0xFF1ABC9C),
+      Color(0xFF8E44AD), Color(0xFF2ECC71), Color(0xFFE74C3C),
+    ];
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) => Padding(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40, height: 4,
+                decoration: BoxDecoration(
+                  color: kTextMuted.withOpacity(0.4),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text('Color de la aplicación',
+                style: TextStyle(color: Color(0xFF1C1C1E), fontSize: 17, fontWeight: FontWeight.w700)),
+            const SizedBox(height: 16),
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: colores.map((c) {
+                final seleccionado = config.colorPrimarioBorrador.value == c.value;
+                return GestureDetector(
+                  onTap: () {
+                    config.actualizarBorradorColor(c);
+                    Navigator.pop(context);
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    width: 44, height: 44,
+                    decoration: BoxDecoration(
+                      color: c,
+                      shape: BoxShape.circle,
+                      border: seleccionado
+                          ? Border.all(color: Colors.white, width: 3)
+                          : null,
+                      boxShadow: seleccionado
+                          ? [BoxShadow(color: c.withOpacity(0.5), blurRadius: 10)]
+                          : null,
+                    ),
+                    child: seleccionado
+                        ? const Icon(Icons.check, color: Colors.white, size: 20)
+                        : null,
+                  ),
+                );
+              }).toList()
+                ..add(
+                  GestureDetector(
+                    onTap: () async {
+                      final elegido =
+                          await _elegirColorPersonalizado(context, config.colorPrimarioBorrador);
+                      if (elegido != null) {
+                        config.actualizarBorradorColor(elegido);
+                        if (context.mounted) Navigator.pop(context);
+                      }
+                    },
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: const Color(0xFFD1D1D6), width: 1.5),
+                        gradient: const SweepGradient(colors: [
+                          Colors.red, Colors.yellow, Colors.green,
+                          Colors.cyan, Colors.blue, Colors.purple, Colors.red,
+                        ]),
+                      ),
+                      child: const Icon(Icons.add, color: Colors.white, size: 20),
+                    ),
+                  ),
+                ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _editarEstiloApp(BuildContext context) async {
+    final cfg = context.read<ProveedorConfig>();
+    String fuenteLocal = cfg.fontFamilyBorrador;
+    double radioLocal = cfg.radioContenedorBorrador;
+    double sombraLocal = cfg.sombraContenedorBorrador;
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => StatefulBuilder(
+        builder: (_, setS) => Padding(
+          padding: EdgeInsets.only(
+              bottom: MediaQuery.of(ctx).viewInsets.bottom,
+              left: 24, right: 24, top: 24),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(children: [
+                  const Text('Tipografía y estilo',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Spacer(),
+                  IconButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      icon: const Icon(Icons.close)),
+                ]),
+                const SizedBox(height: 16),
+                const Text('Fuente', style: TextStyle(
+                    fontSize: 13, color: kTextSub, fontWeight: FontWeight.w500)),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: kFuentesApp.map((f) {
+                    final seleccionado = f == fuenteLocal;
+                    return GestureDetector(
+                      onTap: () => setS(() => fuenteLocal = f),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: seleccionado
+                              ? context.colorPrimario.withOpacity(0.12)
+                              : const Color(0xFFF2F2F7),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: seleccionado ? context.colorPrimario : Colors.transparent,
+                            width: 1.5,
+                          ),
+                        ),
+                        child: Text(
+                          f,
+                          style: GoogleFonts.getFont(
+                            f,
+                            textStyle: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: seleccionado ? context.colorPrimario : const Color(0xFF1C1C1E),
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 20),
+                Text('Redondez de esquinas: ${radioLocal.toStringAsFixed(0)}',
+                    style: const TextStyle(
+                        fontSize: 13, color: kTextSub, fontWeight: FontWeight.w500)),
+                Slider(
+                  value: radioLocal,
+                  min: 0,
+                  max: 28,
+                  divisions: 14,
+                  activeColor: context.colorPrimario,
+                  onChanged: (v) => setS(() => radioLocal = v),
+                ),
+                const SizedBox(height: 8),
+                Text('Intensidad de sombra: ${sombraLocal.toStringAsFixed(1)}x',
+                    style: const TextStyle(
+                        fontSize: 13, color: kTextSub, fontWeight: FontWeight.w500)),
+                Slider(
+                  value: sombraLocal,
+                  min: 0,
+                  max: 2,
+                  divisions: 20,
+                  activeColor: context.colorPrimario,
+                  onChanged: (v) => setS(() => sombraLocal = v),
+                ),
+                const SizedBox(height: 12),
+                const Text('Vista previa', style: TextStyle(
+                    fontSize: 13, color: kTextSub, fontWeight: FontWeight.w500)),
+                const SizedBox(height: 8),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF9F9FB),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(radioLocal),
+                      border: Border.all(color: const Color(0xFFE5E5EA)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.08 * sombraLocal),
+                          blurRadius: 10 * sombraLocal,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: context.colorPrimario.withOpacity(0.12),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(Icons.content_cut, color: context.colorPrimario, size: 20),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Corte de cabello',
+                                  style: GoogleFonts.getFont(
+                                    fuenteLocal,
+                                    textStyle: const TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 15,
+                                        color: Color(0xFF1C1C1E)),
+                                  )),
+                              const SizedBox(height: 2),
+                              Text('Así se verán tus tarjetas',
+                                  style: GoogleFonts.getFont(
+                                    fuenteLocal,
+                                    textStyle: const TextStyle(
+                                        fontSize: 12, color: Color(0xFF8E8E93)),
+                                  )),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: context.colorPrimario,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12))),
+                    onPressed: () async {
+                      Navigator.pop(ctx);
+                      final exito = await cfg.actualizarBorradorEstilo(
+                        fontFamily: fuenteLocal,
+                        radioContenedor: radioLocal,
+                        sombraContenedor: sombraLocal,
+                      );
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content:
+                              Text(exito ? 'Cambio guardado en el borrador' : 'Error al guardar'),
+                          backgroundColor: exito ? Colors.green : Colors.red,
+                        ));
+                      }
+                    },
+                    child: const Text('Guardar cambios',
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  ),
+                ),
+                const SizedBox(height: 24),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _editarBanner(BuildContext context) async {
+    final cfg = context.read<ProveedorConfig>();
+    String? urlLocal = cfg.bannerUrlBorrador;
+    final textoCtrl = TextEditingController(text: cfg.bannerTextoBorrador ?? '');
+    final botonTextoCtrl = TextEditingController(text: cfg.bannerBotonTextoBorrador ?? '');
+    final botonLinkCtrl = TextEditingController(text: cfg.bannerBotonLinkBorrador ?? '');
+    String alineacionLocal = cfg.bannerAlineacionBorrador;
+    bool subiendoLocal = false;
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => StatefulBuilder(
+        builder: (_, setS) => Padding(
+          padding: EdgeInsets.only(
+              bottom: MediaQuery.of(ctx).viewInsets.bottom,
+              left: 24, right: 24, top: 24),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(children: [
+                  const Text('Editar banner',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Spacer(),
+                  IconButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      icon: const Icon(Icons.close)),
+                ]),
+                const SizedBox(height: 16),
+
+                // Imagen
+                GestureDetector(
+                  onTap: subiendoLocal
+                      ? null
+                      : () async {
+                          setS(() => subiendoLocal = true);
+                          final url = await ServicioFTP.seleccionarYSubirImagen(
+                            nombreArchivo: 'banner-promo',
+                            onError: (e) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context)
+                                    .showSnackBar(SnackBar(content: Text(e)));
+                              }
+                            },
+                          );
+                          setS(() {
+                            subiendoLocal = false;
+                            if (url != null) urlLocal = url;
+                          });
+                        },
+                  child: Container(
+                    height: 110,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF2F2F7),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: kTextMuted.withOpacity(0.25)),
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: subiendoLocal
+                        ? const Center(child: CircularProgressIndicator())
+                        : (urlLocal != null && urlLocal!.isNotEmpty)
+                            ? Image.network(urlLocal!, fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) =>
+                                    const Icon(Icons.image_outlined, color: kTextSub))
+                            : const Center(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.add_photo_alternate_outlined, color: kTextSub),
+                                    SizedBox(height: 4),
+                                    Text('Toca para elegir imagen',
+                                        style: TextStyle(color: kTextSub, fontSize: 12)),
+                                  ],
+                                ),
+                              ),
+                  ),
+                ),
+                if (urlLocal != null && urlLocal!.isNotEmpty)
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton.icon(
+                      onPressed: () => setS(() => urlLocal = null),
+                      icon: const Icon(Icons.delete_outline, size: 18, color: Colors.red),
+                      label: const Text('Quitar imagen', style: TextStyle(color: Colors.red)),
+                    ),
+                  ),
+                const SizedBox(height: 8),
+
+                // Texto
+                TextField(
+                  controller: textoCtrl,
+                  maxLines: 2,
+                  style: const TextStyle(color: Color(0xFF1C1C1E)),
+                  decoration: InputDecoration(
+                    labelText: 'Texto del banner',
+                    hintText: '¡TU MEJOR LOOK,\nUN TAP DE DISTANCIA!',
+                    filled: true,
+                    fillColor: const Color(0xFFF2F2F7),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Alineación
+                const Text('Posición del texto', style: TextStyle(
+                    fontSize: 13, color: kTextSub, fontWeight: FontWeight.w500)),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    _BotonAlineacion(
+                      icono: Icons.format_align_left,
+                      etiqueta: 'Izquierda',
+                      seleccionado: alineacionLocal == 'left',
+                      onTap: () => setS(() => alineacionLocal = 'left'),
+                    ),
+                    const SizedBox(width: 8),
+                    _BotonAlineacion(
+                      icono: Icons.format_align_center,
+                      etiqueta: 'Centro',
+                      seleccionado: alineacionLocal == 'center',
+                      onTap: () => setS(() => alineacionLocal = 'center'),
+                    ),
+                    const SizedBox(width: 8),
+                    _BotonAlineacion(
+                      icono: Icons.format_align_right,
+                      etiqueta: 'Derecha',
+                      seleccionado: alineacionLocal == 'right',
+                      onTap: () => setS(() => alineacionLocal = 'right'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+
+                // Botón
+                TextField(
+                  controller: botonTextoCtrl,
+                  style: const TextStyle(color: Color(0xFF1C1C1E)),
+                  decoration: InputDecoration(
+                    labelText: 'Texto del botón',
+                    hintText: 'Reservar ahora',
+                    filled: true,
+                    fillColor: const Color(0xFFF2F2F7),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: botonLinkCtrl,
+                  style: const TextStyle(color: Color(0xFF1C1C1E)),
+                  keyboardType: TextInputType.url,
+                  decoration: InputDecoration(
+                    labelText: 'Link del botón (opcional)',
+                    hintText: 'https://...',
+                    helperText: 'Si lo dejas vacío, el botón lleva a hacer una reserva',
+                    helperMaxLines: 2,
+                    filled: true,
+                    fillColor: const Color(0xFFF2F2F7),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none),
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: context.colorPrimario,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12))),
+                    onPressed: () async {
+                      Navigator.pop(ctx);
+                      final exito = await cfg.actualizarBorradorBanner(
+                            url: urlLocal,
+                            texto: textoCtrl.text.trim().isEmpty ? null : textoCtrl.text.trim(),
+                            alineacion: alineacionLocal,
+                            botonTexto: botonTextoCtrl.text.trim().isEmpty
+                                ? null : botonTextoCtrl.text.trim(),
+                            botonLink: botonLinkCtrl.text.trim().isEmpty
+                                ? null : botonLinkCtrl.text.trim(),
+                          );
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text(
+                              exito ? 'Cambio guardado en el borrador' : 'Error al guardar el banner'),
+                          backgroundColor: exito ? Colors.green : Colors.red,
+                        ));
+                      }
+                    },
+                    child: const Text('Guardar cambios',
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  ),
+                ),
+                const SizedBox(height: 24),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _publicar(BuildContext context) async {
+    final cfg = context.read<ProveedorConfig>();
+    final exito = await cfg.publicarBorrador();
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(exito ? 'Cambios publicados' : 'Error al publicar'),
+        backgroundColor: exito ? Colors.green : Colors.red,
+      ));
+    }
+  }
+
+  Future<void> _descartar(BuildContext context) async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        title: const Text('Descartar cambios', style: TextStyle(color: Color(0xFF1C1C1E))),
+        content: const Text('Se perderán todos los cambios sin publicar. ¿Continuar?',
+            style: TextStyle(color: Color(0xFF1C1C1E))),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Descartar', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+    if (confirmar != true || !context.mounted) return;
+    final exito = await context.read<ProveedorConfig>().descartarBorrador();
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(exito ? 'Cambios descartados' : 'Error al descartar'),
+        backgroundColor: exito ? Colors.green : Colors.red,
+      ));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cfg = context.watch<ProveedorConfig>();
+    final tiendaHabilitada = cfg.tiendaHabilitada;
+
+    return Scaffold(
+      backgroundColor: kBackground,
+      appBar: AppBar(title: const Text('Diseñador de vista')),
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.all(20),
+          children: [
+            if (cfg.tieneBorrador) ...[
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: context.colorPrimario.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: context.colorPrimario.withOpacity(0.3)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.edit_note_rounded, color: context.colorPrimario, size: 20),
+                        const SizedBox(width: 8),
+                        const Expanded(
+                          child: Text('Tienes cambios sin publicar',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 13,
+                                  color: Color(0xFF1C1C1E))),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Los clientes reales siguen viendo la versión publicada. Usa "Editar vista" '
+                      'para previsualizar tus cambios antes de publicarlos.',
+                      style: TextStyle(fontSize: 11, color: Color(0xFF8E8E93)),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () => _descartar(context),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Colors.red,
+                              side: const BorderSide(color: Colors.red),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10)),
+                            ),
+                            child: const Text('Descartar'),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () => _publicar(context),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: context.colorPrimario,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10)),
+                            ),
+                            child: const Text('Publicar cambios',
+                                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+            ],
+            const Text('Módulos de la app',
+                style: TextStyle(
+                    fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF1C1C1E))),
+            const SizedBox(height: 4),
+            const Text(
+              'Activa o desactiva funciones completas de la app para todos los perfiles.',
+              style: TextStyle(fontSize: 12, color: Color(0xFF8E8E93)),
+            ),
+            const SizedBox(height: 16),
+            TarjetaSeccion(
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: context.colorPrimario.withOpacity(0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.storefront_outlined, color: context.colorPrimario),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Tienda en línea',
+                            style: TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 14,
+                                color: Color(0xFF1C1C1E))),
+                        const SizedBox(height: 2),
+                        Text(
+                          tiendaHabilitada
+                              ? 'Productos, carrito y pedidos visibles en toda la app'
+                              : 'Productos, carrito y pedidos ocultos en toda la app',
+                          style: const TextStyle(fontSize: 11, color: Color(0xFF8E8E93)),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Switch(
+                    value: tiendaHabilitada,
+                    activeColor: context.colorPrimario,
+                    onChanged: (v) => _toggleTienda(context, v),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            if (!tiendaHabilitada)
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.info_outline, color: Colors.orange, size: 18),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'La tienda está desactivada: clientes, empleados, admins y sysadmin '
+                        'no verán productos, buscador, carrito ni pedidos.',
+                        style: TextStyle(fontSize: 12, color: Color(0xFF8E8E93)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            const SizedBox(height: 24),
+            const Text('Color de la aplicación',
+                style: TextStyle(
+                    fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF1C1C1E))),
+            const SizedBox(height: 4),
+            const Text(
+              'El color principal usado en botones, íconos y acentos de toda la app.',
+              style: TextStyle(fontSize: 12, color: Color(0xFF8E8E93)),
+            ),
+            const SizedBox(height: 16),
+            Material(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(16),
+                onTap: () => _mostrarSelectorColor(context),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFFE5E5EA)),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: cfg.colorPrimarioBorrador,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: cfg.colorPrimarioBorrador.withOpacity(0.4),
+                              blurRadius: 8,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Color primario',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 14,
+                                    color: Color(0xFF1C1C1E))),
+                            SizedBox(height: 2),
+                            Text('Toca para elegir un color',
+                                style: TextStyle(fontSize: 11, color: Color(0xFF8E8E93))),
+                          ],
+                        ),
+                      ),
+                      const Icon(Icons.arrow_forward_ios_rounded,
+                          size: 14, color: Color(0xFF8E8E93)),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Text('Tipografía y estilo',
+                style: TextStyle(
+                    fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF1C1C1E))),
+            const SizedBox(height: 4),
+            const Text(
+              'Fuente, redondez y sombra de las tarjetas en toda la app.',
+              style: TextStyle(fontSize: 12, color: Color(0xFF8E8E93)),
+            ),
+            const SizedBox(height: 16),
+            Material(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(16),
+                onTap: () => _editarEstiloApp(context),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFFE5E5EA)),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: context.colorPrimario.withOpacity(0.12),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(Icons.text_fields_rounded, color: context.colorPrimario),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(cfg.fontFamilyBorrador,
+                                style: GoogleFonts.getFont(
+                                  cfg.fontFamilyBorrador,
+                                  textStyle: const TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 14,
+                                      color: Color(0xFF1C1C1E)),
+                                )),
+                            const SizedBox(height: 2),
+                            const Text('Editar fuente, redondez y sombra',
+                                style: TextStyle(fontSize: 11, color: Color(0xFF8E8E93))),
+                          ],
+                        ),
+                      ),
+                      const Icon(Icons.arrow_forward_ios_rounded,
+                          size: 14, color: Color(0xFF8E8E93)),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Text('Personalizar secciones',
+                style: TextStyle(
+                    fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF1C1C1E))),
+            const SizedBox(height: 4),
+            const Text(
+              'Inspecciona la tienda tal como la ve el cliente y edita sus secciones.',
+              style: TextStyle(fontSize: 12, color: Color(0xFF8E8E93)),
+            ),
+            const SizedBox(height: 16),
+            Material(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(16),
+                onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => Scaffold(
+                    appBar: AppBar(
+                      title: const Text('Editar vista'),
+                      actions: [
+                        Consumer<ProveedorConfig>(
+                          builder: (ctx, previewCfg, __) => previewCfg.tieneBorrador
+                              ? Padding(
+                                  padding: const EdgeInsets.only(right: 12),
+                                  child: TextButton.icon(
+                                    onPressed: () => _publicar(ctx),
+                                    icon: Icon(Icons.cloud_upload_outlined,
+                                        size: 18, color: ctx.colorPrimario),
+                                    label: Text('Publicar',
+                                        style: TextStyle(
+                                            color: ctx.colorPrimario,
+                                            fontWeight: FontWeight.w700)),
+                                  ),
+                                )
+                              : const SizedBox.shrink(),
+                        ),
+                      ],
+                    ),
+                    body: const PaginaInicio(modoEdicion: true),
+                  ),
+                )),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFFE5E5EA)),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: context.colorPrimario.withOpacity(0.12),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(Icons.edit_note_outlined, color: context.colorPrimario),
+                      ),
+                      const SizedBox(width: 14),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Editar vista',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 14,
+                                    color: Color(0xFF1C1C1E))),
+                            SizedBox(height: 2),
+                            Text('Inspecciona y edita la vista del cliente',
+                                style: TextStyle(fontSize: 11, color: Color(0xFF8E8E93))),
+                          ],
+                        ),
+                      ),
+                      const Icon(Icons.arrow_forward_ios_rounded,
+                          size: 14, color: Color(0xFF8E8E93)),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Material(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(16),
+                onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => const PaginaOrdenSecciones(),
+                )),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFFE5E5EA)),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: context.colorPrimario.withOpacity(0.12),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(Icons.reorder_rounded, color: context.colorPrimario),
+                      ),
+                      const SizedBox(width: 14),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Orden de secciones',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 14,
+                                    color: Color(0xFF1C1C1E))),
+                            SizedBox(height: 2),
+                            Text('Reordena y muestra/oculta secciones del home',
+                                style: TextStyle(fontSize: 11, color: Color(0xFF8E8E93))),
+                          ],
+                        ),
+                      ),
+                      const Icon(Icons.arrow_forward_ios_rounded,
+                          size: 14, color: Color(0xFF8E8E93)),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Consumer<ProveedorConfig>(
+              builder: (_, bannerCfg, __) => Material(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(16),
+                  onTap: () => _editarBanner(context),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0xFFE5E5EA)),
+                    ),
+                    child: Row(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: Container(
+                            width: 44,
+                            height: 44,
+                            color: context.colorPrimario.withOpacity(0.1),
+                            child: (bannerCfg.bannerUrlBorrador != null &&
+                                    bannerCfg.bannerUrlBorrador!.isNotEmpty)
+                                ? Image.network(bannerCfg.bannerUrlBorrador!,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) => Icon(
+                                        Icons.image_outlined, color: context.colorPrimario))
+                                : Icon(Icons.image_outlined, color: context.colorPrimario),
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Banner promocional',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 14,
+                                      color: Color(0xFF1C1C1E))),
+                              SizedBox(height: 2),
+                              Text('Imagen, texto y posición del banner del home',
+                                  style: TextStyle(fontSize: 11, color: Color(0xFF8E8E93))),
+                            ],
+                          ),
+                        ),
+                        const Icon(Icons.arrow_forward_ios_rounded,
+                            size: 14, color: Color(0xFF8E8E93)),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Botón de selección de alineación del banner ──────────────
+class _BotonAlineacion extends StatelessWidget {
+  final IconData icono;
+  final String etiqueta;
+  final bool seleccionado;
+  final VoidCallback onTap;
+
+  const _BotonAlineacion({
+    required this.icono,
+    required this.etiqueta,
+    required this.seleccionado,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = context.colorPrimario;
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            color: seleccionado ? color.withOpacity(0.12) : const Color(0xFFF2F2F7),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: seleccionado ? color : Colors.transparent, width: 1.5),
+          ),
+          child: Column(
+            children: [
+              Icon(icono, size: 18, color: seleccionado ? color : kTextSub),
+              const SizedBox(height: 4),
+              Text(etiqueta,
+                  style: TextStyle(
+                      fontSize: 10,
+                      color: seleccionado ? color : kTextSub,
+                      fontWeight: seleccionado ? FontWeight.w700 : FontWeight.w500)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../data/booking_repository.dart';
 import '../../data/order_repository.dart';
 import '../../domain/models/order.dart';
 import '../../domain/enums/order_status.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/config_provider.dart';
+import '../../core/constants.dart';
 import '../../core/theme/app_theme.dart';
 import '../common/app_widgets.dart';
 import '../admin/manage_services_page.dart';
@@ -27,10 +29,13 @@ class PaginaTableroAdmin extends StatefulWidget {
 class PaginaTableroAdminState extends State<PaginaTableroAdmin> {
   final _repoReserva = RepositorioReserva();
   final _repoPedido = RepositorioPedido();
+  final _client = Supabase.instance.client;
 
   List<Map<String, dynamic>> _estEmpleados = [];
   List<Map<String, dynamic>> _serviciosPopulares = [];
   List<Pedido> _pedidos = [];
+  double _totalComisiones = 0;
+  double _totalInsumos = 0;
   bool _cargando = true;
 
   @override
@@ -48,11 +53,23 @@ class PaginaTableroAdminState extends State<PaginaTableroAdmin> {
         _repoReserva.obtenerTodasEstadisticasEmpleados(),
         _repoReserva.obtenerServiciosPopulares(),
         _repoPedido.obtenerTodosPedidos(),
+        _client.from('commission_entries').select('commission_amount'),
+        _client.from('supplies').select('price, stock'),
       ]);
+      final comisiones = resultados[3] as List;
+      final comprasInsumos = resultados[4] as List;
       setState(() {
         _estEmpleados = resultados[0] as List<Map<String, dynamic>>;
         _serviciosPopulares = resultados[1] as List<Map<String, dynamic>>;
         _pedidos = resultados[2] as List<Pedido>;
+        _totalComisiones = comisiones.fold<double>(0,
+            (s, c) => s + (((c as Map)['commission_amount'] as num?)?.toDouble() ?? 0));
+        _totalInsumos = comprasInsumos.fold<double>(0, (s, c) {
+          final m = c as Map;
+          final precio = (m['price'] as num?)?.toDouble() ?? 0;
+          final cantidad = (m['stock'] as num?)?.toDouble() ?? 0;
+          return s + (precio * cantidad);
+        });
         _cargando = false;
       });
     } catch (_) {
@@ -60,16 +77,11 @@ class PaginaTableroAdminState extends State<PaginaTableroAdmin> {
     }
   }
 
-  static const _coloresPreset = [
-    Color(0xFF4ECDC4), Color(0xFF7C3AED), Color(0xFF007AFF), Color(0xFF34C759),
-    Color(0xFFFF9500), Color(0xFFFF2D55), Color(0xFF5856D6), Color(0xFF1ABC9C),
-    Color(0xFFFF6B6B), Color(0xFFE91E63), Color(0xFF2196F3), Color(0xFFFF5722),
-  ];
-
   void _mostrarConfiguracion(BuildContext context) {
+    final tiendaHabilitada = context.read<ProveedorConfig>().tiendaHabilitada;
     showModalBottomSheet(
       context: context,
-      backgroundColor: kCard,
+      backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -84,14 +96,14 @@ class PaginaTableroAdminState extends State<PaginaTableroAdmin> {
                 child: Container(
                   width: 40, height: 4,
                   decoration: BoxDecoration(
-                    color: kTextMuted.withOpacity(0.4),
+                    color: const Color(0xFF8E8E93).withOpacity(0.4),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
               ),
               const SizedBox(height: 16),
               const Text('Configuración',
-                  style: TextStyle(color: kText, fontSize: 17, fontWeight: FontWeight.w700)),
+                  style: TextStyle(color: Color(0xFF1C1C1E), fontSize: 17, fontWeight: FontWeight.w700)),
               const SizedBox(height: 16),
               _OpcionConfig(
                 icono: Icons.design_services_outlined,
@@ -114,28 +126,30 @@ class PaginaTableroAdminState extends State<PaginaTableroAdmin> {
                       builder: (_) => const PaginaGestionEmpleados()));
                 },
               ),
-              const SizedBox(height: 10),
-              _OpcionConfig(
-                icono: Icons.inventory_2_outlined,
-                titulo: 'Inventario',
-                subtitulo: 'Agregar, editar y eliminar productos',
-                onTap: () {
-                  Navigator.pop(ctx);
-                  Navigator.of(context).push(MaterialPageRoute(
-                      builder: (_) => const PaginaInventario()));
-                },
-              ),
-              const SizedBox(height: 10),
-              _OpcionConfig(
-                icono: Icons.storefront_outlined,
-                titulo: 'Inspeccionar Tienda',
-                subtitulo: 'Ver la tienda como la ven los clientes',
-                onTap: () {
-                  Navigator.pop(ctx);
-                  Navigator.of(context).push(MaterialPageRoute(
-                      builder: (_) => const PaginaProductos()));
-                },
-              ),
+              if (tiendaHabilitada) ...[
+                const SizedBox(height: 10),
+                _OpcionConfig(
+                  icono: Icons.inventory_2_outlined,
+                  titulo: 'Inventario',
+                  subtitulo: 'Agregar, editar y eliminar productos',
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    Navigator.of(context).push(MaterialPageRoute(
+                        builder: (_) => const PaginaInventario()));
+                  },
+                ),
+                const SizedBox(height: 10),
+                _OpcionConfig(
+                  icono: Icons.storefront_outlined,
+                  titulo: 'Inspeccionar Tienda',
+                  subtitulo: 'Ver la tienda como la ven los clientes',
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    Navigator.of(context).push(MaterialPageRoute(
+                        builder: (_) => const PaginaProductos()));
+                  },
+                ),
+              ],
               const SizedBox(height: 10),
               _OpcionConfig(
                 icono: Icons.percent_rounded,
@@ -147,87 +161,8 @@ class PaginaTableroAdminState extends State<PaginaTableroAdmin> {
                       builder: (_) => const PaginaConfigComisiones()));
                 },
               ),
-              const SizedBox(height: 10),
-              _OpcionConfig(
-                icono: Icons.palette_outlined,
-                titulo: 'Color de la aplicación',
-                subtitulo: 'Cambia el color principal de la app',
-                onTap: () {
-                  Navigator.pop(ctx);
-                  _mostrarSelectorColor(context);
-                },
-              ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  void _mostrarSelectorColor(BuildContext context) {
-    final config = context.read<ProveedorConfig>();
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (_) => Padding(
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Color de la aplicación',
-                style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF1C1C1E))),
-            const SizedBox(height: 6),
-            const Text('Selecciona el color principal de la app',
-                style: TextStyle(fontSize: 13, color: Color(0xFF6E6E73))),
-            const SizedBox(height: 20),
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 6,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-              ),
-              itemCount: _coloresPreset.length,
-              itemBuilder: (ctx, i) {
-                final color = _coloresPreset[i];
-                final seleccionado = config.colorPrimario.value == color.value;
-                return GestureDetector(
-                  onTap: () async {
-                    Navigator.pop(ctx);
-                    await config.actualizarColor(color);
-                  },
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: color,
-                      shape: BoxShape.circle,
-                      border: seleccionado
-                          ? Border.all(color: const Color(0xFF1C1C1E), width: 3)
-                          : null,
-                      boxShadow: [
-                        BoxShadow(
-                          color: color.withOpacity(0.4),
-                          blurRadius: 8,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    child: seleccionado
-                        ? const Icon(Icons.check_rounded,
-                            color: Colors.white, size: 20)
-                        : null,
-                  ),
-                );
-              },
-            ),
-          ],
         ),
       ),
     );
@@ -236,6 +171,7 @@ class PaginaTableroAdminState extends State<PaginaTableroAdmin> {
   @override
   Widget build(BuildContext context) {
     final perfil = context.watch<ProveedorAuth>().perfil;
+    final tiendaHabilitada = context.watch<ProveedorConfig>().tiendaHabilitada;
     final nombre = perfil?.nombreCompleto.split(' ').first ?? 'Admin';
     final hoy = DateFormat("EEEE d 'de' MMMM", 'es_ES').format(DateTime.now());
 
@@ -254,6 +190,7 @@ class PaginaTableroAdminState extends State<PaginaTableroAdmin> {
         .where((p) => p.estado == EstadoPedido.pending)
         .length;
     final ingresosTotales = ingresosServicios + ingresosTienda;
+    final gananciasNetas = ingresosTotales - _totalComisiones - _totalInsumos;
 
     return Scaffold(
       backgroundColor: kBackground,
@@ -307,6 +244,14 @@ class PaginaTableroAdminState extends State<PaginaTableroAdmin> {
                               ),
                               Row(
                                 children: [
+                                  const IconoNotificaciones(color: Colors.white),
+                                  const SizedBox(width: 10),
+                                  const CircleAvatar(
+                                    radius: 20,
+                                    backgroundColor: Colors.white,
+                                    backgroundImage: NetworkImage(kUrlLogoBarberia),
+                                  ),
+                                  const SizedBox(width: 8),
                                   GestureDetector(
                                     onTap: () => Navigator.of(context).push(
                                       MaterialPageRoute(
@@ -387,7 +332,7 @@ class PaginaTableroAdminState extends State<PaginaTableroAdmin> {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 18, vertical: 14),
                               decoration: BoxDecoration(
-                                color: kCard,
+                                color: Colors.white,
                                 borderRadius: BorderRadius.circular(16),
                                 boxShadow: kNeumorphicShadowsSmall,
                               ),
@@ -410,18 +355,18 @@ class PaginaTableroAdminState extends State<PaginaTableroAdmin> {
                                       children: [
                                         Text('Nueva reserva',
                                             style: TextStyle(
-                                                color: kText,
+                                                color: Color(0xFF1C1C1E),
                                                 fontWeight: FontWeight.w700,
                                                 fontSize: 14)),
                                         Text('Crear reserva para un cliente',
                                             style: TextStyle(
-                                                color: kTextMuted,
+                                                color: Color(0xFF8E8E93),
                                                 fontSize: 11)),
                                       ],
                                     ),
                                   ),
                                   const Icon(Icons.arrow_forward_ios_rounded,
-                                      size: 14, color: kTextMuted),
+                                      size: 14, color: Color(0xFF8E8E93)),
                                 ],
                               ),
                             ),
@@ -442,18 +387,31 @@ class PaginaTableroAdminState extends State<PaginaTableroAdmin> {
                                   subtitulo: '$totalCompletadas completados',
                                 ),
                               ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: _TarjetaIngreso(
-                                  titulo: 'Tienda',
-                                  monto: ingresosTienda,
-                                  icono: Icons.shopping_bag_rounded,
-                                  color: const Color(0xFF34C759),
-                                  subtitulo:
-                                      '${pedidosActivos.length} pedidos',
+                              if (tiendaHabilitada) ...[
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: _TarjetaIngreso(
+                                    titulo: 'Tienda',
+                                    monto: ingresosTienda,
+                                    icono: Icons.shopping_bag_rounded,
+                                    color: const Color(0xFF34C759),
+                                    subtitulo:
+                                        '${pedidosActivos.length} pedidos',
+                                  ),
                                 ),
-                              ),
+                              ],
                             ],
+                          ),
+                          const SizedBox(height: 24),
+
+                          // ── Sección: Ganancias netas ─────────
+                          const _SeccionTitulo('Ganancias netas'),
+                          const SizedBox(height: 12),
+                          _TarjetaGanancias(
+                            ingresos: ingresosTotales,
+                            comisiones: _totalComisiones,
+                            insumos: _totalInsumos,
+                            ganancias: gananciasNetas,
                           ),
                           const SizedBox(height: 24),
 
@@ -480,12 +438,13 @@ class PaginaTableroAdminState extends State<PaginaTableroAdmin> {
                                 icono: Icons.people_outline_rounded,
                                 color: const Color(0xFF007AFF),
                               ),
-                              _TarjetaStat(
-                                etiqueta: 'Pedidos\npendientes',
-                                valor: '$pedidosPendientes',
-                                icono: Icons.hourglass_top_rounded,
-                                color: const Color(0xFFFF9500),
-                              ),
+                              if (tiendaHabilitada)
+                                _TarjetaStat(
+                                  etiqueta: 'Pedidos\npendientes',
+                                  valor: '$pedidosPendientes',
+                                  icono: Icons.hourglass_top_rounded,
+                                  color: const Color(0xFFFF9500),
+                                ),
                               _TarjetaStat(
                                 etiqueta: 'Servicios\npopulares',
                                 valor: '${_serviciosPopulares.length}',
@@ -497,7 +456,7 @@ class PaginaTableroAdminState extends State<PaginaTableroAdmin> {
                           const SizedBox(height: 24),
 
                           // ── Pedidos recientes ────────────────
-                          if (_pedidos.isNotEmpty) ...[
+                          if (tiendaHabilitada && _pedidos.isNotEmpty) ...[
                             const _SeccionTitulo('Pedidos recientes'),
                             const SizedBox(height: 12),
                             ..._pedidos.take(4).map(
@@ -552,6 +511,85 @@ class _SeccionTitulo extends StatelessWidget {
           color: Color(0xFF1C1C1E),
         ),
       );
+}
+
+class _TarjetaGanancias extends StatelessWidget {
+  final double ingresos;
+  final double comisiones;
+  final double insumos;
+  final double ganancias;
+
+  const _TarjetaGanancias({
+    required this.ingresos,
+    required this.comisiones,
+    required this.insumos,
+    required this.ganancias,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final fmt = NumberFormat('#,##0', 'es_ES');
+    final positivo = ganancias >= 0;
+    final colorGanancia = positivo ? const Color(0xFF34C759) : const Color(0xFFFF3B30);
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 10, offset: const Offset(0, 2))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _filaDesglose('Ingresos totales', ingresos, esPositivo: true),
+          const SizedBox(height: 6),
+          _filaDesglose('Comisiones', -comisiones, esPositivo: false),
+          const SizedBox(height: 6),
+          _filaDesglose('Insumos comprados', -insumos, esPositivo: false),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 10),
+            child: Divider(height: 1, color: Color(0xFFE5E5EA)),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('Ganancias netas',
+                  style: TextStyle(
+                      color: Color(0xFF1C1C1E),
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14)),
+              Text(
+                '${positivo ? '' : '-'}\$${fmt.format(ganancias.abs())}',
+                style: TextStyle(
+                    color: colorGanancia,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 20),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _filaDesglose(String etiqueta, double monto, {required bool esPositivo}) {
+    final fmt = NumberFormat('#,##0', 'es_ES');
+    final signo = monto < 0 ? '-' : '+';
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(etiqueta, style: const TextStyle(color: Color(0xFF8E8E93), fontSize: 13)),
+        Text(
+          '$signo\$${fmt.format(monto.abs())}',
+          style: TextStyle(
+              color: esPositivo ? const Color(0xFF1C1C1E) : const Color(0xFFFF3B30),
+              fontWeight: FontWeight.w600,
+              fontSize: 13),
+        ),
+      ],
+    );
+  }
 }
 
 class _TarjetaIngreso extends StatelessWidget {
@@ -691,7 +729,7 @@ class _FilaPedido extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: kCard,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         boxShadow: kNeumorphicShadowsSmall,
       ),
@@ -714,13 +752,13 @@ class _FilaPedido extends StatelessWidget {
                 Text(
                   pedido.nombreCliente ?? 'Cliente',
                   style: const TextStyle(
-                      color: kText,
+                      color: Color(0xFF1C1C1E),
                       fontWeight: FontWeight.w600,
                       fontSize: 13),
                 ),
                 Text(
                   '${pedido.items.length} producto${pedido.items.length == 1 ? '' : 's'}',
-                  style: const TextStyle(color: kTextMuted, fontSize: 11),
+                  style: const TextStyle(color: Color(0xFF8E8E93), fontSize: 11),
                 ),
               ],
             ),
@@ -769,7 +807,7 @@ class _FilaServicio extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: kCard,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         boxShadow: kNeumorphicShadowsSmall,
       ),
@@ -782,14 +820,14 @@ class _FilaServicio extends StatelessWidget {
               shape: BoxShape.circle,
             ),
             child: Icon(Icons.content_cut_rounded,
-                color: Colors.white, size: 16),
+                color: context.colorPrimario, size: 16),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               data['name'] as String? ?? '',
               style: const TextStyle(
-                  color: kText, fontWeight: FontWeight.w600, fontSize: 13),
+                  color: Color(0xFF1C1C1E), fontWeight: FontWeight.w600, fontSize: 13),
             ),
           ),
           Container(
@@ -834,7 +872,7 @@ class _OpcionConfig extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: kCardDark2,
+          color: const Color(0xFFF2F2F7),
           borderRadius: BorderRadius.circular(14),
         ),
         child: Row(
@@ -854,72 +892,13 @@ class _OpcionConfig extends StatelessWidget {
                 children: [
                   Text(titulo,
                       style: const TextStyle(
-                          color: kText, fontWeight: FontWeight.w600, fontSize: 13)),
+                          color: Color(0xFF1C1C1E), fontWeight: FontWeight.w600, fontSize: 13)),
                   Text(subtitulo,
-                      style: const TextStyle(color: kTextMuted, fontSize: 11)),
+                      style: const TextStyle(color: Color(0xFF8E8E93), fontSize: 11)),
                 ],
               ),
             ),
-            const Icon(Icons.arrow_forward_ios_rounded, size: 13, color: kTextMuted),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ── Tile selector de color ──────────────────────────────────────
-class _TileColorApp extends StatelessWidget {
-  final VoidCallback onTap;
-  const _TileColorApp({required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final colorActual = context.colorPrimario;
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-        decoration: BoxDecoration(
-          color: kCard,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: kNeumorphicShadowsSmall,
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: colorActual,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: colorActual.withOpacity(0.4),
-                    blurRadius: 8,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 14),
-            const Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Color de la aplicación',
-                      style: TextStyle(
-                          color: kText,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 14)),
-                  Text('Cambia el color principal de la app',
-                      style: TextStyle(color: kTextMuted, fontSize: 11)),
-                ],
-              ),
-            ),
-            const Icon(Icons.arrow_forward_ios_rounded,
-                size: 14, color: kTextMuted),
+            const Icon(Icons.arrow_forward_ios_rounded, size: 13, color: Color(0xFF8E8E93)),
           ],
         ),
       ),
@@ -937,7 +916,7 @@ class _FilaEmpleado extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: kCard,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         boxShadow: kNeumorphicShadowsSmall,
       ),
@@ -952,14 +931,14 @@ class _FilaEmpleado extends StatelessWidget {
                 Text(
                   data['full_name'] as String? ?? '',
                   style: const TextStyle(
-                      color: kText,
+                      color: Color(0xFF1C1C1E),
                       fontWeight: FontWeight.w600,
                       fontSize: 13),
                 ),
                 Text(
                   '${data['total_completadas'] ?? 0} servicios completados',
                   style:
-                      const TextStyle(color: kTextMuted, fontSize: 11),
+                      const TextStyle(color: Color(0xFF8E8E93), fontSize: 11),
                 ),
               ],
             ),

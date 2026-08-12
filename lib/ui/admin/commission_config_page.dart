@@ -44,15 +44,17 @@ class _PaginaConfigComisionesState extends State<PaginaConfigComisiones>
         headerSliverBuilder: (_, __) => [
           SliverAppBar(
             pinned: true,
-            backgroundColor: const Color(0xFF1C1C1E),
-            foregroundColor: Colors.white,
+            backgroundColor: Colors.white,
+            foregroundColor: const Color(0xFF1C1C1E),
+            iconTheme: const IconThemeData(color: Color(0xFF1C1C1E)),
+            actionsIconTheme: const IconThemeData(color: Color(0xFF1C1C1E)),
             centerTitle: true,
             title: const Text(
               'Comisiones',
               style: TextStyle(
-                color: Colors.white,
+                color: Color(0xFF1C1C1E),
                 fontWeight: FontWeight.w700,
-                fontSize: 17,
+                fontSize: 22,
               ),
             ),
             bottom: PreferredSize(
@@ -61,8 +63,8 @@ class _PaginaConfigComisionesState extends State<PaginaConfigComisiones>
                 controller: _tabs,
                 indicatorColor: color,
                 indicatorWeight: 3,
-                labelColor: Colors.white,
-                unselectedLabelColor: Colors.white38,
+                labelColor: color,
+                unselectedLabelColor: const Color(0xFF8E8E93),
                 labelStyle: const TextStyle(
                     fontWeight: FontWeight.w700, fontSize: 13),
                 tabs: const [

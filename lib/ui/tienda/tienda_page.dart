@@ -76,8 +76,8 @@ class _TiendaPageState extends State<TiendaPage> {
             child: Padding(
               padding: const EdgeInsets.all(12),
               child: GridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
+                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                    maxCrossAxisExtent: 230,
                     mainAxisSpacing: 14,
                     crossAxisSpacing: 14,
                     childAspectRatio: 0.68),
@@ -175,8 +175,8 @@ class _ProductCard extends StatelessWidget {
                   top: 8,
                   right: 8,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 3),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(999),
@@ -262,7 +262,8 @@ class _ProductCard extends StatelessWidget {
                               ),
                             ),
                           Text(
-                            money.format(tieneOferta ? p.precioOferta! : p.precio),
+                            money.format(
+                                tieneOferta ? p.precioOferta! : p.precio),
                             style: const TextStyle(
                               fontSize: 13,
                               color: Colors.black87,
@@ -664,8 +665,8 @@ class _BotonTarjeta extends StatelessWidget {
               ),
               child: Text(
                 label,
-                style: const TextStyle(
-                    fontSize: 11, fontWeight: FontWeight.w600),
+                style:
+                    const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
               ),
             ),
     );

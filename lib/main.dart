@@ -1,6 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'data/stripe_web_service.dart' if (dart.library.io) 'data/stripe_web_stub.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -15,6 +18,7 @@ import 'providers/order_provider.dart';
 import 'providers/saved_provider.dart';
 import 'providers/config_provider.dart';
 import 'providers/commission_provider.dart';
+import 'providers/notification_provider.dart';
 import 'routing/app_router.dart';
 
 Future<void> main() async {
@@ -26,6 +30,13 @@ Future<void> main() async {
     url: kSupabaseUrl,
     anonKey: kSupabaseAnonKey,
   );
+
+  if (kIsWeb) {
+    ServicioStripeWeb.inicializar(kStripePublishableKey);
+  } else {
+    Stripe.publishableKey = kStripePublishableKey;
+    await Stripe.instance.applySettings();
+  }
 
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
@@ -53,12 +64,18 @@ class BarberApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ProveedorGuardados()),
         ChangeNotifierProvider(create: (_) => ProveedorConfig()..cargar()),
         ChangeNotifierProvider(create: (_) => ProveedorComision()),
+        ChangeNotifierProvider(create: (_) => ProveedorNotificaciones()),
       ],
       child: Consumer<ProveedorConfig>(
         builder: (_, config, __) => MaterialApp.router(
           debugShowCheckedModeBanner: false,
           title: 'BarberApp',
-          theme: crearTema(config.colorPrimario),
+          theme: crearTema(
+            config.colorPrimarioEfectivo,
+            fontFamily: config.fontFamilyEfectiva,
+            radioContenedor: config.radioContenedorEfectivo,
+            sombraContenedor: config.sombraContenedorEfectiva,
+          ),
           routerConfig: construirEnrutador(navigatorKey: rootNavigatorKey),
           builder: (context, child) => _SesionExpiradaListener(child: child!),
         ),

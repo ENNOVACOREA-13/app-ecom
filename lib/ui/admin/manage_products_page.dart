@@ -96,7 +96,9 @@ class _PaginaInventarioState extends State<PaginaInventario> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Eliminar producto'),
+        backgroundColor: Colors.white,
+        title: const Text('Eliminar producto',
+            style: TextStyle(color: Color(0xFF1C1C1E))),
         content: Text('¿Eliminar "${producto.nombre}"?',
             style: const TextStyle(color: kTextSub)),
         actions: [
@@ -144,9 +146,11 @@ class _PaginaInventarioState extends State<PaginaInventario> {
                     children: [
                       Container(
                         padding: const EdgeInsets.all(24),
-                        decoration: const BoxDecoration(
-                          color: kCard, shape: BoxShape.circle,
-                          boxShadow: kNeumorphicShadows,
+                        decoration: BoxDecoration(
+                          color: Colors.white, shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 10, offset: const Offset(0, 3)),
+                          ],
                         ),
                         child: const Icon(Icons.inventory_2_outlined,
                             size: 48, color: kTextMuted),
@@ -154,7 +158,7 @@ class _PaginaInventarioState extends State<PaginaInventario> {
                       const SizedBox(height: 16),
                       const Text('Sin productos',
                           style: TextStyle(
-                              color: kText,
+                              color: Color(0xFF1C1C1E),
                               fontSize: 18,
                               fontWeight: FontWeight.w600)),
                       const SizedBox(height: 6),
@@ -201,9 +205,11 @@ class _FilaProducto extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: kCard,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: kDivider),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 3)),
+        ],
       ),
       child: Row(
         children: [
@@ -232,7 +238,7 @@ class _FilaProducto extends StatelessWidget {
                 Text(
                   producto.nombre,
                   style: const TextStyle(
-                      color: kText,
+                      color: Color(0xFF1C1C1E),
                       fontWeight: FontWeight.w700,
                       fontSize: 14),
                   maxLines: 1,
@@ -253,7 +259,7 @@ class _FilaProducto extends StatelessWidget {
                       Text(
                         '\$${producto.precioOferta!.toStringAsFixed(0)}',
                         style: const TextStyle(
-                            color: Colors.white,
+                            color: Color(0xFF1C1C1E),
                             fontWeight: FontWeight.w700,
                             fontSize: 13),
                       ),
@@ -261,7 +267,7 @@ class _FilaProducto extends StatelessWidget {
                       Text(
                         '\$${producto.precio.toStringAsFixed(0)}',
                         style: const TextStyle(
-                            color: Colors.white,
+                            color: Color(0xFF1C1C1E),
                             fontWeight: FontWeight.w700,
                             fontSize: 13),
                       ),
@@ -299,7 +305,7 @@ class _FilaProducto extends StatelessWidget {
           // Acciones
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert, color: kTextMuted),
-            color: kCard,
+            color: Colors.white,
             onSelected: (v) {
               if (v == 'editar') alEditar();
               if (v == 'eliminar') alEliminar();
@@ -310,7 +316,7 @@ class _FilaProducto extends StatelessWidget {
                 child: Row(children: [
                   Icon(Icons.edit_outlined, size: 18, color: kTextSub),
                   SizedBox(width: 8),
-                  Text('Editar', style: TextStyle(color: Colors.white)),
+                  Text('Editar', style: TextStyle(color: Color(0xFF1C1C1E))),
                 ]),
               ),
               const PopupMenuItem(
@@ -374,14 +380,14 @@ class _DialogoProductoState extends State<_DialogoProducto> {
   Widget build(BuildContext context) {
     final c = widget.ctrls;
     return AlertDialog(
-      backgroundColor: kCard,
+      backgroundColor: Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       title: Row(
         children: [
-          Icon(widget.icono, color: kPrimary, size: 22),
+          Icon(widget.icono, color: context.colorPrimario, size: 22),
           const SizedBox(width: 8),
           Text(widget.titulo,
-              style: const TextStyle(color: Colors.white, fontSize: 17)),
+              style: const TextStyle(color: Color(0xFF1C1C1E), fontSize: 17)),
         ],
       ),
       content: Form(
@@ -419,7 +425,7 @@ class _DialogoProductoState extends State<_DialogoProducto> {
                 child: Container(
                   height: 110,
                   decoration: BoxDecoration(
-                    color: kCardDark2,
+                    color: const Color(0xFFF2F2F7),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: kTextMuted.withOpacity(0.25)),
                   ),
@@ -523,13 +529,17 @@ class _DialogoProductoState extends State<_DialogoProducto> {
   }) {
     return TextFormField(
       controller: ctrl,
-      style: const TextStyle(color: Colors.white),
+      style: const TextStyle(color: Color(0xFF1C1C1E)),
       keyboardType: tipo,
       maxLines: maxLineas,
       validator: validador,
       decoration: InputDecoration(
         labelText: etiqueta,
         prefixIcon: Icon(icono, size: 18, color: kTextMuted),
+        filled: true,
+        fillColor: const Color(0xFFF2F2F7),
+        border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
       ),
     );
   }

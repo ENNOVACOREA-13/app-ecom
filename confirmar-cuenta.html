@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Confirmar cuenta – Mil Cositas</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f5f5f7;
+      color: #333;
+      padding: 24px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 40px 32px;
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    }
+    h1 { font-size: 1.4em; margin-bottom: 12px; }
+    p { line-height: 1.6; color: #555; }
+    .icon { font-size: 48px; margin-bottom: 16px; }
+    .error { color: #d32f2f; }
+    .ok { color: #2e7d32; }
+  </style>
+</head>
+<body>
+  <div class="card" id="card">
+    <div class="icon">⏳</div>
+    <h1>Confirmando tu cuenta…</h1>
+    <p>Espera un momento.</p>
+  </div>
+
+  <script>
+    var SUPABASE_URL = 'https://nvqdxrcoobojrfiuamwn.supabase.co';
+    var params = new URLSearchParams(window.location.search);
+    var token = params.get('token');
+    var card = document.getElementById('card');
+
+    function render(icon, title, msg, cls) {
+      card.innerHTML =
+        '<div class="icon">' + icon + '</div>' +
+        '<h1 class="' + cls + '">' + title + '</h1>' +
+        '<p>' + msg + '</p>';
+    }
+
+    if (!token) {
+      render('⚠️', 'Enlace inválido', 'No se encontró el token de confirmación en el enlace.', 'error');
+    } else {
+      fetch(SUPABASE_URL + '/functions/v1/confirm-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: token }),
+      })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          if (data.success) {
+            render('✅', '¡Cuenta confirmada!', 'Ya puedes volver a la app de Mil Cositas e iniciar sesión.', 'ok');
+          } else {
+            var mensajes = {
+              token_expired: 'Este enlace ya expiró. Vuelve a intentar registrarte o inicia sesión para pedir uno nuevo.',
+              token_already_used: 'Esta cuenta ya había sido confirmada antes.',
+              invalid_token: 'El enlace no es válido.',
+            };
+            render('⚠️', 'No se pudo confirmar', mensajes[data.error] || 'Ocurrió un error. Intenta de nuevo.', 'error');
+          }
+        })
+        .catch(function () {
+          render('⚠️', 'Error de conexión', 'No se pudo contactar al servidor. Intenta más tarde.', 'error');
+        });
+    }
+  </script>
+</body>
+</html>

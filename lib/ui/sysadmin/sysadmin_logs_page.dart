@@ -117,7 +117,7 @@ class _PaginaLogsState extends State<PaginaLogs>
     try {
       await _client.from('session_logs').update({
         'is_active': false,
-        'logout_at': DateTime.now().toIso8601String(),
+        'logout_at': DateTime.now().toUtc().toIso8601String(),
       }).eq('id', sessionId);
 
       if (mounted) {
@@ -163,7 +163,7 @@ class _PaginaLogsState extends State<PaginaLogs>
     try {
       await _client.from('session_logs').update({
         'is_active': false,
-        'logout_at': DateTime.now().toIso8601String(),
+        'logout_at': DateTime.now().toUtc().toIso8601String(),
       }).eq('is_active', true);
 
       if (mounted) {
@@ -250,54 +250,29 @@ class _PaginaLogsState extends State<PaginaLogs>
 
     return Scaffold(
       backgroundColor: kBackground,
+      appBar: AppBar(
+        title: const Text('Logs del sistema'),
+        actions: [
+          IconButton(
+            onPressed: _borrarSesionesCerradas,
+            icon: const Icon(Icons.delete_sweep_outlined, color: Colors.red),
+            tooltip: 'Borrar sesiones cerradas',
+          ),
+          IconButton(
+            onPressed: _cerrarTodasLasSesiones,
+            icon: const Icon(Icons.power_settings_new, color: Colors.red),
+            tooltip: 'Cerrar todas las sesiones',
+          ),
+          IconButton(
+            onPressed: () { _cargarSesiones(); _cargarActividad(); },
+            icon: const Icon(Icons.refresh_outlined, color: kTextSub),
+          ),
+        ],
+      ),
       body: SafeArea(
         child: Column(
           children: [
-            // ── Header ────────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-              child: Row(children: [
-                Container(
-                  width: 44, height: 44,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                        colors: [const Color(0xFF1C1C1E), color],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: const Icon(Icons.analytics_outlined,
-                      color: Colors.white, size: 22),
-                ),
-                const SizedBox(width: 12),
-                const Expanded(
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Logs del sistema', style: TextStyle(
-                          fontSize: 18, fontWeight: FontWeight.bold,
-                          color: Color(0xFF1C1C1E))),
-                      Text('Sesiones y actividad detallada',
-                          style: TextStyle(color: kTextSub, fontSize: 12)),
-                    ],
-                  ),
-                ),
-                IconButton(
-                  onPressed: _borrarSesionesCerradas,
-                  icon: const Icon(Icons.delete_sweep_outlined, color: Colors.red),
-                  tooltip: 'Borrar sesiones cerradas',
-                ),
-                IconButton(
-                  onPressed: _cerrarTodasLasSesiones,
-                  icon: const Icon(Icons.power_settings_new, color: Colors.red),
-                  tooltip: 'Cerrar todas las sesiones',
-                ),
-                IconButton(
-                  onPressed: () { _cargarSesiones(); _cargarActividad(); },
-                  icon: const Icon(Icons.refresh_outlined, color: kTextSub),
-                ),
-              ]),
-            ),
-
+            const SizedBox(height: 8),
             // ── Tabs ──────────────────────────────────────────
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 20),

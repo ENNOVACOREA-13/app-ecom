@@ -9,41 +9,24 @@ class RepositorioPedido {
     required String clienteId,
     required List<ItemCarrito> items,
     String? notas,
+    String metodoPago = 'cash',
+    String estadoPago = 'pending',
+    String? stripePaymentId,
   }) async {
-    final total = items.fold(0.0, (s, i) => s + i.subtotal);
-    final pedido = await _client.from('orders').insert({
-      'client_id': clienteId,
-      'total': total,
-      if (notas != null && notas.isNotEmpty) 'notes': notas,
-    }).select().single();
-
-    final pedidoId = pedido['id'] as String;
-    await _client.from('order_items').insert(
-      items
+    // El precio real se calcula en el servidor (crear_pedido) a partir del
+    // precio vigente de cada producto — el cliente solo manda id y cantidad.
+    final pedidoId = await _client.rpc('crear_pedido', params: {
+      'p_items': items
           .map((i) => {
-                'order_id': pedidoId,
                 'product_id': i.producto.id,
-                'product_name': i.producto.nombre,
-                'quantity': i.cantidad,
-                'unit_price': i.producto.precio,
+                'cantidad': i.cantidad,
               })
           .toList(),
-    );
-
-    // Descontar stock de cada producto
-    for (final item in items) {
-      final row = await _client
-          .from('products')
-          .select('stock')
-          .eq('id', item.producto.id)
-          .single();
-      final stockActual = (row['stock'] as int? ?? 0);
-      final nuevoStock = (stockActual - item.cantidad).clamp(0, stockActual);
-      await _client
-          .from('products')
-          .update({'stock': nuevoStock})
-          .eq('id', item.producto.id);
-    }
+      'p_notes': (notas != null && notas.isNotEmpty) ? notas : null,
+      'p_payment_method': metodoPago,
+      'p_payment_status': estadoPago,
+      'p_stripe_payment_id': stripePaymentId,
+    }) as String;
 
     return pedidoId;
   }
@@ -76,7 +59,7 @@ class RepositorioPedido {
 
     await _client.from('orders').update({
       'status': estado,
-      'updated_at': DateTime.now().toIso8601String(),
+      'updated_at': DateTime.now().toUtc().toIso8601String(),
     }).eq('id', pedidoId);
 
     // Restaurar stock solo si se cancela y no estaba ya cancelado

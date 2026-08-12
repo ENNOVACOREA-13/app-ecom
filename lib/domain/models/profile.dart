@@ -8,6 +8,7 @@ class Perfil {
   final String? urlAvatar;
   final String? bio;
   final bool estaActivo;
+  final bool emailVerificado;
   final DateTime creadoEn;
 
   const Perfil({
@@ -18,6 +19,7 @@ class Perfil {
     this.urlAvatar,
     this.bio,
     required this.estaActivo,
+    this.emailVerificado = true,
     required this.creadoEn,
   });
 
@@ -30,6 +32,7 @@ class Perfil {
       urlAvatar: map['avatar_url'] as String?,
       bio: map['bio'] as String?,
       estaActivo: map['is_active'] as bool? ?? true,
+      emailVerificado: map['email_verificado'] as bool? ?? true,
       creadoEn: DateTime.tryParse(map['created_at'] as String? ?? '') ?? DateTime.now(),
     );
   }
@@ -48,6 +51,7 @@ class Perfil {
     String? bio,
     RolUsuario? rol,
     bool? estaActivo,
+    bool? emailVerificado,
   }) {
     return Perfil(
       id: id,
@@ -57,6 +61,7 @@ class Perfil {
       urlAvatar: urlAvatar ?? this.urlAvatar,
       bio: bio ?? this.bio,
       estaActivo: estaActivo ?? this.estaActivo,
+      emailVerificado: emailVerificado ?? this.emailVerificado,
       creadoEn: creadoEn,
     );
   }

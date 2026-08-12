@@ -54,10 +54,10 @@ class _PaginaGuardadosState extends State<PaginaGuardados> {
                         const Text(
                           'Guardados',
                           style: TextStyle(
-                            fontSize: 26,
-                            fontWeight: FontWeight.w800,
+                            fontSize: 22,
+                            fontWeight: FontWeight.w700,
                             color: Color(0xFF1C1C1E),
-                            letterSpacing: -0.5,
+                            letterSpacing: -0.3,
                           ),
                         ),
                         if (productosGuardados.isNotEmpty)
@@ -92,14 +92,13 @@ class _PaginaGuardadosState extends State<PaginaGuardados> {
                       Container(
                         padding: const EdgeInsets.all(28),
                         decoration: const BoxDecoration(
-                          color: kCard,
+                          color: Color(0xFFF2F2F7),
                           shape: BoxShape.circle,
-                          boxShadow: kNeumorphicShadows,
                         ),
                         child: const Icon(
                           Icons.bookmark_border_rounded,
                           size: 52,
-                          color: kTextMuted,
+                          color: Color(0xFF8E8E93),
                         ),
                       ),
                       const SizedBox(height: 20),
@@ -129,8 +128,8 @@ class _PaginaGuardadosState extends State<PaginaGuardados> {
               SliverPadding(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
                 sliver: SliverGrid(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
+                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                    maxCrossAxisExtent: 230,
                     crossAxisSpacing: 14,
                     mainAxisSpacing: 14,
                     childAspectRatio: 0.62,
@@ -318,11 +317,9 @@ class _BotonGuardado extends StatelessWidget {
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20)),
               ),
-              child: Text(label,
-                  style: TextStyle(
-                      fontSize: 11,
-                      color: onTap == null ? Colors.black26 : bg,
-                      fontWeight: FontWeight.w700)),
+              child: Icon(Icons.shopping_cart_outlined,
+                  size: 18,
+                  color: onTap == null ? Colors.black26 : bg),
             )
           : ElevatedButton(
               onPressed: onTap,
@@ -358,11 +355,11 @@ class _IconoCarrito extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: const BoxDecoration(
-              color: kCard,
+              color: Colors.white,
               shape: BoxShape.circle,
               boxShadow: kNeumorphicShadowsSmall,
             ),
-            child: const Icon(Icons.shopping_cart_outlined, size: 20, color: kTextSub),
+            child: const Icon(Icons.shopping_cart_outlined, size: 20, color: Color(0xFF6E6E73)),
           ),
           if (carrito.totalItems > 0)
             Positioned(
@@ -371,8 +368,8 @@ class _IconoCarrito extends StatelessWidget {
               child: Container(
                 width: 16,
                 height: 16,
-                decoration: const BoxDecoration(
-                  color: kPrimary,
+                decoration: BoxDecoration(
+                  color: context.colorPrimario,
                   shape: BoxShape.circle,
                 ),
                 child: Center(

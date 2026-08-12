@@ -143,6 +143,12 @@ class ProveedorAuth extends ChangeNotifier {
     }
   }
 
+  Future<void> solicitarRecuperacionContrasena(String correo) async {
+    try {
+      await _repo.solicitarRecuperacionContrasena(correo);
+    } catch (_) {}
+  }
+
   void iniciarSesionConGoogle() {
     _error = null;
     notifyListeners();
@@ -189,6 +195,7 @@ class ProveedorAuth extends ChangeNotifier {
     if (e.contains('network') || e.contains('socket')) return 'Sin conexión a internet';
     if (e.contains('timeout')) return 'La solicitud tardó demasiado. Intenta de nuevo';
     if (e.contains('email_confirmation_required')) return 'Revisa tu correo para confirmar tu cuenta antes de entrar';
+    if (e.contains('email_not_verified')) return 'Confirma tu correo antes de iniciar sesión. Revisa tu bandeja de entrada (y spam)';
     if (e.contains('row-level security') || e.contains('violates') || e.contains('42501')) return 'Error de permisos en la base de datos. Contacta al administrador';
     if (e.contains('does not exist') || e.contains('relation')) return 'Error de configuración en la base de datos';
     if (e.contains('Email rate limit') || e.contains('rate limit')) return 'Demasiados intentos. Espera unos minutos';

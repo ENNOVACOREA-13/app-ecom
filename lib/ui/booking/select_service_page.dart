@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../providers/booking_provider.dart';
 import '../../providers/service_provider.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/service_icons.dart';
 import '../common/app_widgets.dart';
 
 class PaginaSeleccionarServicio extends StatefulWidget {
@@ -57,16 +58,18 @@ class _PaginaSeleccionarServicioState extends State<PaginaSeleccionarServicio> {
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 150),
                             decoration: BoxDecoration(
-                              color: kCard,
+                              color: Colors.white,
                               borderRadius: BorderRadius.circular(12),
                               border: estaSeleccionado
                                   ? null
-                                  : Border.all(color: kDivider, width: 1),
+                                  : Border.all(color: const Color(0xFFE5E5EA), width: 1),
                               boxShadow: estaSeleccionado
                                   ? [
                                       BoxShadow(color: Color(0x444ECDC4), blurRadius: 12, offset: const Offset(0, 4)),
                                     ]
-                                  : kNeumorphicShadowsSmall,
+                                  : [
+                                      BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 12, offset: const Offset(0, 4)),
+                                    ],
                             ),
                             child: ListTile(
                               shape: RoundedRectangleBorder(
@@ -75,22 +78,19 @@ class _PaginaSeleccionarServicioState extends State<PaginaSeleccionarServicio> {
                                 width: 46,
                                 height: 46,
                                 decoration: BoxDecoration(
-                                  color: estaSeleccionado
-                                      ? kPrimaryLight
-                                      : kCardDark,
+                                  color: colorDesdeHex(s.iconoColor) ?? context.colorPrimario,
                                   borderRadius: BorderRadius.circular(10),
-                                  boxShadow: kNeumorphicShadowsInset,
                                 ),
-                                child: const Icon(Icons.content_cut,
+                                child: Icon(obtenerIconoServicio(s.iconoNombre),
                                     color: Colors.white),
                               ),
                               title: Text(s.nombre,
                                   style: const TextStyle(
-                                      color: kText,
+                                      color: Color(0xFF1C1C1E),
                                       fontWeight: FontWeight.w600)),
                               subtitle: Text(s.etiquetaDuracion,
                                   style: const TextStyle(
-                                      color: kTextSub, fontSize: 12)),
+                                      color: Color(0xFF8E8E93), fontSize: 12)),
                               trailing: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
@@ -100,18 +100,18 @@ class _PaginaSeleccionarServicioState extends State<PaginaSeleccionarServicio> {
                                     children: [
                                       Text(
                                           '\$${s.precio.toStringAsFixed(0)}',
-                                          style: const TextStyle(
-                                              color: kPrimary,
+                                          style: TextStyle(
+                                              color: context.colorPrimario,
                                               fontWeight: FontWeight.bold,
                                               fontSize: 16)),
                                     ],
                                   ),
                                   const SizedBox(width: 8),
                                   estaSeleccionado
-                                      ? const Icon(Icons.check_circle,
-                                          color: kPrimary, size: 24)
+                                      ? Icon(Icons.check_circle,
+                                          color: context.colorPrimario, size: 24)
                                       : const Icon(Icons.radio_button_unchecked,
-                                          color: kTextSub, size: 24),
+                                          color: Color(0xFF8E8E93), size: 24),
                                 ],
                               ),
                             ),
@@ -128,9 +128,11 @@ class _PaginaSeleccionarServicioState extends State<PaginaSeleccionarServicio> {
               bottom: 0,
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: const BoxDecoration(
-                  color: kCard,
-                  boxShadow: kNeumorphicShadowsSmall,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 12, offset: const Offset(0, -2)),
+                  ],
                 ),
                 child: SafeArea(
                   top: false,
@@ -142,15 +144,17 @@ class _PaginaSeleccionarServicioState extends State<PaginaSeleccionarServicio> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              '${seleccionados.length} servicio${seleccionados.length > 1 ? 's' : ''}',
+                              reserva.servicioSeleccionado?.nombre ?? '',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
-                                  color: kText,
+                                  color: Color(0xFF1C1C1E),
                                   fontWeight: FontWeight.w600),
                             ),
                             Text(
                               '\$${reserva.totalPrecio.toStringAsFixed(0)} · ${reserva.totalDuracionMin}min',
                               style: const TextStyle(
-                                  color: kTextSub, fontSize: 13),
+                                  color: Color(0xFF8E8E93), fontSize: 13),
                             ),
                           ],
                         ),
@@ -158,14 +162,14 @@ class _PaginaSeleccionarServicioState extends State<PaginaSeleccionarServicio> {
                       const SizedBox(width: 12),
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: kPrimary,
+                          backgroundColor: context.colorPrimario,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(
                               horizontal: 24, vertical: 12),
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10)),
                         ),
-                        onPressed: () => context.push('/booking/employee'),
+                        onPressed: () => context.push('/booking/slot'),
                         child: const Text('Continuar',
                             style: TextStyle(fontWeight: FontWeight.bold)),
                       ),

@@ -55,11 +55,13 @@ class _PaginaProductosState extends State<PaginaProductos> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setLocal) => AlertDialog(
-          title: const Row(
+          backgroundColor: Colors.white,
+          title: Row(
             children: [
-              Icon(Icons.add_shopping_cart, color: kPrimary, size: 22),
-              SizedBox(width: 8),
-              Text('Nuevo producto'),
+              Icon(Icons.add_shopping_cart, color: context.colorPrimario, size: 22),
+              const SizedBox(width: 8),
+              const Text('Nuevo producto',
+                  style: TextStyle(color: Color(0xFF1C1C1E))),
             ],
           ),
           content: Form(
@@ -95,7 +97,7 @@ class _PaginaProductosState extends State<PaginaProductos> {
                     child: Container(
                       height: 110,
                       decoration: BoxDecoration(
-                        color: kCardDark2,
+                        color: const Color(0xFFF2F2F7),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           color: kTextMuted.withOpacity(0.25),
@@ -111,7 +113,7 @@ class _PaginaProductosState extends State<PaginaProductos> {
                                     fit: BoxFit.cover,
                                     errorBuilder: (_, __, ___) => const Icon(
                                       Icons.broken_image_outlined,
-                                      color: kTextMuted,
+                                      color: Color(0xFF8E8E93),
                                     ),
                                   ),
                                 )
@@ -119,12 +121,12 @@ class _PaginaProductosState extends State<PaginaProductos> {
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Icon(Icons.add_photo_alternate_outlined,
-                                        color: kTextMuted, size: 32),
+                                        color: Color(0xFF8E8E93), size: 32),
                                     SizedBox(height: 6),
                                     Text('Toca para añadir imagen',
                                         textAlign: TextAlign.center,
                                         style: TextStyle(
-                                            color: kTextMuted, fontSize: 12)),
+                                            color: Color(0xFF8E8E93), fontSize: 12)),
                                   ],
                                 ),
                     ),
@@ -269,10 +271,10 @@ class _PaginaProductosState extends State<PaginaProductos> {
                           ),
                         const Text('Tienda',
                             style: TextStyle(
-                              fontSize: 26,
-                              fontWeight: FontWeight.w800,
+                              fontSize: 22,
+                              fontWeight: FontWeight.w700,
                               color: Color(0xFF1C1C1E),
-                              letterSpacing: -0.5,
+                              letterSpacing: -0.3,
                             )),
                       ],
                     ),
@@ -316,7 +318,7 @@ class _PaginaProductosState extends State<PaginaProductos> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
-                      borderSide: const BorderSide(color: kPrimary, width: 1.5),
+                      borderSide: BorderSide(color: context.colorPrimario, width: 1.5),
                     ),
                   ),
                 ),
@@ -333,14 +335,14 @@ class _PaginaProductosState extends State<PaginaProductos> {
                     height: 130,
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [kPrimary, kPrimary.withOpacity(0.6)],
+                        colors: [context.colorPrimario, context.colorPrimario.withOpacity(0.6)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: kPrimary.withOpacity(0.3),
+                          color: context.colorPrimario.withOpacity(0.3),
                           blurRadius: 16,
                           offset: const Offset(0, 6),
                         ),
@@ -398,10 +400,10 @@ class _PaginaProductosState extends State<PaginaProductos> {
                                   color: Colors.white,
                                   borderRadius: BorderRadius.circular(20),
                                 ),
-                                child: const Text(
+                                child: Text(
                                   'Reservar ahora',
                                   style: TextStyle(
-                                    color: kPrimary,
+                                    color: context.colorPrimario,
                                     fontSize: 11,
                                     fontWeight: FontWeight.w700,
                                   ),
@@ -435,11 +437,11 @@ class _PaginaProductosState extends State<PaginaProductos> {
                     if (servicios.isNotEmpty)
                       GestureDetector(
                         onTap: () => context.push('/booking/service'),
-                        child: const Text(
+                        child: Text(
                           'Ver todos >',
                           style: TextStyle(
                             fontSize: 13,
-                            color: kPrimary,
+                            color: context.colorPrimario,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -493,13 +495,13 @@ class _PaginaProductosState extends State<PaginaProductos> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          color: kPrimary.withOpacity(0.12),
+                          color: context.colorPrimario.withOpacity(0.12),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
                           '${proveedor.productos.length} productos',
-                          style: const TextStyle(
-                              color: kPrimary, fontSize: 12, fontWeight: FontWeight.w600),
+                          style: TextStyle(
+                              color: context.colorPrimario, fontSize: 12, fontWeight: FontWeight.w600),
                         ),
                       ),
                   ],
@@ -520,16 +522,15 @@ class _PaginaProductosState extends State<PaginaProductos> {
                       Container(
                         padding: const EdgeInsets.all(24),
                         decoration: const BoxDecoration(
-                          color: kCard,
+                          color: Color(0xFFF2F2F7),
                           shape: BoxShape.circle,
-                          boxShadow: kNeumorphicShadows,
                         ),
                         child: Icon(
                           _busqueda.isNotEmpty
                               ? Icons.search_off
                               : Icons.shopping_bag_outlined,
                           size: 48,
-                          color: kTextMuted,
+                          color: const Color(0xFF8E8E93),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -558,8 +559,8 @@ class _PaginaProductosState extends State<PaginaProductos> {
               SliverPadding(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
                 sliver: SliverGrid(
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
+                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                    maxCrossAxisExtent: 230,
                     crossAxisSpacing: 12,
                     mainAxisSpacing: 12,
                     childAspectRatio: 0.62,
@@ -585,7 +586,7 @@ class _PaginaProductosState extends State<PaginaProductos> {
           ? FloatingActionButton(
               heroTag: null,
               onPressed: _mostrarDialogoCrear,
-              backgroundColor: kPrimary,
+              backgroundColor: context.colorPrimario,
               foregroundColor: Colors.white,
               child: const Icon(Icons.add),
             )
@@ -612,11 +613,13 @@ class _PaginaProductosState extends State<PaginaProductos> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setLocal) => AlertDialog(
-          title: const Row(
+          backgroundColor: Colors.white,
+          title: Row(
             children: [
-              Icon(Icons.edit_outlined, color: kPrimary, size: 22),
-              SizedBox(width: 8),
-              Text('Editar producto'),
+              Icon(Icons.edit_outlined, color: context.colorPrimario, size: 22),
+              const SizedBox(width: 8),
+              const Text('Editar producto',
+                  style: TextStyle(color: Color(0xFF1C1C1E))),
             ],
           ),
           content: Form(
@@ -652,7 +655,7 @@ class _PaginaProductosState extends State<PaginaProductos> {
                     child: Container(
                       height: 110,
                       decoration: BoxDecoration(
-                        color: kCardDark2,
+                        color: const Color(0xFFF2F2F7),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           color: kTextMuted.withOpacity(0.25),
@@ -672,7 +675,7 @@ class _PaginaProductosState extends State<PaginaProductos> {
                                           errorBuilder: (_, __, ___) =>
                                               const Icon(
                                             Icons.broken_image_outlined,
-                                            color: kTextMuted,
+                                            color: Color(0xFF8E8E93),
                                           ),
                                         ),
                                       ),
@@ -702,12 +705,12 @@ class _PaginaProductosState extends State<PaginaProductos> {
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Icon(Icons.add_photo_alternate_outlined,
-                                        color: kTextMuted, size: 32),
+                                        color: Color(0xFF8E8E93), size: 32),
                                     SizedBox(height: 6),
                                     Text('Toca para añadir imagen',
                                         textAlign: TextAlign.center,
                                         style: TextStyle(
-                                            color: kTextMuted, fontSize: 12)),
+                                            color: Color(0xFF8E8E93), fontSize: 12)),
                                   ],
                                 ),
                     ),
@@ -806,7 +809,9 @@ class _PaginaProductosState extends State<PaginaProductos> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Eliminar producto'),
+        backgroundColor: Colors.white,
+        title: const Text('Eliminar producto',
+            style: TextStyle(color: Color(0xFF1C1C1E))),
         content: Text('¿Eliminar "$nombre"?',
             style: const TextStyle(color: kTextSub)),
         actions: [
@@ -843,12 +848,11 @@ class _ChipServicio extends StatelessWidget {
           Container(
             width: 56,
             height: 56,
-            decoration: const BoxDecoration(
-              color: kCard,
+            decoration: BoxDecoration(
+              color: context.colorPrimario.withOpacity(0.12),
               shape: BoxShape.circle,
-              boxShadow: kNeumorphicShadowsSmall,
             ),
-            child: const Icon(Icons.content_cut, color: Colors.white, size: 22),
+            child: Icon(Icons.content_cut, color: context.colorPrimario, size: 22),
           ),
           const SizedBox(height: 6),
           SizedBox(
@@ -886,11 +890,10 @@ class _ChipCategoria extends StatelessWidget {
           width: 48,
           height: 48,
           decoration: BoxDecoration(
-            color: kCard,
+            color: context.colorPrimario.withOpacity(0.12),
             borderRadius: BorderRadius.circular(14),
-            boxShadow: kNeumorphicShadowsSmall,
           ),
-          child: Icon(icono, color: kPrimary, size: 22),
+          child: Icon(icono, color: context.colorPrimario, size: 22),
         ),
         const SizedBox(height: 6),
         Text(etiqueta,
@@ -925,13 +928,20 @@ class _CampoDialogo extends StatelessWidget {
   Widget build(BuildContext context) {
     return TextFormField(
       controller: controlador,
-      style: const TextStyle(color: kText),
+      style: const TextStyle(color: Color(0xFF1C1C1E)),
       maxLines: maxLineas,
       keyboardType: tipoTeclado,
       validator: validador,
       decoration: InputDecoration(
         labelText: etiqueta,
-        prefixIcon: Icon(icono, size: 18, color: kTextSub),
+        prefixIcon: Icon(icono, size: 18, color: const Color(0xFF8E8E93)),
+        filled: true,
+        fillColor: const Color(0xFFF2F2F7),
+        border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+        enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+        labelStyle: const TextStyle(color: Color(0xFF8E8E93)),
       ),
     );
   }
@@ -1227,11 +1237,11 @@ class _IconoGuardados extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: const BoxDecoration(
-              color: kCard,
+              color: Colors.white,
               shape: BoxShape.circle,
               boxShadow: kNeumorphicShadowsSmall,
             ),
-            child: const Icon(Icons.favorite_border_rounded, size: 20, color: kTextSub),
+            child: const Icon(Icons.favorite_border_rounded, size: 20, color: Color(0xFF6E6E73)),
           ),
           if (guardados.guardados.isNotEmpty)
             Positioned(
@@ -1290,11 +1300,9 @@ class _BotonProducto extends StatelessWidget {
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20)),
               ),
-              child: Text(label,
-                  style: TextStyle(
-                      fontSize: 11,
-                      color: onTap == null ? Colors.black26 : bg,
-                      fontWeight: FontWeight.w700)),
+              child: Icon(Icons.shopping_cart_outlined,
+                  size: 18,
+                  color: onTap == null ? Colors.black26 : bg),
             )
           : ElevatedButton(
               onPressed: onTap,
@@ -1331,12 +1339,12 @@ class _IconoCarrito extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: const BoxDecoration(
-              color: kCard,
+              color: Colors.white,
               shape: BoxShape.circle,
               boxShadow: kNeumorphicShadowsSmall,
             ),
             child: const Icon(Icons.shopping_cart_outlined,
-                size: 20, color: kTextSub),
+                size: 20, color: Color(0xFF6E6E73)),
           ),
           if (carrito.totalItems > 0)
             Positioned(
@@ -1345,8 +1353,8 @@ class _IconoCarrito extends StatelessWidget {
               child: Container(
                 width: 16,
                 height: 16,
-                decoration: const BoxDecoration(
-                  color: kPrimary,
+                decoration: BoxDecoration(
+                  color: context.colorPrimario,
                   shape: BoxShape.circle,
                 ),
                 child: Center(

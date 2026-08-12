@@ -33,7 +33,7 @@ class PaginaMuroInvitado extends StatelessWidget {
                 mensaje,
                 textAlign: TextAlign.center,
                 style: const TextStyle(
-                  color: kText,
+                  color: Color(0xFF1C1C1E),
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
                 ),
@@ -91,7 +91,7 @@ class PaginaMuroInvitado extends StatelessWidget {
 void mostrarLoginRequerido(BuildContext context) {
   showModalBottomSheet(
     context: context,
-    backgroundColor: kCard,
+    backgroundColor: Colors.white,
     shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
     builder: (_) => Padding(
@@ -113,7 +113,7 @@ void mostrarLoginRequerido(BuildContext context) {
           const SizedBox(height: 12),
           const Text('Acción requerida',
               style: TextStyle(
-                  color: kText, fontSize: 18, fontWeight: FontWeight.w700)),
+                  color: Color(0xFF1C1C1E), fontSize: 18, fontWeight: FontWeight.w700)),
           const SizedBox(height: 8),
           const Text(
             'Debes iniciar sesión o registrarte para realizar esta acción.',

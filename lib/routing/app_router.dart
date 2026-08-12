@@ -6,9 +6,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../providers/booking_provider.dart';
 import '../ui/auth/login_page.dart';
 import '../ui/auth/register_page.dart';
+import '../ui/auth/forgot_password_page.dart';
 import '../ui/shell/app_shell.dart';
 import '../ui/booking/select_service_page.dart';
-import '../ui/booking/select_employee_page.dart';
 import '../ui/booking/select_slot_page.dart';
 import '../ui/booking/confirm_booking_page.dart';
 import '../ui/cart/cart_page.dart';
@@ -37,7 +37,8 @@ GoRouter construirEnrutador({GlobalKey<NavigatorState>? navigatorKey}) {
     redirect: (context, state) {
       final estaConectado = Supabase.instance.client.auth.currentUser != null;
       final enPaginaAuth = state.matchedLocation == '/login' ||
-          state.matchedLocation == '/register';
+          state.matchedLocation == '/register' ||
+          state.matchedLocation == '/forgot-password';
 
       // Si está conectado y quiere ir al login/registro → mandarlo al inicio
       if (estaConectado && enPaginaAuth) return '/';
@@ -49,28 +50,19 @@ GoRouter construirEnrutador({GlobalKey<NavigatorState>? navigatorKey}) {
     routes: [
       GoRoute(path: '/login', builder: (_, __) => const PaginaLogin()),
       GoRoute(path: '/register', builder: (_, __) => const PaginaRegistro()),
+      GoRoute(path: '/forgot-password', builder: (_, __) => const PaginaOlvideContrasena()),
       GoRoute(path: '/', builder: (_, __) => const CarcasaApp()),
 
-      // Flujo de reserva (4 pasos) — con guards para evitar saltar pasos
+      // Flujo de reserva (3 pasos: servicio → fecha/hora/especialista → confirmar) — con guards para evitar saltar pasos
       GoRoute(
         path: '/booking/service',
         builder: (_, __) => const PaginaSeleccionarServicio(),
-      ),
-      GoRoute(
-        path: '/booking/employee',
-        redirect: (context, state) {
-          final reserva = context.read<ProveedorReserva>();
-          if (reserva.serviciosSeleccionados.isEmpty) return '/booking/service';
-          return null;
-        },
-        builder: (_, __) => const PaginaSeleccionarEmpleado(),
       ),
       GoRoute(
         path: '/booking/slot',
         redirect: (context, state) {
           final reserva = context.read<ProveedorReserva>();
           if (reserva.serviciosSeleccionados.isEmpty) return '/booking/service';
-          if (reserva.empleadoSeleccionado == null) return '/booking/employee';
           return null;
         },
         builder: (_, __) => const PaginaSeleccionarTurno(),
@@ -80,7 +72,7 @@ GoRouter construirEnrutador({GlobalKey<NavigatorState>? navigatorKey}) {
         redirect: (context, state) {
           final reserva = context.read<ProveedorReserva>();
           if (reserva.serviciosSeleccionados.isEmpty) return '/booking/service';
-          if (reserva.empleadoSeleccionado == null) return '/booking/employee';
+          if (reserva.empleadoSeleccionado == null) return '/booking/slot';
           if (reserva.turnoSeleccionado == null) return '/booking/slot';
           return null;
         },

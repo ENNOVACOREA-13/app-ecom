@@ -4,6 +4,8 @@ import '../../providers/auth_provider.dart';
 import '../../providers/booking_provider.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/saved_provider.dart';
+import '../../providers/config_provider.dart';
+import '../../providers/notification_provider.dart';
 import '../../domain/enums/user_role.dart';
 import '../../core/theme/app_theme.dart';
 
@@ -28,6 +30,7 @@ import '../admin/insumos_page.dart';
 import '../sysadmin/sysadmin_dashboard_page.dart';
 import '../sysadmin/sysadmin_logs_page.dart';
 import '../sysadmin/sysadmin_config_page.dart';
+import '../sysadmin/view_designer_page.dart';
 import '../../data/activity_service.dart';
 
 // Carrito & Guardados
@@ -54,6 +57,7 @@ class _CarcasaAppState extends State<CarcasaApp> {
       final perfil = context.read<ProveedorAuth>().perfil;
       if (perfil != null) {
         context.read<ProveedorGuardados>().cargar(perfil.id);
+        context.read<ProveedorNotificaciones>().iniciar(perfil.id);
       }
     });
   }
@@ -61,6 +65,7 @@ class _CarcasaAppState extends State<CarcasaApp> {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<ProveedorAuth>();
+    final tiendaHabilitada = context.watch<ProveedorConfig>().tiendaHabilitada;
 
     // Esperando restaurar sesión
     if (auth.inicializando) {
@@ -76,11 +81,12 @@ class _CarcasaAppState extends State<CarcasaApp> {
     if (perfil == null) {
       return _ShellInvitado(
         indiceActual: _indiceActual,
+        tiendaHabilitada: tiendaHabilitada,
         onTap: (i) => setState(() => _indiceActual = i),
       );
     }
 
-    final pestanas = _pestanasPorRol(perfil.rol);
+    final pestanas = _pestanasPorRol(perfil.rol, tiendaHabilitada);
     final indiceSafe = _indiceActual.clamp(0, pestanas.length - 1);
     final esAdmin =
         perfil.rol == RolUsuario.admin || perfil.rol == RolUsuario.superAdmin;
@@ -107,91 +113,93 @@ class _CarcasaAppState extends State<CarcasaApp> {
     final perfil = context.read<ProveedorAuth>().perfil;
     if (perfil == null) return;
     final reserva = context.read<ProveedorReserva>();
-    final tabs = _pestanasPorRol(rol);
-    if (indice < tabs.length) {
-      ServicioActividad.instancia.registrarPantalla(tabs[indice].etiqueta);
-    }
+    final tiendaHabilitada = context.read<ProveedorConfig>().tiendaHabilitada;
+    final tabs = _pestanasPorRol(rol, tiendaHabilitada);
+    if (indice >= tabs.length) return;
+    final id = tabs[indice].id;
+    ServicioActividad.instancia.registrarPantalla(tabs[indice].etiqueta);
 
-    switch (rol) {
-      case RolUsuario.sysadmin:
-        if (indice == 2) _keyConfigSysadmin.currentState?.recargar();
+    switch (id) {
+      case 'sysadmin_config':
+        _keyConfigSysadmin.currentState?.recargar();
         break;
-      case RolUsuario.client:
-        if (indice == 1) reserva.cargarReservasCliente(perfil.id);
+      case 'client_reservas':
+        reserva.cargarReservasCliente(perfil.id);
         break;
-      case RolUsuario.employee:
-        if (indice == 1) reserva.cargarReservasEmpleado(perfil.id);
+      case 'employee_reservas':
+        reserva.cargarReservasEmpleado(perfil.id);
         break;
-      case RolUsuario.admin:
-      case RolUsuario.superAdmin:
-        if (indice == 0) _keyDashboardAdmin.currentState?.recargar();
-        if (indice == 1) reserva.cargarTodasLasReservas();
+      case 'admin_dashboard':
+        _keyDashboardAdmin.currentState?.recargar();
+        break;
+      case 'admin_reservas':
+        reserva.cargarTodasLasReservas();
         break;
     }
   }
 
-  List<_Pestana> _pestanasPorRol(RolUsuario role) {
+  List<_Pestana> _pestanasPorRol(RolUsuario role, bool tiendaHabilitada) {
     switch (role) {
       case RolUsuario.sysadmin:
         return [
           _Pestana(Icons.shield_outlined, 'Dashboard',
               const PaginaTableroSysadmin(),
-              imagen: 'IMG/ADMIN.png'),
+              imagen: 'IMG/ADMIN.png', id: 'sysadmin_dashboard'),
           _Pestana(Icons.analytics_outlined, 'Logs', const PaginaLogs(),
-              imagen: 'IMG/ESTADISTICAS.png'),
+              imagen: 'IMG/ESTADISTICAS.png', id: 'sysadmin_logs'),
           _Pestana(Icons.manage_accounts_outlined, 'Config',
               PaginaConfigSysadmin(key: _keyConfigSysadmin),
-              imagen: 'IMG/PERFILESC.png'),
+              imagen: 'IMG/PERFILESC.png', id: 'sysadmin_config'),
+          _Pestana(Icons.dashboard_customize_outlined, 'Vista',
+              const PaginaDisenadorVista(),
+              imagen: 'IMG/CONFIGURACION.png', id: 'sysadmin_vista'),
         ];
       case RolUsuario.superAdmin:
       case RolUsuario.admin:
         return [
           _Pestana(Icons.dashboard_outlined, 'Dashboard',
               PaginaTableroAdmin(key: _keyDashboardAdmin),
-              imagen: 'IMG/DASHBOARD.png'),
+              imagen: 'IMG/DASHBOARD.png', id: 'admin_dashboard'),
           _Pestana(Icons.calendar_today_outlined, 'Reservas',
               const PaginaTodasReservas(),
-              imagen: 'IMG/RESERVAS.png'),
-          _Pestana(Icons.receipt_long_outlined, 'Pedidos',
-              const PaginaPedidosAdmin(),
-              imagen: 'IMG/PEDIDOS.png'),
+              imagen: 'IMG/RESERVAS.png', id: 'admin_reservas'),
+          if (tiendaHabilitada)
+            _Pestana(Icons.receipt_long_outlined, 'Pedidos',
+                const PaginaPedidosAdmin(),
+                imagen: 'IMG/PEDIDOS.png', id: 'admin_pedidos'),
           _Pestana(Icons.inventory_2_outlined, 'Insumos', const PaginaInsumos(),
-              imagen: 'IMG/INSUMOS.png'),
+              imagen: 'IMG/INSUMOS.png', id: 'admin_insumos'),
           _Pestana(Icons.settings_outlined, 'Config', const PaginaConfigAdmin(),
-              imagen: 'IMG/CONFIGURACION.png'),
+              imagen: 'IMG/CONFIGURACION.png', id: 'admin_config'),
         ];
       case RolUsuario.employee:
         return [
           _Pestana(Icons.dashboard_outlined, 'Mi Panel',
               const PaginaTableroEmpleado(),
-              imagen: 'IMG/INICIO.png'),
+              imagen: 'IMG/INICIO.png', id: 'employee_dashboard'),
           _Pestana(Icons.calendar_today_outlined, 'Mis Reservas',
               const PaginaReservasEmpleado(),
-              imagen: 'IMG/RESERVAS.png'),
-          _Pestana(
-              Icons.shopping_cart_outlined, 'Carrito', const PaginaCarrito(),
-              imagen: 'IMG/CARRITO_NAV.png'),
-          _Pestana(Icons.favorite_border_rounded, 'Favoritos',
-              const PaginaGuardados(),
-              imagen: 'IMG/FAVORITOS.png'),
+              imagen: 'IMG/RESERVAS.png', id: 'employee_reservas'),
           _Pestana(Icons.person_outline, 'Perfil', const PaginaPerfil(),
-              imagen: 'IMG/PERFIL.png'),
+              imagen: 'IMG/PERFIL.png', id: 'employee_perfil'),
         ];
       case RolUsuario.client:
         return [
           _Pestana(Icons.home_outlined, 'Inicio', const PaginaInicio(),
-              imagen: 'IMG/INICIO.png'),
+              imagen: 'IMG/INICIO.png', id: 'client_inicio'),
           _Pestana(Icons.calendar_today_outlined, 'Mis Reservas',
               const PaginaMisReservas(),
-              imagen: 'IMG/RESERVAS.png'),
-          _Pestana(
-              Icons.shopping_cart_outlined, 'Carrito', const PaginaCarrito(),
-              imagen: 'IMG/CARRITO_NAV.png'),
-          _Pestana(Icons.favorite_border_rounded, 'Favoritos',
-              const PaginaGuardados(),
-              imagen: 'IMG/FAVORITOS.png'),
+              imagen: 'IMG/RESERVAS.png', id: 'client_reservas'),
+          if (tiendaHabilitada)
+            _Pestana(
+                Icons.shopping_cart_outlined, 'Carrito', const PaginaCarrito(),
+                imagen: 'IMG/CARRITO_NAV.png', id: 'client_carrito'),
+          if (tiendaHabilitada)
+            _Pestana(Icons.favorite_border_rounded, 'Favoritos',
+                const PaginaGuardados(),
+                imagen: 'IMG/FAVORITOS.png', id: 'client_favoritos'),
           _Pestana(Icons.person_outline, 'Perfil', const PaginaPerfil(),
-              imagen: 'IMG/PERFIL.png'),
+              imagen: 'IMG/PERFIL.png', id: 'client_perfil'),
         ];
     }
   }
@@ -214,19 +222,17 @@ class _BarraNavegacion extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    // Ancho disponible descontando padding lateral (20+20) y espacio entre tabs
     final itemWidth = (screenWidth - 40) / pestanas.length;
-    // Ícono máximo 52px pero nunca más del 70% del espacio de cada tab
-    final iconSize = (itemWidth * 0.70).clamp(28.0, 52.0);
-    final barHeight = (iconSize + 44).clamp(72.0, 96.0);
+    final iconSize = (itemWidth * 0.70).clamp(22.0, 38.0);
+    final barHeight = (iconSize + 44).clamp(64.0, 84.0);
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+      padding: EdgeInsets.zero,
       child: Container(
         height: barHeight,
         decoration: BoxDecoration(
           color: kCard,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.zero,
           boxShadow: const [
             BoxShadow(
               color: Color(0x33000000),
@@ -248,26 +254,20 @@ class _BarraNavegacion extends StatelessWidget {
             return GestureDetector(
               onTap: () => onTap(i),
               child: Container(
-                padding: EdgeInsets.zero,
+                padding: selected ? const EdgeInsets.all(6) : EdgeInsets.zero,
                 decoration: selected
-                    ? BoxDecoration(
-                        color: kPrimary.withValues(alpha: 0.15),
+                    ? const BoxDecoration(
+                        color: Colors.white,
                         shape: BoxShape.circle,
                       )
                     : null,
-                child: pestanas[i].imagen != null
-                    ? Image.asset(
-                        pestanas[i].imagen!,
-                        width: iconSize,
-                        height: iconSize,
-                      )
-                    : Icon(
-                        selected
-                            ? _iconoActivo(pestanas[i].icono)
-                            : pestanas[i].icono,
-                        color: selected ? kPrimary : const Color(0xFF6E6E73),
-                        size: iconSize * 0.85,
-                      ),
+                child: Icon(
+                  selected
+                      ? _iconoActivo(pestanas[i].icono)
+                      : pestanas[i].icono,
+                  color: selected ? Colors.black : Colors.white,
+                  size: iconSize * 0.85,
+                ),
               ),
             );
           }),
@@ -294,25 +294,40 @@ class _Pestana {
   final String? imagen; // ruta asset PNG personalizado
   final String etiqueta;
   final Widget pagina;
-  const _Pestana(this.icono, this.etiqueta, this.pagina, {this.imagen});
+  final String id;
+  const _Pestana(this.icono, this.etiqueta, this.pagina,
+      {this.imagen, this.id = ''});
 }
 
 // ── Shell para invitados (sin login) ─────────────────────────
 class _ShellInvitado extends StatelessWidget {
   final int indiceActual;
+  final bool tiendaHabilitada;
   final ValueChanged<int> onTap;
 
-  const _ShellInvitado({required this.indiceActual, required this.onTap});
+  const _ShellInvitado({
+    required this.indiceActual,
+    required this.tiendaHabilitada,
+    required this.onTap,
+  });
 
-  static const _pestanas = [
+  static const _pestanasBase = [
     _Pestana(Icons.home_outlined, 'Inicio', PaginaInicio(),
         imagen: 'IMG/INICIO.png'),
     _Pestana(Icons.calendar_today_outlined, 'Mis Reservas',
         PaginaMuroInvitado(mensaje: 'Inicia sesión para ver tus reservas'),
         imagen: 'IMG/RESERVAS.png'),
+  ];
+
+  static const _pestanasTienda = [
+    _Pestana(Icons.shopping_cart_outlined, 'Carrito', PaginaCarrito(),
+        imagen: 'IMG/CARRITO_NAV.png'),
     _Pestana(Icons.favorite_border_rounded, 'Favoritos',
         PaginaMuroInvitado(mensaje: 'Inicia sesión para ver tus favoritos'),
         imagen: 'IMG/FAVORITOS.png'),
+  ];
+
+  static const _pestanasFinal = [
     _Pestana(Icons.person_outline, 'Perfil',
         PaginaMuroInvitado(mensaje: 'Inicia sesión para ver tu perfil'),
         imagen: 'IMG/PERFIL.png'),
@@ -320,15 +335,20 @@ class _ShellInvitado extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final indice = indiceActual.clamp(0, _pestanas.length - 1);
+    final pestanas = [
+      ..._pestanasBase,
+      if (tiendaHabilitada) ..._pestanasTienda,
+      ..._pestanasFinal,
+    ];
+    final indice = indiceActual.clamp(0, pestanas.length - 1);
     return Scaffold(
       extendBody: true,
       body: IndexedStack(
         index: indice,
-        children: _pestanas.map((t) => t.pagina).toList(),
+        children: pestanas.map((t) => t.pagina).toList(),
       ),
       bottomNavigationBar: _BarraNavegacion(
-        pestanas: _pestanas,
+        pestanas: pestanas,
         indiceSafe: indice,
         mostrarCarrito: true,
         onTap: onTap,

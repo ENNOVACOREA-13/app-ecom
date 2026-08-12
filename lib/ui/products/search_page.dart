@@ -63,7 +63,7 @@ class _PaginaBusquedaProductosState extends State<PaginaBusquedaProductos> {
                     child: const Padding(
                       padding: EdgeInsets.only(right: 10),
                       child: Icon(Icons.arrow_back_ios_new_rounded,
-                          size: 20, color: kText),
+                          size: 20, color: Color(0xFF1C1C1E)),
                     ),
                   ),
                   Expanded(
@@ -84,7 +84,7 @@ class _PaginaBusquedaProductosState extends State<PaginaBusquedaProductos> {
                               controller: _ctrl,
                               autofocus: true,
                               style: const TextStyle(
-                                  fontSize: 14, color: kText),
+                                  fontSize: 14, color: Color(0xFF1C1C1E)),
                               decoration: const InputDecoration(
                                 hintText: 'Buscar productos...',
                                 hintStyle:
@@ -141,8 +141,8 @@ class _PaginaBusquedaProductosState extends State<PaginaBusquedaProductos> {
                       : GridView.builder(
                           padding: const EdgeInsets.fromLTRB(16, 4, 16, 100),
                           gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
+                              const SliverGridDelegateWithMaxCrossAxisExtent(
+                            maxCrossAxisExtent: 230,
                             crossAxisSpacing: 14,
                             mainAxisSpacing: 14,
                             childAspectRatio: 0.62,
@@ -173,12 +173,11 @@ class _EstadoVacio extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(28),
             decoration: const BoxDecoration(
-              color: kCard,
+              color: Color(0xFFF2F2F7),
               shape: BoxShape.circle,
-              boxShadow: kNeumorphicShadows,
             ),
             child: const Icon(Icons.search_off_rounded,
-                size: 48, color: kTextMuted),
+                size: 48, color: Color(0xFF8E8E93)),
           ),
           const SizedBox(height: 20),
           Text(
@@ -474,11 +473,9 @@ class _BotonBusqueda extends StatelessWidget {
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20)),
               ),
-              child: Text(label,
-                  style: TextStyle(
-                      fontSize: 11,
-                      color: onTap == null ? Colors.black26 : bg,
-                      fontWeight: FontWeight.w700)),
+              child: Icon(Icons.shopping_cart_outlined,
+                  size: 18,
+                  color: onTap == null ? Colors.black26 : bg),
             )
           : ElevatedButton(
               onPressed: onTap,

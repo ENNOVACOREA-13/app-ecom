@@ -17,12 +17,22 @@ class ProveedorPedido extends ChangeNotifier {
     required String clienteId,
     required List<ItemCarrito> items,
     String? notas,
+    String metodoPago = 'cash',
+    String estadoPago = 'pending',
+    String? stripePaymentId,
   }) async {
     _cargando = true;
     _error = null;
     notifyListeners();
     try {
-      await _repo.crearPedido(clienteId: clienteId, items: items, notas: notas);
+      await _repo.crearPedido(
+        clienteId: clienteId,
+        items: items,
+        notas: notas,
+        metodoPago: metodoPago,
+        estadoPago: estadoPago,
+        stripePaymentId: stripePaymentId,
+      );
       _cargando = false;
       notifyListeners();
       return true;

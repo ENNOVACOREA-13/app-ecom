@@ -12,6 +12,7 @@ class Reserva {
   final double precioTotal;
   final String? notas;
   final DateTime creadoEn;
+  final bool cancelacionSolicitada;
 
   // Joined fields (nullable – solo cuando se hace JOIN)
   final String? nombreCliente;
@@ -31,6 +32,7 @@ class Reserva {
     required this.precioTotal,
     this.notas,
     required this.creadoEn,
+    this.cancelacionSolicitada = false,
     this.nombreCliente,
     this.nombreEmpleado,
     this.nombreServicio,
@@ -50,6 +52,7 @@ class Reserva {
       precioTotal: (map['total_price'] as num).toDouble(),
       notas: map['notes'] as String?,
       creadoEn: DateTime.tryParse(map['created_at'] as String? ?? '') ?? DateTime.now(),
+      cancelacionSolicitada: map['cancel_requested'] as bool? ?? false,
       nombreCliente: map['client_name'] as String?,
       nombreEmpleado: map['employee_name'] as String?,
       nombreServicio: map['service_name'] as String?,
@@ -57,6 +60,10 @@ class Reserva {
     );
   }
 
-  bool get puedeCancelar =>
-      estado == EstadoReserva.pending || estado == EstadoReserva.confirmed;
+  /// El cliente puede cancelar directo solo si está pendiente.
+  bool get puedeCancelarDirecto => estado == EstadoReserva.pending;
+
+  /// Reserva confirmada, sin solicitud de cancelación en curso todavía.
+  bool get puedeSolicitarCancelacion =>
+      estado == EstadoReserva.confirmed && !cancelacionSolicitada;
 }

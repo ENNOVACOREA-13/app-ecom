@@ -41,6 +41,9 @@ class Pedido {
   final List<ItemPedido> items;
   final String? nombreCliente;
   final String? telefonoCliente;
+  final String metodoPago; // 'cash' | 'card' | 'transfer'
+  final String estadoPago; // 'pending' | 'paid'
+  final String? stripePaymentId;
 
   const Pedido({
     required this.id,
@@ -52,6 +55,9 @@ class Pedido {
     this.items = const [],
     this.nombreCliente,
     this.telefonoCliente,
+    this.metodoPago = 'cash',
+    this.estadoPago = 'pending',
+    this.stripePaymentId,
   });
 
   factory Pedido.fromMap(Map<String, dynamic> map) {
@@ -67,6 +73,9 @@ class Pedido {
       items: itemsData.map((i) => ItemPedido.fromMap(i as Map<String, dynamic>)).toList(),
       nombreCliente: profileData?['full_name'] as String?,
       telefonoCliente: profileData?['phone'] as String?,
+      metodoPago: map['payment_method'] as String? ?? 'cash',
+      estadoPago: map['payment_status'] as String? ?? 'pending',
+      stripePaymentId: map['stripe_payment_id'] as String?,
     );
   }
 }

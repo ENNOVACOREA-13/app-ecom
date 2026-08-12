@@ -1,5 +1,8 @@
+import 'dart:convert';
 import 'dart:typed_data';
+import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../core/constants.dart';
 import '../domain/models/profile.dart';
 
 class RepositorioAuth {
@@ -8,7 +11,13 @@ class RepositorioAuth {
   Future<Perfil> iniciarSesion({required String correo, required String contrasena}) async {
     final resultado = await _client.auth.signInWithPassword(email: correo, password: contrasena);
     if (resultado.user == null) throw Exception('Credenciales incorrectas');
-    return _obtenerPerfilConReintento(resultado.user!.id);
+
+    final perfil = await _obtenerPerfilConReintento(resultado.user!.id);
+    if (!perfil.emailVerificado) {
+      await _client.auth.signOut();
+      throw Exception('email_not_verified');
+    }
+    return perfil;
   }
 
   Future<Perfil> registrarse({
@@ -23,11 +32,6 @@ class RepositorioAuth {
       data: {'full_name': nombreCompleto, 'role': 'client'},
     );
     if (resultado.user == null) throw Exception('Error al crear la cuenta');
-
-    // Si Supabase requiere confirmación de email, no hay sesión activa
-    if (resultado.session == null) {
-      throw Exception('email_confirmation_required');
-    }
 
     // Esperar a que el trigger cree el perfil
     await Future.delayed(const Duration(seconds: 1));
@@ -52,7 +56,38 @@ class RepositorioAuth {
       await _client.from('profiles').update({'phone': telefono}).eq('id', resultado.user!.id);
     }
 
-    return _obtenerPerfilConReintento(resultado.user!.id);
+    // El registro nunca deja al usuario logueado: debe confirmar su correo
+    // (enviado con nuestro propio SMTP) antes de poder iniciar sesión.
+    if (resultado.session != null) {
+      try {
+        await _enviarCorreoConfirmacion();
+      } catch (_) {}
+      await _client.auth.signOut();
+    }
+    throw Exception('email_confirmation_required');
+  }
+
+  Future<void> _enviarCorreoConfirmacion() async {
+    final session = _client.auth.currentSession;
+    if (session == null) return;
+    await http.post(
+      Uri.parse('$kSupabaseUrl/functions/v1/send-confirmation-email'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ${session.accessToken}',
+      },
+    );
+  }
+
+  /// Envía el correo de recuperación (vía nuestro SMTP) si el correo existe.
+  /// Siempre "tiene éxito" desde el punto de vista de la UI, para no revelar
+  /// si una cuenta existe o no.
+  Future<void> solicitarRecuperacionContrasena(String correo) async {
+    await http.post(
+      Uri.parse('$kSupabaseUrl/functions/v1/send-password-reset-email'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'email': correo}),
+    );
   }
 
   Future<Perfil?> obtenerPerfilActual() async {

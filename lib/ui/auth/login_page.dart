@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../core/constants.dart';
 import '../../core/theme/app_theme.dart';
 import '../common/app_widgets.dart';
 
@@ -51,11 +52,22 @@ class _PaginaLoginState extends State<PaginaLogin> {
                   width: 80,
                   height: 80,
                   decoration: const BoxDecoration(
-                    color: kCard,
+                    color: Colors.white,
                     borderRadius: BorderRadius.all(Radius.circular(24)),
                     boxShadow: kNeumorphicShadows,
                   ),
-                  child: const Icon(Icons.content_cut, color: Colors.white, size: 36),
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.all(Radius.circular(24)),
+                    child: Padding(
+                      padding: const EdgeInsets.all(10),
+                      child: Image.network(
+                        kUrlLogoBarberia,
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) =>
+                            const Icon(Icons.content_cut, color: Colors.black, size: 36),
+                      ),
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(height: 32),
@@ -124,7 +136,14 @@ class _PaginaLoginState extends State<PaginaLogin> {
                         return null;
                       },
                     ),
-                    const SizedBox(height: 24),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: () => context.go('/forgot-password'),
+                        child: const Text('¿Olvidaste tu contraseña?'),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
                     BotonPrincipal(
                       etiqueta: 'Iniciar sesión',
                       onPressed: _enviar,

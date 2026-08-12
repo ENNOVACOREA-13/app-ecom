@@ -18,6 +18,12 @@ class _PaginaInsumosState extends State<PaginaInsumos> {
   bool _cargando = true;
   String _busqueda = '';
 
+  double get _totalComprado => _insumos.fold<double>(0, (s, i) {
+        final precio = (i['price'] as num?)?.toDouble() ?? 0;
+        final cantidad = (i['stock'] as num?)?.toDouble() ?? 0;
+        return s + (precio * cantidad);
+      });
+
   @override
   void initState() {
     super.initState();
@@ -48,14 +54,14 @@ class _PaginaInsumosState extends State<PaginaInsumos> {
     final perfil = context.read<ProveedorAuth>().perfil;
     final nombreCtrl = TextEditingController(text: insumo?['name'] ?? '');
     final descCtrl = TextEditingController(text: insumo?['description'] ?? '');
+    final cantidadCtrl = TextEditingController(text: insumo?['stock']?.toString() ?? '');
     final precioCtrl = TextEditingController(text: insumo?['price']?.toString() ?? '');
-    final stockCtrl = TextEditingController(text: insumo?['stock']?.toString() ?? '0');
     final unidadCtrl = TextEditingController(text: insumo?['unit'] ?? 'unidad');
 
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: kCard,
+      backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (ctx) => Padding(
@@ -69,22 +75,30 @@ class _PaginaInsumosState extends State<PaginaInsumos> {
               child: Container(
                   width: 40, height: 4,
                   decoration: BoxDecoration(
-                      color: Colors.white24,
+                      color: Colors.grey.shade300,
                       borderRadius: BorderRadius.circular(2))),
             ),
             const SizedBox(height: 16),
-            Text(insumo == null ? 'Nuevo insumo' : 'Editar insumo',
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text(insumo == null ? 'Registrar compra' : 'Editar compra',
+                style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1C1C1E))),
+            if (insumo != null) ...[
+              const SizedBox(height: 4),
+              Text('Registrado el ${_fmtFecha(insumo['created_at'] as String?)}',
+                  style: const TextStyle(color: kTextSub, fontSize: 12)),
+            ],
             const SizedBox(height: 16),
             _campo(nombreCtrl, 'Nombre', Icons.inventory_2_outlined),
             const SizedBox(height: 12),
             _campo(descCtrl, 'Descripción (opcional)', Icons.notes_outlined),
             const SizedBox(height: 12),
             Row(children: [
-              Expanded(child: _campo(precioCtrl, 'Precio', Icons.attach_money,
+              Expanded(child: _campo(cantidadCtrl, 'Cantidad comprada', Icons.numbers,
                   tipo: TextInputType.number)),
               const SizedBox(width: 12),
-              Expanded(child: _campo(stockCtrl, 'Stock', Icons.numbers,
+              Expanded(child: _campo(precioCtrl, 'Precio unitario (\$)', Icons.attach_money,
                   tipo: TextInputType.number)),
             ]),
             const SizedBox(height: 12),
@@ -94,7 +108,7 @@ class _PaginaInsumosState extends State<PaginaInsumos> {
               width: double.infinity,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                    backgroundColor: kPrimary,
+                    backgroundColor: context.colorPrimario,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
@@ -106,8 +120,8 @@ class _PaginaInsumosState extends State<PaginaInsumos> {
                     'description': descCtrl.text.trim().isEmpty
                         ? null
                         : descCtrl.text.trim(),
+                    'stock': int.tryParse(cantidadCtrl.text) ?? 0,
                     'price': double.tryParse(precioCtrl.text) ?? 0,
-                    'stock': int.tryParse(stockCtrl.text) ?? 0,
                     'unit': unidadCtrl.text.trim(),
                     'status': 'active',
                   };
@@ -122,7 +136,7 @@ class _PaginaInsumosState extends State<PaginaInsumos> {
                   }
                   _cargar();
                 },
-                child: Text(insumo == null ? 'Crear insumo' : 'Guardar cambios'),
+                child: Text(insumo == null ? 'Registrar' : 'Guardar cambios'),
               ),
             ),
           ],
@@ -136,12 +150,12 @@ class _PaginaInsumosState extends State<PaginaInsumos> {
     return TextField(
       controller: ctrl,
       keyboardType: tipo,
-      style: const TextStyle(color: Colors.white),
+      style: const TextStyle(color: Color(0xFF1C1C1E)),
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon, color: kTextSub),
         filled: true,
-        fillColor: const Color(0xFF2C2C2E),
+        fillColor: const Color(0xFFF2F2F7),
         border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide.none),
@@ -154,9 +168,11 @@ class _PaginaInsumosState extends State<PaginaInsumos> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: kCard,
-        title: const Text('Eliminar insumo'),
-        content: const Text('¿Seguro que quieres eliminar este insumo?'),
+        backgroundColor: Colors.white,
+        title: const Text('Eliminar compra',
+            style: TextStyle(color: Color(0xFF1C1C1E))),
+        content: const Text('¿Seguro que quieres eliminar este registro?',
+            style: TextStyle(color: Color(0xFF1C1C1E))),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false),
               child: const Text('Cancelar')),
@@ -172,52 +188,51 @@ class _PaginaInsumosState extends State<PaginaInsumos> {
     }
   }
 
+  String _fmtFecha(String? iso) {
+    final dt = iso == null ? null : DateTime.tryParse(iso)?.toLocal();
+    if (dt == null) return '';
+    return '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final color = context.colorPrimario;
     return Scaffold(
       backgroundColor: kBackground,
+      appBar: AppBar(
+        title: const Text('Insumos'),
+        actions: [
+          IconButton(
+            onPressed: _cargar,
+            icon: const Icon(Icons.refresh_outlined, color: kTextSub),
+          ),
+          IconButton(
+            onPressed: () => _mostrarFormulario(),
+            icon: Icon(Icons.add_circle_outline, color: color),
+          ),
+        ],
+      ),
       body: SafeArea(
         child: Column(
           children: [
-            // Header
+            // Total comprado
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-              child: Row(children: [
-                Container(
-                  width: 44, height: 44,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                        colors: [color, color.withOpacity(0.7)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: const Icon(Icons.inventory_2_outlined,
-                      color: Colors.white, size: 22),
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                const SizedBox(width: 12),
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Insumos', style: TextStyle(
-                          fontSize: 20, fontWeight: FontWeight.bold,
-                          color: Color(0xFF1C1C1E))),
-                      Text('Tienda interna de suministros',
-                          style: TextStyle(color: kTextSub, fontSize: 12)),
-                    ],
-                  ),
-                ),
-                IconButton(
-                  onPressed: _cargar,
-                  icon: const Icon(Icons.refresh_outlined, color: kTextSub),
-                ),
-                IconButton(
-                  onPressed: () => _mostrarFormulario(),
-                  icon: Icon(Icons.add_circle_outline, color: color),
-                ),
-              ]),
+                child: Row(children: [
+                  Icon(Icons.receipt_long_outlined, size: 16, color: color),
+                  const SizedBox(width: 8),
+                  Text('Total comprado: \$${_totalComprado.toStringAsFixed(2)}',
+                      style: TextStyle(
+                          color: color, fontSize: 12, fontWeight: FontWeight.w600)),
+                ]),
+              ),
             ),
 
             // Buscador
@@ -253,7 +268,7 @@ class _PaginaInsumosState extends State<PaginaInsumos> {
                               Icon(Icons.inventory_2_outlined,
                                   size: 56, color: color.withOpacity(0.4)),
                               const SizedBox(height: 12),
-                              const Text('Sin insumos',
+                              const Text('Sin compras registradas',
                                   style: TextStyle(color: kTextSub)),
                             ],
                           ),
@@ -264,6 +279,7 @@ class _PaginaInsumosState extends State<PaginaInsumos> {
                           itemBuilder: (_, i) => _TarjetaInsumo(
                             insumo: _filtrados[i],
                             color: color,
+                            fecha: _fmtFecha(_filtrados[i]['created_at'] as String?),
                             onEditar: () => _mostrarFormulario(insumo: _filtrados[i]),
                             onEliminar: () => _eliminar(_filtrados[i]['id']),
                           ),
@@ -279,85 +295,74 @@ class _PaginaInsumosState extends State<PaginaInsumos> {
 class _TarjetaInsumo extends StatelessWidget {
   final Map<String, dynamic> insumo;
   final Color color;
+  final String fecha;
   final VoidCallback onEditar;
   final VoidCallback onEliminar;
 
   const _TarjetaInsumo({
     required this.insumo,
     required this.color,
+    required this.fecha,
     required this.onEditar,
     required this.onEliminar,
   });
 
   @override
   Widget build(BuildContext context) {
-    final stock = insumo['stock'] as int? ?? 0;
+    final cantidad = insumo['stock'] as int? ?? 0;
     final precio = (insumo['price'] as num?)?.toDouble() ?? 0;
     final unidad = insumo['unit'] as String? ?? 'unidad';
+    final total = precio * cantidad;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: const [BoxShadow(color: Color(0x0A000000), blurRadius: 8)],
-      ),
-      child: Row(children: [
-        Container(
-          width: 48, height: 48,
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(Icons.inventory_2_outlined, color: color, size: 24),
+    return GestureDetector(
+      onTap: onEditar,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: const [BoxShadow(color: Color(0x0A000000), blurRadius: 8)],
         ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(insumo['name'] as String,
-                style: const TextStyle(fontWeight: FontWeight.w600,
-                    color: Color(0xFF1C1C1E))),
-            const SizedBox(height: 2),
-            Text('\$${precio.toStringAsFixed(2)} / $unidad',
-                style: const TextStyle(color: kTextSub, fontSize: 12)),
-          ]),
-        ),
-        Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+        child: Row(children: [
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            width: 48, height: 48,
             decoration: BoxDecoration(
-              color: stock > 5
-                  ? Colors.green.withOpacity(0.12)
-                  : stock > 0
-                      ? Colors.orange.withOpacity(0.12)
-                      : Colors.red.withOpacity(0.12),
-              borderRadius: BorderRadius.circular(8),
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
             ),
-            child: Text('$stock ${stock == 1 ? unidad : '${unidad}s'}',
-                style: TextStyle(
-                  fontSize: 11, fontWeight: FontWeight.w600,
-                  color: stock > 5
-                      ? Colors.green
-                      : stock > 0
-                          ? Colors.orange
-                          : Colors.red,
-                )),
+            child: Icon(Icons.inventory_2_outlined, color: color, size: 24),
           ),
-          const SizedBox(height: 4),
-          Row(children: [
-            GestureDetector(
-              onTap: onEditar,
-              child: Icon(Icons.edit_outlined, size: 18, color: color),
-            ),
-            const SizedBox(width: 8),
-            GestureDetector(
-              onTap: onEliminar,
-              child: const Icon(Icons.delete_outline, size: 18, color: Colors.red),
-            ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(insumo['name'] as String,
+                  style: const TextStyle(fontWeight: FontWeight.w600,
+                      color: Color(0xFF1C1C1E))),
+              const SizedBox(height: 2),
+              Text('$cantidad $unidad × \$${precio.toStringAsFixed(2)} · $fecha',
+                  style: const TextStyle(color: kTextSub, fontSize: 12)),
+            ]),
+          ),
+          Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+            Text('\$${total.toStringAsFixed(2)}',
+                style: TextStyle(
+                    fontSize: 15, fontWeight: FontWeight.w700, color: color)),
+            const SizedBox(height: 4),
+            Row(children: [
+              GestureDetector(
+                onTap: onEditar,
+                child: Icon(Icons.edit_outlined, size: 18, color: color),
+              ),
+              const SizedBox(width: 8),
+              GestureDetector(
+                onTap: onEliminar,
+                child: const Icon(Icons.delete_outline, size: 18, color: Colors.red),
+              ),
+            ]),
           ]),
         ]),
-      ]),
+      ),
     );
   }
 }

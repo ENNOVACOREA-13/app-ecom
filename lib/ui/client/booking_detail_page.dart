@@ -1,0 +1,409 @@
+import 'dart:typed_data';
+import 'dart:ui' as ui;
+import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import 'package:qr_flutter/qr_flutter.dart';
+import 'package:share_plus/share_plus.dart';
+import '../../domain/enums/booking_status.dart';
+import '../../domain/models/booking.dart';
+import '../../providers/auth_provider.dart';
+import '../../providers/booking_provider.dart';
+import '../../core/theme/app_theme.dart';
+import '../common/app_widgets.dart';
+
+class PaginaDetalleReserva extends StatefulWidget {
+  final Reserva reserva;
+  const PaginaDetalleReserva({super.key, required this.reserva});
+
+  @override
+  State<PaginaDetalleReserva> createState() => _PaginaDetalleReservaState();
+}
+
+class _PaginaDetalleReservaState extends State<PaginaDetalleReserva> {
+  final _claveTarjeta = GlobalKey();
+  Reserva get reserva => widget.reserva;
+
+  Future<void> _compartirQr(BuildContext context) async {
+    try {
+      final boundary = _claveTarjeta.currentContext!.findRenderObject() as RenderRepaintBoundary;
+      final imagen = await boundary.toImage(pixelRatio: 3);
+      final byteData = await imagen.toByteData(format: ui.ImageByteFormat.png);
+      final bytes = byteData!.buffer.asUint8List();
+      final fechaTexto = DateFormat('dd MMM yyyy', 'es_ES').format(reserva.fechaReserva);
+
+      await Share.shareXFiles(
+        [XFile.fromData(bytes, name: 'reserva_qr.png', mimeType: 'image/png')],
+        text:
+            'Código QR de mi cita: ${reserva.nombreServicio ?? 'Servicio'} el $fechaTexto a las ${reserva.horaInicio}. Muéstralo al llegar.',
+      );
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('No se pudo compartir: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _cancelar(BuildContext context) async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Cancelar reserva'),
+        content: const Text('¿Seguro que quieres cancelar esta reserva?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('No')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Cancelar reserva', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+    if (confirmar == true && context.mounted) {
+      final perfil = context.read<ProveedorAuth>().perfil!;
+      await context.read<ProveedorReserva>().cancelarReserva(
+            reserva.id,
+            perfil.id,
+            motivo: 'Cancelada por el cliente',
+          );
+      if (context.mounted) Navigator.pop(context);
+    }
+  }
+
+  Future<void> _solicitarCancelacion(BuildContext context) async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Solicitar cancelación'),
+        content: const Text(
+            'Esta reserva ya está confirmada. Se enviará una solicitud de cancelación al negocio para que la apruebe. ¿Continuar?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('No')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Solicitar cancelación', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+    if (confirmar == true && context.mounted) {
+      await context.read<ProveedorReserva>().solicitarCancelacion(reserva.id);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Solicitud enviada, en espera de aprobación')),
+        );
+        Navigator.pop(context);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final r = reserva;
+    final fechaTexto = DateFormat('dd MMM yyyy', 'es_ES').format(r.fechaReserva);
+
+    final tamano = MediaQuery.of(context).size;
+
+    return Scaffold(
+      backgroundColor: kBackground,
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
+        titleTextStyle: const TextStyle(
+            color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700),
+        title: const Text('Detalles de reserva'),
+        actions: [
+          if (r.estado == EstadoReserva.confirmed)
+            IconButton(
+              icon: const Icon(Icons.share_outlined),
+              tooltip: 'Compartir QR',
+              onPressed: () => _compartirQr(context),
+            ),
+        ],
+      ),
+      body: Stack(
+        children: [
+          Positioned(
+            top: (tamano.height * 0.4) - (tamano.width * 1.15),
+            left: (tamano.width - (tamano.width * 1.15)) / 2,
+            child: Container(
+              width: tamano.width * 1.15,
+              height: tamano.width * 1.15,
+              decoration: const BoxDecoration(color: Color(0xFF1C1C1E), shape: BoxShape.circle),
+            ),
+          ),
+          SafeArea(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(20, kToolbarHeight + 20, 20, 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              RepaintBoundary(
+                key: _claveTarjeta,
+                child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(color: Colors.black.withOpacity(0.15), blurRadius: 18, offset: const Offset(0, 8)),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                          child: Column(
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      r.nombreServicio ?? 'Servicio',
+                                      style: const TextStyle(
+                                          color: Color(0xFF1C1C1E), fontWeight: FontWeight.w700, fontSize: 17),
+                                    ),
+                                  ),
+                                  ChipEstado(etiqueta: r.estado.label, color: r.estado.color),
+                                ],
+                              ),
+                              const SizedBox(height: 2),
+                              Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text(fechaTexto,
+                                    style: const TextStyle(color: Color(0xFF6E6E73), fontSize: 12)),
+                              ),
+                              const SizedBox(height: 20),
+                              const Divider(height: 1, color: Color(0xFFE5E5EA)),
+                              const SizedBox(height: 16),
+
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: _CampoDetalle(
+                                        etiqueta: 'Servicio', valor: r.nombreServicio ?? '—'),
+                                  ),
+                                  Expanded(
+                                    child: _CampoDetalle(
+                                        etiqueta: 'Empleado', valor: r.nombreEmpleado ?? '—'),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 18),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: _CampoDetalle(etiqueta: 'Fecha', valor: fechaTexto),
+                                  ),
+                                  Expanded(
+                                    child: _CampoDetalle(
+                                        etiqueta: 'Horario', valor: '${r.horaInicio} – ${r.horaFin}'),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 18),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: _CampoDetalle(
+                                        etiqueta: 'Total',
+                                        valor: '\$${r.precioTotal.toStringAsFixed(0)}',
+                                        destacado: true),
+                                  ),
+                                  Expanded(
+                                    child: _CampoDetalle(etiqueta: 'Estado', valor: r.estado.label),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 20),
+                            ],
+                          ),
+                        ),
+
+                        if (r.estado == EstadoReserva.confirmed) ...[
+                          SizedBox(
+                            height: 1,
+                            child: Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                const Positioned.fill(child: _LineaPunteada()),
+                                Positioned(
+                                  left: -12, top: -12,
+                                  child: _Circulo(radio: 12, color: const Color(0xFFF2F2F7)),
+                                ),
+                                Positioned(
+                                  right: -12, top: -12,
+                                  child: _Circulo(radio: 12, color: const Color(0xFFF2F2F7)),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+                            child: Column(
+                              children: [
+                                QrImageView(
+                                  data: 'reserva:${r.id}',
+                                  version: QrVersions.auto,
+                                  size: 180,
+                                  backgroundColor: Colors.white,
+                                ),
+                                const SizedBox(height: 12),
+                                const Text(
+                                  'Muestra este código al llegar a tu cita',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(color: Color(0xFF6E6E73), fontSize: 12),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ] else if (r.estado == EstadoReserva.pending) ...[
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF2F2F7),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: const Text(
+                                'El código QR estará disponible cuando el negocio confirme tu reserva',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(color: Color(0xFF6E6E73), fontSize: 12),
+                              ),
+                            ),
+                          ),
+                        ] else
+                          const SizedBox(height: 20),
+                      ],
+                    ),
+                  ),
+                ),
+
+              if (r.puedeCancelarDirecto) ...[
+                const SizedBox(height: 20),
+                OutlinedButton(
+                  onPressed: () => _cancelar(context),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.red,
+                    side: const BorderSide(color: Colors.red),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text('Cancelar reserva'),
+                ),
+              ],
+              if (r.puedeSolicitarCancelacion) ...[
+                const SizedBox(height: 20),
+                OutlinedButton(
+                  onPressed: () => _solicitarCancelacion(context),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.red,
+                    side: const BorderSide(color: Colors.red),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text('Solicitar cancelación'),
+                ),
+              ],
+              if (r.estado == EstadoReserva.confirmed && r.cancelacionSolicitada) ...[
+                const SizedBox(height: 20),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.hourglass_top_rounded, size: 16, color: Colors.orange),
+                      SizedBox(width: 8),
+                      Text('Cancelación solicitada, esperando aprobación',
+                          style: TextStyle(color: Colors.orange, fontSize: 12, fontWeight: FontWeight.w600)),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CampoDetalle extends StatelessWidget {
+  final String etiqueta;
+  final String valor;
+  final bool destacado;
+  const _CampoDetalle({required this.etiqueta, required this.valor, this.destacado = false});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(etiqueta,
+            style: const TextStyle(color: Color(0xFF8E8E93), fontSize: 11, fontWeight: FontWeight.w600)),
+        const SizedBox(height: 4),
+        Text(
+          valor,
+          style: TextStyle(
+            color: destacado ? context.colorPrimario : const Color(0xFF1C1C1E),
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ── Línea punteada (perforación del ticket) ─────────────────────
+class _LineaPunteada extends StatelessWidget {
+  const _LineaPunteada();
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const anchoGuion = 6.0;
+        const espacio = 5.0;
+        final cantidad = (constraints.maxWidth / (anchoGuion + espacio)).floor();
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: List.generate(
+            cantidad,
+            (_) => Container(width: anchoGuion, height: 1.5, color: const Color(0xFFD1D1D6)),
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ── Círculo "muesca" del ticket ──────────────────────────────────
+class _Circulo extends StatelessWidget {
+  final double radio;
+  final Color color;
+  const _Circulo({required this.radio, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: radio * 2,
+      height: radio * 2,
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+    );
+  }
+}

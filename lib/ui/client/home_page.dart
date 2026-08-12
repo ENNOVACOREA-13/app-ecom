@@ -1,20 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/service_provider.dart';
 import '../../providers/product_provider.dart';
 import '../../domain/models/service_model.dart' show ModeloServicio;
 import '../../domain/models/product.dart';
+import '../../core/constants.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/service_icons.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/saved_provider.dart';
+import '../../providers/config_provider.dart';
 import '../cart/cart_page.dart';
 import '../common/app_widgets.dart';
 import '../auth/guest_wall_page.dart';
 
 class PaginaInicio extends StatefulWidget {
-  const PaginaInicio({super.key});
+  final bool modoEdicion;
+  const PaginaInicio({super.key, this.modoEdicion = false});
 
   @override
   State<PaginaInicio> createState() => _PaginaInicioState();
@@ -23,20 +28,420 @@ class PaginaInicio extends StatefulWidget {
 class _PaginaInicioState extends State<PaginaInicio> {
   final _ctrlBusqueda = TextEditingController();
   String _busqueda = '';
+  ProveedorConfig? _cfgVistaPrevia;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<ProveedorServicio>().cargarServicios();
-      context.read<ProveedorProducto>().cargarProductos(esVistaAdmin: false);
+      if (context.read<ProveedorConfig>().tiendaHabilitada) {
+        context.read<ProveedorProducto>().cargarProductos(esVistaAdmin: false);
+      }
+      if (widget.modoEdicion) {
+        _cfgVistaPrevia = context.read<ProveedorConfig>();
+        _cfgVistaPrevia!.activarVistaPrevia();
+      }
     });
   }
 
   @override
   void dispose() {
     _ctrlBusqueda.dispose();
+    _cfgVistaPrevia?.desactivarVistaPrevia();
     super.dispose();
+  }
+
+  Future<void> _editarSeccionCategorias() async {
+    final cfg = context.read<ProveedorConfig>();
+    final ctrlTitulo = TextEditingController(text: cfg.categoriasTituloBorrador);
+    String formaLocal = cfg.categoriasFormaBorrador;
+    double tamanoIconoLocal = cfg.categoriasIconoTamanoBorrador;
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => StatefulBuilder(
+        builder: (_, setS) => Padding(
+          padding: EdgeInsets.only(
+              bottom: MediaQuery.of(ctx).viewInsets.bottom,
+              left: 24, right: 24, top: 24),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(children: [
+                  const Text('Editar sección',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Spacer(),
+                  IconButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      icon: const Icon(Icons.close)),
+                ]),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: ctrlTitulo,
+                  style: const TextStyle(color: Color(0xFF1C1C1E)),
+                  decoration: InputDecoration(
+                    labelText: 'Título de la sección',
+                    filled: true,
+                    fillColor: const Color(0xFFF2F2F7),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text('Forma de los íconos', style: TextStyle(
+                    fontSize: 13, color: kTextSub, fontWeight: FontWeight.w500)),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _BotonForma(
+                        icono: Icons.circle_outlined,
+                        etiqueta: 'Círculo',
+                        seleccionado: formaLocal == 'circulo',
+                        onTap: () => setS(() => formaLocal = 'circulo'),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _BotonForma(
+                        icono: Icons.square_outlined,
+                        etiqueta: 'Cuadrado',
+                        seleccionado: formaLocal == 'cuadrado',
+                        onTap: () => setS(() => formaLocal = 'cuadrado'),
+                      ),
+                    ),
+                  ],
+                ),
+                if (formaLocal == 'cuadrado') ...[
+                  const SizedBox(height: 20),
+                  Text('Tamaño de íconos: ${tamanoIconoLocal.toStringAsFixed(0)}',
+                      style: const TextStyle(
+                          fontSize: 13, color: kTextSub, fontWeight: FontWeight.w500)),
+                  Slider(
+                    value: tamanoIconoLocal,
+                    min: 16,
+                    max: 36,
+                    divisions: 10,
+                    activeColor: context.colorPrimario,
+                    onChanged: (v) => setS(() => tamanoIconoLocal = v),
+                  ),
+                ],
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: context.colorPrimario,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12))),
+                    onPressed: () async {
+                      Navigator.pop(ctx);
+                      final exito = await cfg.actualizarBorradorCategorias(
+                        titulo: ctrlTitulo.text.trim().isEmpty
+                            ? 'Categorías de Servicios'
+                            : ctrlTitulo.text.trim(),
+                        forma: formaLocal,
+                        tamanoIcono: tamanoIconoLocal,
+                      );
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content:
+                              Text(exito ? 'Cambio guardado en el borrador' : 'Error al guardar'),
+                          backgroundColor: exito ? Colors.green : Colors.red,
+                        ));
+                      }
+                    },
+                    child: const Text('Guardar cambios',
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  ),
+                ),
+                const SizedBox(height: 24),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _editarTituloProductos() async {
+    final cfg = context.read<ProveedorConfig>();
+    final ctrlTitulo = TextEditingController(text: cfg.productosTituloBorrador);
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(
+            bottom: MediaQuery.of(ctx).viewInsets.bottom,
+            left: 24, right: 24, top: 24),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(children: [
+                const Text('Editar sección',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                const Spacer(),
+                IconButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    icon: const Icon(Icons.close)),
+              ]),
+              const SizedBox(height: 16),
+              TextField(
+                controller: ctrlTitulo,
+                style: const TextStyle(color: Color(0xFF1C1C1E)),
+                decoration: InputDecoration(
+                  labelText: 'Título de la sección',
+                  filled: true,
+                  fillColor: const Color(0xFFF2F2F7),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none),
+                ),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: context.colorPrimario,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12))),
+                  onPressed: () async {
+                    Navigator.pop(ctx);
+                    final exito = await cfg.actualizarBorradorProductos(
+                      ctrlTitulo.text.trim().isEmpty
+                          ? 'Productos Populares'
+                          : ctrlTitulo.text.trim(),
+                    );
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content:
+                            Text(exito ? 'Cambio guardado en el borrador' : 'Error al guardar'),
+                        backgroundColor: exito ? Colors.green : Colors.red,
+                      ));
+                    }
+                  },
+                  child: const Text('Guardar cambios',
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                ),
+              ),
+              const SizedBox(height: 24),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _slivsCategorias({
+    required ProveedorServicio provServicio,
+    required ProveedorConfig provConfig,
+    required List<ModeloServicio> servicios,
+  }) {
+    return [
+      // ── Categorías de servicios — título ─────────────────
+      SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 28, 20, 14),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  provConfig.categoriasTituloEfectivo,
+                  style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF1C1C1E),
+                  ),
+                ),
+              ),
+              if (widget.modoEdicion)
+                GestureDetector(
+                  onTap: _editarSeccionCategorias,
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    margin: const EdgeInsets.only(left: 8),
+                    decoration: BoxDecoration(
+                      color: context.colorPrimario.withOpacity(0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.edit_outlined,
+                        size: 16, color: context.colorPrimario),
+                  ),
+                ),
+              if (!widget.modoEdicion && servicios.isNotEmpty)
+                GestureDetector(
+                  onTap: () {
+                    if (context.read<ProveedorAuth>().perfil == null) {
+                      mostrarLoginRequerido(context);
+                      return;
+                    }
+                    context.push('/booking/service');
+                  },
+                  child: Text(
+                    'Ver todos >',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: context.colorPrimario,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+
+      // ── Chips de servicios (circulares u horizontales) ───
+      if (provServicio.cargando)
+        const SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.symmetric(vertical: 20),
+            child: Center(child: CircularProgressIndicator()),
+          ),
+        )
+      else if (servicios.isNotEmpty && provConfig.categoriasFormaEfectiva == 'cuadrado')
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+          sliver: SliverGrid(
+            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: 170,
+              crossAxisSpacing: 14,
+              mainAxisSpacing: 14,
+              childAspectRatio: 1,
+            ),
+            delegate: SliverChildBuilderDelegate(
+              (context, i) => _ChipServicioCuadrado(
+                servicio: servicios[i],
+                alTap: () {
+                  if (context.read<ProveedorAuth>().perfil == null) {
+                    mostrarLoginRequerido(context);
+                    return;
+                  }
+                  context.push('/booking/service', extra: servicios[i]);
+                },
+              ),
+              childCount: servicios.length,
+            ),
+          ),
+        )
+      else if (servicios.isNotEmpty)
+        SliverToBoxAdapter(
+          child: SizedBox(
+            height: 90,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              itemCount: servicios.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 14),
+              itemBuilder: (context, i) => _ChipServicio(
+                servicio: servicios[i],
+                alTap: () {
+                  if (context.read<ProveedorAuth>().perfil == null) {
+                    mostrarLoginRequerido(context);
+                    return;
+                  }
+                  context.push('/booking/service', extra: servicios[i]);
+                },
+              ),
+            ),
+          ),
+        ),
+    ];
+  }
+
+  List<Widget> _slivsProductos({
+    required ProveedorConfig provConfig,
+    required List<Producto> todosProductos,
+    required List<Producto> productos,
+  }) {
+    return [
+      // ── Productos populares — título ──────────────────────
+      if (todosProductos.isNotEmpty)
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 28, 20, 14),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    _busqueda.isEmpty ? provConfig.productosTituloEfectivo : 'Resultados',
+                    style: const TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF1C1C1E),
+                    ),
+                  ),
+                ),
+                if (widget.modoEdicion)
+                  GestureDetector(
+                    onTap: _editarTituloProductos,
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      margin: const EdgeInsets.only(right: 8),
+                      decoration: BoxDecoration(
+                        color: context.colorPrimario.withOpacity(0.12),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(Icons.edit_outlined,
+                          size: 16, color: context.colorPrimario),
+                    ),
+                  ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: context.colorPrimario.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    '${productos.length} productos',
+                    style: TextStyle(
+                      color: context.colorPrimario,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+      // ── Grid de productos (columnas según ancho de pantalla) ─
+      if (productos.isNotEmpty)
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+          sliver: SliverGrid(
+            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: 230,
+              crossAxisSpacing: 14,
+              mainAxisSpacing: 14,
+              childAspectRatio: 0.62,
+            ),
+            delegate: SliverChildBuilderDelegate(
+              (context, i) => _TarjetaProductoH(producto: productos[i]),
+              childCount: productos.length,
+            ),
+          ),
+        ),
+    ];
   }
 
   @override
@@ -44,8 +449,10 @@ class _PaginaInicioState extends State<PaginaInicio> {
     final perfil = context.watch<ProveedorAuth>().perfil;
     final provServicio = context.watch<ProveedorServicio>();
     final provProducto = context.watch<ProveedorProducto>();
+    final provConfig = context.watch<ProveedorConfig>();
+    final tiendaHabilitada = provConfig.tiendaHabilitada;
     final servicios = provServicio.servicios;
-    final todosProductos = provProducto.productos;
+    final todosProductos = tiendaHabilitada ? provProducto.productos : <Producto>[];
     final productos = _busqueda.isEmpty
         ? todosProductos
         : todosProductos
@@ -87,7 +494,19 @@ class _PaginaInicioState extends State<PaginaInicio> {
                       ],
                     ),
                   ),
-                  _IconoCarrito(),
+                  if (perfil != null) ...[
+                    const IconoNotificaciones(),
+                    const SizedBox(width: 12),
+                  ],
+                  if (tiendaHabilitada) ...[
+                    _IconoCarrito(),
+                    const SizedBox(width: 12),
+                  ],
+                  const CircleAvatar(
+                    radius: 22,
+                    backgroundColor: Colors.white,
+                    backgroundImage: NetworkImage(kUrlLogoBarberia),
+                  ),
                   const SizedBox(width: 12),
                   AvatarRed(
                     url: perfil?.urlAvatar,
@@ -99,6 +518,7 @@ class _PaginaInicioState extends State<PaginaInicio> {
             ),
 
             // ── Barra de búsqueda fija ────────────────────────────
+            if (tiendaHabilitada)
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
               child: TextField(
@@ -139,238 +559,269 @@ class _PaginaInicioState extends State<PaginaInicio> {
 
             // ── Contenido scrolleable ─────────────────────────────
             Expanded(
-              child: CustomScrollView(
-                slivers: [
+              child: Builder(builder: (context) {
+                final seccionesDisponibles = <String, List<Widget>>{
+                  'categorias': _slivsCategorias(
+                    provServicio: provServicio,
+                    provConfig: provConfig,
+                    servicios: servicios,
+                  ),
+                  'banner_promo': const [SliverToBoxAdapter(child: _BannerPromo())],
+                  'productos': _slivsProductos(
+                    provConfig: provConfig,
+                    todosProductos: todosProductos,
+                    productos: productos,
+                  ),
+                };
 
-            // ── Banner hero ──────────────────────────────────────
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-                child: GestureDetector(
-                  onTap: () {
-                    if (context.read<ProveedorAuth>().perfil == null) {
-                      mostrarLoginRequerido(context);
-                      return;
-                    }
-                    context.push('/booking/service');
-                  },
-                  child: Container(
-                    height: 130,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [context.colorPrimario, context.colorPrimario.withOpacity(0.6)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: context.colorPrimario.withOpacity(0.3),
-                          blurRadius: 16,
-                          offset: const Offset(0, 6),
-                        ),
-                      ],
-                    ),
-                    child: Stack(
-                      children: [
-                        Positioned(
-                          right: -10,
-                          top: -10,
-                          child: Container(
-                            width: 120,
-                            height: 120,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.08),
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          right: 20,
-                          top: 20,
-                          child: Container(
-                            width: 70,
-                            height: 70,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.15),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(Icons.content_cut,
-                                color: Colors.white, size: 32),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(20),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Text(
-                                '¡TU MEJOR LOOK,\nUN TAP DE DISTANCIA!',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w800,
-                                  height: 1.3,
-                                  letterSpacing: -0.2,
-                                ),
-                              ),
-                              const SizedBox(height: 10),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 14, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Text(
-                                  'Reservar ahora',
-                                  style: TextStyle(
-                                    color: context.colorPrimario,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
+                return CustomScrollView(
+                  slivers: [
+                    // ── Banner hero (fijo, de referencia — nunca se toca) ─
+                    const SliverToBoxAdapter(child: _BannerReferencia()),
+
+                    for (final s in provConfig.seccionesHomeEfectivas)
+                      if (s['visible'] == true && seccionesDisponibles.containsKey(s['key']))
+                        ...seccionesDisponibles[s['key']]!,
+
+                    const SliverToBoxAdapter(child: SizedBox(height: 100)),
+                  ],
+                );
+              }),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Banner hero fijo (solo de referencia — nunca lo toca sysadmin) ─
+class _BannerReferencia extends StatelessWidget {
+  const _BannerReferencia();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+      child: GestureDetector(
+        onTap: () {
+          if (context.read<ProveedorAuth>().perfil == null) {
+            mostrarLoginRequerido(context);
+            return;
+          }
+          context.push('/booking/service');
+        },
+        child: Container(
+          height: 130,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [context.colorPrimario, context.colorPrimario.withOpacity(0.6)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: context.colorPrimario.withOpacity(0.3),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Stack(
+            children: [
+              Positioned(
+                right: -10,
+                top: -10,
+                child: Container(
+                  width: 120,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.08),
+                    shape: BoxShape.circle,
                   ),
                 ),
               ),
-            ),
-
-            // ── Categorías de servicios — título ─────────────────
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 28, 20, 14),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Positioned(
+                right: 20,
+                top: 20,
+                child: Container(
+                  width: 70,
+                  height: 70,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.content_cut, color: Colors.white, size: 32),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Text(
-                      'Categorías de Servicios',
+                      '¡TU MEJOR LOOK,\nUN TAP DE DISTANCIA!',
                       style: TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF1C1C1E),
+                        color: Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        height: 1.3,
+                        letterSpacing: -0.2,
                       ),
                     ),
-                    if (servicios.isNotEmpty)
-                      GestureDetector(
-                        onTap: () {
-                          if (context.read<ProveedorAuth>().perfil == null) {
-                            mostrarLoginRequerido(context);
-                            return;
-                          }
-                          context.push('/booking/service');
-                        },
-                        child: Text(
-                          'Ver todos >',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: context.colorPrimario,
-                            fontWeight: FontWeight.w600,
-                          ),
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        'Reservar ahora',
+                        style: TextStyle(
+                          color: context.colorPrimario,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
+                    ),
                   ],
                 ),
               ),
-            ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
 
-            // ── Chips de servicios (horizontal) ──────────────────
-            if (provServicio.cargando)
-              const SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 20),
-                  child: Center(child: CircularProgressIndicator()),
+// ── Banner promocional dinámico (imagen configurable desde sysadmin,
+// no se muestra nada si no hay imagen) ──────────────────────────
+class _BannerPromo extends StatelessWidget {
+  const _BannerPromo();
+
+  @override
+  Widget build(BuildContext context) {
+    final cfg = context.watch<ProveedorConfig>();
+    final bannerUrl = cfg.bannerUrlEfectivo;
+    if (bannerUrl == null || bannerUrl.isEmpty) return const SizedBox.shrink();
+
+    final tieneTexto = cfg.bannerTextoEfectivo != null && cfg.bannerTextoEfectivo!.trim().isNotEmpty;
+    final texto = cfg.bannerTextoEfectivo ?? '';
+    final botonTexto =
+        (cfg.bannerBotonTextoEfectivo != null && cfg.bannerBotonTextoEfectivo!.trim().isNotEmpty)
+            ? cfg.bannerBotonTextoEfectivo!
+            : 'Reservar ahora';
+    final botonLink = cfg.bannerBotonLinkEfectivo;
+    final (crossAlign, boxAlign) = switch (cfg.bannerAlineacionEfectiva) {
+      'center' => (CrossAxisAlignment.center, Alignment.center),
+      'right' => (CrossAxisAlignment.end, Alignment.centerRight),
+      _ => (CrossAxisAlignment.start, Alignment.centerLeft),
+    };
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+      child: GestureDetector(
+        onTap: !tieneTexto
+            ? null
+            : () async {
+                if (botonLink != null && botonLink.trim().isNotEmpty) {
+                  final uri = Uri.tryParse(botonLink.trim());
+                  if (uri != null) {
+                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                  }
+                  return;
+                }
+                if (context.read<ProveedorAuth>().perfil == null) {
+                  mostrarLoginRequerido(context);
+                  return;
+                }
+                if (context.mounted) context.push('/booking/service');
+              },
+        child: Container(
+          height: 130,
+          clipBehavior: Clip.antiAlias,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: context.colorPrimario.withOpacity(0.3),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: Image.network(
+                  bannerUrl,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
                 ),
-              )
-            else if (servicios.isNotEmpty)
-              SliverToBoxAdapter(
-                child: SizedBox(
-                  height: 90,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    itemCount: servicios.length,
-                    separatorBuilder: (_, __) => const SizedBox(width: 14),
-                    itemBuilder: (context, i) => _ChipServicio(
-                      servicio: servicios[i],
-                      alTap: () {
-                        if (context.read<ProveedorAuth>().perfil == null) {
-                          mostrarLoginRequerido(context);
-                          return;
-                        }
-                        context.push('/booking/service', extra: servicios[i]);
-                      },
+              ),
+              if (tieneTexto)
+                Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.black.withOpacity(0.45), Colors.black.withOpacity(0.15)],
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                      ),
                     ),
                   ),
                 ),
-              ),
-
-            // ── Productos populares — título ──────────────────────
-            if (todosProductos.isNotEmpty)
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 28, 20, 14),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        _busqueda.isEmpty ? 'Productos Populares' : 'Resultados',
-                        style: const TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF1C1C1E),
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: context.colorPrimario.withOpacity(0.12),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          '${productos.length} productos',
-                          style: TextStyle(
-                            color: context.colorPrimario,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
+              if (tieneTexto)
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Align(
+                    alignment: boxAlign,
+                    child: Column(
+                      crossAxisAlignment: crossAlign,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          texto,
+                          textAlign: switch (cfg.bannerAlineacionEfectiva) {
+                            'center' => TextAlign.center,
+                            'right' => TextAlign.right,
+                            _ => TextAlign.left,
+                          },
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                            height: 1.3,
+                            letterSpacing: -0.2,
                           ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 10),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            botonTexto,
+                            style: TextStyle(
+                              color: context.colorPrimario,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-
-            // ── Grid de productos (2 columnas) ───────────────────
-            if (productos.isNotEmpty)
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-                sliver: SliverGrid(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 14,
-                    mainAxisSpacing: 14,
-                    childAspectRatio: 0.62,
-                  ),
-                  delegate: SliverChildBuilderDelegate(
-                    (context, i) => _TarjetaProductoH(producto: productos[i]),
-                    childCount: productos.length,
-                  ),
-                ),
-              ),
-
-            const SliverToBoxAdapter(child: SizedBox(height: 100)),
-          ],
-        ),
-            ),       // cierra Expanded
-          ],          // cierra Column
+            ],
+          ),
         ),
       ),
     );
@@ -385,6 +836,7 @@ class _ChipServicio extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const tamanoIcono = 22.0;
     return GestureDetector(
       onTap: alTap,
       child: Column(
@@ -393,12 +845,12 @@ class _ChipServicio extends StatelessWidget {
           Container(
             width: 56,
             height: 56,
-            decoration: const BoxDecoration(
-              color: kCard,
+            decoration: BoxDecoration(
+              color: colorDesdeHex(servicio.iconoColor) ?? kCard,
               shape: BoxShape.circle,
               boxShadow: kNeumorphicShadowsSmall,
             ),
-            child: const Icon(Icons.content_cut, color: Colors.white, size: 22),
+            child: Icon(obtenerIconoServicio(servicio.iconoNombre), color: Colors.white, size: tamanoIcono),
           ),
           const SizedBox(height: 6),
           SizedBox(
@@ -416,6 +868,49 @@ class _ChipServicio extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ── Tile cuadrado de servicio (ancho completo, responsivo) ────
+class _ChipServicioCuadrado extends StatelessWidget {
+  final ModeloServicio servicio;
+  final VoidCallback alTap;
+  const _ChipServicioCuadrado({required this.servicio, required this.alTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = colorDesdeHex(servicio.iconoColor) ?? context.colorPrimario;
+    final tamanoIcono = context.watch<ProveedorConfig>().categoriasIconoTamanoEfectivo + 6;
+    return GestureDetector(
+      onTap: alTap,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: kNeumorphicShadowsSmall,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(obtenerIconoServicio(servicio.iconoNombre), color: Colors.white, size: tamanoIcono),
+            const SizedBox(height: 10),
+            Text(
+              servicio.nombre,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -685,11 +1180,9 @@ class _BotonTarjetaH extends StatelessWidget {
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20)),
               ),
-              child: Text(label,
-                  style: TextStyle(
-                      fontSize: 11,
-                      color: onTap == null ? Colors.black26 : bg,
-                      fontWeight: FontWeight.w700)),
+              child: Icon(Icons.shopping_cart_outlined,
+                  size: 18,
+                  color: onTap == null ? Colors.black26 : bg),
             )
           : ElevatedButton(
               onPressed: onTap,
@@ -726,12 +1219,12 @@ class _IconoCarrito extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: const BoxDecoration(
-              color: kCard,
+              color: Colors.white,
               shape: BoxShape.circle,
               boxShadow: kNeumorphicShadowsSmall,
             ),
             child: const Icon(Icons.shopping_cart_outlined,
-                size: 20, color: kTextSub),
+                size: 20, color: Color(0xFF6E6E73)),
           ),
           if (carrito.totalItems > 0)
             Positioned(
@@ -756,6 +1249,48 @@ class _IconoCarrito extends StatelessWidget {
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+// ── Botón de selección de forma (círculo/cuadrado) ────────────
+class _BotonForma extends StatelessWidget {
+  final IconData icono;
+  final String etiqueta;
+  final bool seleccionado;
+  final VoidCallback onTap;
+
+  const _BotonForma({
+    required this.icono,
+    required this.etiqueta,
+    required this.seleccionado,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = context.colorPrimario;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: seleccionado ? color.withOpacity(0.12) : const Color(0xFFF2F2F7),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: seleccionado ? color : Colors.transparent, width: 1.5),
+        ),
+        child: Column(
+          children: [
+            Icon(icono, size: 18, color: seleccionado ? color : kTextSub),
+            const SizedBox(height: 4),
+            Text(etiqueta,
+                style: TextStyle(
+                    fontSize: 12,
+                    color: seleccionado ? color : kTextSub,
+                    fontWeight: seleccionado ? FontWeight.w700 : FontWeight.w500)),
+          ],
+        ),
       ),
     );
   }

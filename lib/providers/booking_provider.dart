@@ -45,18 +45,13 @@ class ProveedorReserva extends ChangeNotifier {
 
   // ── Flujo de selección ──────────────────────────────────────
 
+  /// Solo se puede elegir un servicio por reserva: tocar uno nuevo reemplaza
+  /// la selección; tocar el ya seleccionado lo deselecciona.
   void seleccionarServicio(ModeloServicio servicio) {
-    final estabaVacio = _serviciosSeleccionados.isEmpty;
     final yaSeleccionado = _serviciosSeleccionados.any((s) => s.id == servicio.id);
-    if (yaSeleccionado) {
-      _serviciosSeleccionados.removeWhere((s) => s.id == servicio.id);
-    } else {
-      if (estabaVacio) {
-        _empleadoSeleccionado = null;
-        _turnoSeleccionado = null;
-      }
-      _serviciosSeleccionados.add(servicio);
-    }
+    _empleadoSeleccionado = null;
+    _turnoSeleccionado = null;
+    _serviciosSeleccionados = yaSeleccionado ? [] : [servicio];
     notifyListeners();
   }
 
@@ -216,6 +211,45 @@ class ProveedorReserva extends ChangeNotifier {
         horaInicio: b.horaInicio, horaFin: b.horaFin,
         estado: nuevoEstado, precioTotal: b.precioTotal,
         notas: b.notas, creadoEn: b.creadoEn,
+        nombreCliente: b.nombreCliente, nombreEmpleado: b.nombreEmpleado,
+        nombreServicio: b.nombreServicio, duracionServicio: b.duracionServicio,
+      );
+    }).toList();
+    notifyListeners();
+  }
+
+  /// Fetch fresco (sin caché local) para validar un QR justo antes de escanear.
+  Future<Reserva?> obtenerReservaPorId(String id) => _repo.obtenerReservaPorId(id);
+
+  Future<void> solicitarCancelacion(String idReserva) async {
+    await _repo.solicitarCancelacion(idReserva);
+    _reservas = _reservas.map((b) {
+      if (b.id != idReserva) return b;
+      return Reserva(
+        id: b.id, idCliente: b.idCliente, idEmpleado: b.idEmpleado,
+        idServicio: b.idServicio, fechaReserva: b.fechaReserva,
+        horaInicio: b.horaInicio, horaFin: b.horaFin,
+        estado: b.estado, precioTotal: b.precioTotal,
+        notas: b.notas, creadoEn: b.creadoEn,
+        cancelacionSolicitada: true,
+        nombreCliente: b.nombreCliente, nombreEmpleado: b.nombreEmpleado,
+        nombreServicio: b.nombreServicio, duracionServicio: b.duracionServicio,
+      );
+    }).toList();
+    notifyListeners();
+  }
+
+  Future<void> rechazarSolicitudCancelacion(String idReserva) async {
+    await _repo.rechazarSolicitudCancelacion(idReserva);
+    _reservas = _reservas.map((b) {
+      if (b.id != idReserva) return b;
+      return Reserva(
+        id: b.id, idCliente: b.idCliente, idEmpleado: b.idEmpleado,
+        idServicio: b.idServicio, fechaReserva: b.fechaReserva,
+        horaInicio: b.horaInicio, horaFin: b.horaFin,
+        estado: b.estado, precioTotal: b.precioTotal,
+        notas: b.notas, creadoEn: b.creadoEn,
+        cancelacionSolicitada: false,
         nombreCliente: b.nombreCliente, nombreEmpleado: b.nombreEmpleado,
         nombreServicio: b.nombreServicio, duracionServicio: b.duracionServicio,
       );

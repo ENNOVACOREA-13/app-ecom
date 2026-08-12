@@ -7,6 +7,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/booking_provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../common/app_widgets.dart';
+import 'scan_qr_page.dart';
 
 class PaginaReservasEmpleado extends StatefulWidget {
   const PaginaReservasEmpleado({super.key});
@@ -37,17 +38,21 @@ class _PaginaReservasEmpleadoState extends State<PaginaReservasEmpleado> {
       ..sort((a, b) => b.fechaReserva.compareTo(a.fechaReserva));
 
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Reservas'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.qr_code_scanner_rounded, color: context.colorPrimario),
+            tooltip: 'Escanear QR',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const PaginaEscanearQR()),
+            ),
+          ),
+        ],
+      ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SafeArea(
-            bottom: false,
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(20, 16, 20, 0),
-              child: Text('Reservas',
-                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 22)),
-            ),
-          ),
           // Filtros
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
@@ -99,12 +104,15 @@ class _ChipFiltro extends StatelessWidget {
         duration: const Duration(milliseconds: 150),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
         decoration: BoxDecoration(
-          color: selected ? kPrimary : kCard,
+          color: selected ? context.colorPrimario : kCard,
           borderRadius: BorderRadius.circular(20),
           border: selected ? null : Border.all(color: kDivider, width: 0.5),
           boxShadow: selected
               ? [
-                  BoxShadow(color: Color(0x664ECDC4), blurRadius: 8, offset: const Offset(0, 4)),
+                  BoxShadow(
+                      color: context.colorPrimario.withOpacity(0.4),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4)),
                 ]
               : kNeumorphicShadowsSmall,
         ),
@@ -148,17 +156,19 @@ class _ListaConSeparadores extends StatelessWidget {
       }
       items.add(r);
     }
-    return ListView.builder(
+    return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-      itemCount: items.length,
-      itemBuilder: (context, i) {
-        final item = items[i];
-        if (item is String) return _SeparadorDia(etiqueta: item);
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: _TarjetaReservaEmpleado(reserva: item as Reserva),
-        );
-      },
+      child: Column(
+        children: items.map((item) {
+          if (item is String) return _SeparadorDia(etiqueta: item);
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: _TarjetaReservaEmpleado(
+                key: ValueKey((item as Reserva).id), reserva: item),
+          );
+        }).toList(),
+      ),
     );
   }
 }
@@ -191,7 +201,7 @@ class _SeparadorDia extends StatelessWidget {
 
 class _TarjetaReservaEmpleado extends StatefulWidget {
   final Reserva reserva;
-  const _TarjetaReservaEmpleado({required this.reserva});
+  const _TarjetaReservaEmpleado({super.key, required this.reserva});
 
   @override
   State<_TarjetaReservaEmpleado> createState() => _TarjetaReservaEmpleadoState();
@@ -286,21 +296,24 @@ class _TarjetaReservaEmpleadoState extends State<_TarjetaReservaEmpleado> {
                     _FilaDetalle(Icons.access_time_outlined, '${r.horaInicio} – ${r.horaFin}'),
                     if (r.estado == EstadoReserva.confirmed) ...[
                       const SizedBox(height: 12),
-                      SizedBox(
+                      Container(
                         width: double.infinity,
-                        child: ElevatedButton.icon(
-                          onPressed: () => context
-                              .read<ProveedorReserva>()
-                              .actualizarEstado(r.id, EstadoReserva.completed),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF34C759),
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10)),
-                          ),
-                          icon: const Icon(Icons.check_circle_outline, size: 18),
-                          label: const Text('Marcar como completada',
-                              style: TextStyle(fontWeight: FontWeight.w700)),
+                        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF34C759).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.qr_code_scanner_rounded, size: 16, color: Color(0xFF34C759)),
+                            SizedBox(width: 8),
+                            Flexible(
+                              child: Text('Escanea el QR del cliente para marcarla como pagada',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(color: Color(0xFF34C759), fontSize: 12, fontWeight: FontWeight.w600)),
+                            ),
+                          ],
                         ),
                       ),
                     ],

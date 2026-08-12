@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 // ── Color primario por defecto (fallback) ────────────────────────────────────
 const kPrimary      = Color(0xFF4ECDC4);
@@ -34,11 +35,17 @@ const kNeumorphicShadowsInset = [
   BoxShadow(color: Color(0x40000000), blurRadius: 4, offset: Offset(2, 2), spreadRadius: -1),
 ];
 
-// ── Tema dinámico — recibe el color primario como parámetro ──────────────────
-ThemeData crearTema(Color primario) => ThemeData(
+// ── Tema dinámico — recibe el color primario y el estilo como parámetros ─────
+ThemeData crearTema(
+  Color primario, {
+  String fontFamily = 'Poppins',
+  double radioContenedor = 16,
+  double sombraContenedor = 1,
+}) => ThemeData(
   useMaterial3: true,
   brightness: Brightness.dark,
   scaffoldBackgroundColor: kBackground,
+  textTheme: GoogleFonts.getTextTheme(fontFamily, ThemeData.light().textTheme),
   colorScheme: ColorScheme.dark(
     primary: primario,
     secondary: primario,
@@ -46,19 +53,22 @@ ThemeData crearTema(Color primario) => ThemeData(
     onPrimary: Colors.white,
     onSurface: kText,
   ),
-  appBarTheme: const AppBarTheme(
+  appBarTheme: AppBarTheme(
     backgroundColor: kBackground,
-    foregroundColor: Color(0xFF1C1C1E),
+    foregroundColor: const Color(0xFF1C1C1E),
     elevation: 0,
-    centerTitle: false,
+    centerTitle: true,
     systemOverlayStyle: SystemUiOverlayStyle.dark,
-    titleTextStyle: TextStyle(
-      color: Color(0xFF1C1C1E),
-      fontSize: 22,
-      fontWeight: FontWeight.w700,
-      letterSpacing: -0.3,
+    titleTextStyle: GoogleFonts.getFont(
+      fontFamily,
+      textStyle: const TextStyle(
+        color: Color(0xFF1C1C1E),
+        fontSize: 22,
+        fontWeight: FontWeight.w700,
+        letterSpacing: -0.3,
+      ),
     ),
-    iconTheme: IconThemeData(color: Color(0xFF1C1C1E)),
+    iconTheme: const IconThemeData(color: Color(0xFF1C1C1E)),
   ),
   navigationBarTheme: NavigationBarThemeData(
     backgroundColor: kCard,
@@ -79,21 +89,21 @@ ThemeData crearTema(Color primario) => ThemeData(
   cardTheme: CardThemeData(
     color: kCard,
     elevation: 0,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radioContenedor)),
     margin: EdgeInsets.zero,
   ),
   inputDecorationTheme: InputDecorationTheme(
     filled: true,
-    fillColor: kCardDark2,
-    labelStyle: const TextStyle(color: kTextSub),
-    hintStyle: const TextStyle(color: kTextMuted),
+    fillColor: const Color(0xFFF2F2F7),
+    labelStyle: const TextStyle(color: Color(0xFF8E8E93)),
+    hintStyle: const TextStyle(color: Color(0xFF8E8E93)),
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(12),
-      borderSide: BorderSide.none,
+      borderSide: const BorderSide(color: Color(0xFFE5E5EA)),
     ),
     enabledBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(12),
-      borderSide: BorderSide.none,
+      borderSide: const BorderSide(color: Color(0xFFE5E5EA)),
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(12),
@@ -140,9 +150,15 @@ ThemeData crearTema(Color primario) => ThemeData(
   ),
   dialogTheme: DialogThemeData(
     backgroundColor: kCard,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-    titleTextStyle: const TextStyle(color: kText, fontSize: 18, fontWeight: FontWeight.w600),
-    contentTextStyle: const TextStyle(color: kTextSub),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radioContenedor)),
+    titleTextStyle: GoogleFonts.getFont(
+      fontFamily,
+      textStyle: const TextStyle(color: kText, fontSize: 18, fontWeight: FontWeight.w600),
+    ),
+    contentTextStyle: GoogleFonts.getFont(
+      fontFamily,
+      textStyle: const TextStyle(color: kTextSub),
+    ),
   ),
   snackBarTheme: SnackBarThemeData(
     backgroundColor: kCardElevated,

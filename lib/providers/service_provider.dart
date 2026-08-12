@@ -52,6 +52,12 @@ class ProveedorServicio extends ChangeNotifier {
         'price': actualizaciones['price'] ?? s.precio,
         'image_url': actualizaciones['image_url'] ?? s.urlImagen,
         'is_active': actualizaciones['is_active'] ?? s.estaActivo,
+        'icon_name': actualizaciones.containsKey('icon_name')
+            ? actualizaciones['icon_name']
+            : s.iconoNombre,
+        'icon_color': actualizaciones.containsKey('icon_color')
+            ? actualizaciones['icon_color']
+            : s.iconoColor,
       });
     }).toList();
     notifyListeners();

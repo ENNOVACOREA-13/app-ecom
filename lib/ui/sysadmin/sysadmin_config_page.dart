@@ -406,6 +406,19 @@ class PaginaConfigSysadminState extends State<PaginaConfigSysadmin> {
 
     return Scaffold(
       backgroundColor: kBackground,
+      appBar: AppBar(
+        title: const Text('Configuración'),
+        actions: [
+          IconButton(
+            onPressed: _cargar,
+            icon: const Icon(Icons.refresh_outlined, color: kTextSub),
+          ),
+          IconButton(
+            onPressed: () => _salir(context),
+            icon: const Icon(Icons.logout, color: Colors.redAccent),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: _crearUsuario,
         backgroundColor: color,
@@ -415,45 +428,7 @@ class PaginaConfigSysadminState extends State<PaginaConfigSysadmin> {
       body: SafeArea(
         child: Column(
           children: [
-            // Header
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-              child: Row(children: [
-                Container(
-                  width: 44, height: 44,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                        colors: [const Color(0xFF1C1C1E), color],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: const Icon(Icons.manage_accounts_outlined,
-                      color: Colors.white, size: 22),
-                ),
-                const SizedBox(width: 12),
-                const Expanded(
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Configuración', style: TextStyle(
-                          fontSize: 18, fontWeight: FontWeight.bold,
-                          color: Color(0xFF1C1C1E))),
-                      Text('Gestión de usuarios y roles',
-                          style: TextStyle(color: kTextSub, fontSize: 12)),
-                    ],
-                  ),
-                ),
-                IconButton(
-                  onPressed: _cargar,
-                  icon: const Icon(Icons.refresh_outlined, color: kTextSub),
-                ),
-                IconButton(
-                  onPressed: () => _salir(context),
-                  icon: const Icon(Icons.logout, color: Colors.redAccent),
-                ),
-              ]),
-            ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
 
             // Buscador
             Padding(
@@ -593,6 +568,7 @@ class PaginaConfigSysadminState extends State<PaginaConfigSysadmin> {
     );
   }
 }
+
 
 // ── Campo de texto reutilizable ─────────────────────────────
 class _Campo extends StatelessWidget {

@@ -7,7 +7,7 @@ class RepositorioEmpleado {
 
   Future<List<Perfil>> obtenerEmpleados() async {
     final datos = await _client
-        .from('profiles')
+        .from('profiles_public')
         .select()
         .eq('role', 'employee')
         .eq('is_active', true)
@@ -25,12 +25,19 @@ class RepositorioEmpleado {
 
   // Empleados que realizan un servicio específico
   Future<List<Perfil>> obtenerEmpleadosPorServicio(String idServicio) async {
-    final datos = await _client
+    final vinculos = await _client
         .from('employee_services')
-        .select('profiles!employee_id(*)')
+        .select('employee_id')
         .eq('service_id', idServicio);
+    final ids = (vinculos as List).map((e) => e['employee_id'] as String).toList();
+    if (ids.isEmpty) return [];
+
+    final datos = await _client
+        .from('profiles_public')
+        .select()
+        .inFilter('id', ids);
     return (datos as List)
-        .map((e) => Perfil.fromMap(e['profiles'] as Map<String, dynamic>))
+        .map((e) => Perfil.fromMap(e as Map<String, dynamic>))
         .where((p) => p.estaActivo)
         .toList();
   }
@@ -78,5 +85,33 @@ class RepositorioEmpleado {
       'employee_id': idEmpleado,
       'service_id': idServicio,
     });
+  }
+
+  Future<List<Map<String, dynamic>>> obtenerDiasLibres(String idEmpleado) async {
+    final datos = await _client
+        .from('employee_time_off')
+        .select()
+        .eq('employee_id', idEmpleado)
+        .gte('date', DateTime.now().toIso8601String().substring(0, 10))
+        .order('date');
+    return (datos as List).cast<Map<String, dynamic>>();
+  }
+
+  Future<void> agregarDiaLibre({
+    required String idEmpleado,
+    required DateTime fecha,
+    String? motivo,
+  }) async {
+    final fechaTexto =
+        '${fecha.year}-${fecha.month.toString().padLeft(2, '0')}-${fecha.day.toString().padLeft(2, '0')}';
+    await _client.from('employee_time_off').upsert({
+      'employee_id': idEmpleado,
+      'date': fechaTexto,
+      'reason': motivo,
+    }, onConflict: 'employee_id,date');
+  }
+
+  Future<void> eliminarDiaLibre(String id) async {
+    await _client.from('employee_time_off').delete().eq('id', id);
   }
 }

@@ -21,7 +21,16 @@
       "Bash(curl -s -o IMG/FAVORITOS.png \"https://prettycore.xyz/FLUTTER/APP1/RECURSOS/FAVORITOS.png\")",
       "Bash(curl -s -o IMG/INICIO.png \"https://prettycore.xyz/FLUTTER/APP1/RECURSOS/INICIO.png\")",
       "Bash(curl -s -o IMG/CARRITO_NAV.png \"https://prettycore.xyz/FLUTTER/APP1/RECURSOS/CARRITO.png\")",
-      "Bash(ls IMG/*.png)"
+      "Bash(ls IMG/*.png)",
+      "Bash(find d:/FLUTTER/barber_app -type f \\\\\\(-name *.sql -o -name *migration* \\\\\\))",
+      "Bash(xargs wc:*)",
+      "Bash(wc -l /d/FLUTTER/barber_app/lib/providers/*.dart)",
+      "Bash(keytool -version)",
+      "PowerShell(New-Item -ItemType Directory -Force \"d:\\\\FLUTTER\\\\barber_app\\\\android\\\\app\\\\src\\\\main\\\\kotlin\\\\com\\\\prettycore\\\\barberapp\")",
+      "Bash(cat \"C:/flutterfiles/flutter/packages/flutter_tools/gradle/src/main/groovy/flutter.groovy\" 2>/dev/null | grep -i \"minSdkVersion\" | head -5)",
+      "Read(//c/flutterfiles/flutter/packages/flutter_tools/gradle/src/main/groovy/**)",
+      "Bash(grep -r \"minSdkVersion\" \"C:/flutterfiles/flutter/packages/flutter_tools/\" 2>/dev/null | head -5)",
+      "Read(//c/flutterfiles/flutter/packages/flutter_tools/**)"
     ],
     "deny": [],
     "ask": []

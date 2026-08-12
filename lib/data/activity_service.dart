@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -24,25 +23,26 @@ class ServicioActividad {
   /// Obtiene el modelo real del dispositivo (ej. "Samsung Galaxy S24", "iPhone 15 Pro")
   Future<String> _obtenerModeloDispositivo() async {
     if (_dispositivoCache != null) return _dispositivoCache!;
+    if (kIsWeb) {
+      _dispositivoCache = 'Web Browser';
+      return _dispositivoCache!;
+    }
     try {
       final deviceInfo = DeviceInfoPlugin();
-      if (Platform.isAndroid) {
+      final platform = defaultTargetPlatform;
+      if (platform == TargetPlatform.android) {
         final info = await deviceInfo.androidInfo;
-        final brand = info.brand;
-        final model = info.model;
-        debugPrint('[Actividad] Android: $brand $model');
-        _dispositivoCache = '$brand $model';
+        _dispositivoCache = '${info.brand} ${info.model}';
         return _dispositivoCache!;
-      } else if (Platform.isIOS) {
+      } else if (platform == TargetPlatform.iOS) {
         final info = await deviceInfo.iosInfo;
-        debugPrint('[Actividad] iOS: ${info.name} (${info.model})');
         _dispositivoCache = '${info.name} (${info.model})';
         return _dispositivoCache!;
-      } else if (Platform.isWindows) {
+      } else if (platform == TargetPlatform.windows) {
         final info = await deviceInfo.windowsInfo;
         _dispositivoCache = info.computerName;
         return _dispositivoCache!;
-      } else if (Platform.isMacOS) {
+      } else if (platform == TargetPlatform.macOS) {
         final info = await deviceInfo.macOsInfo;
         _dispositivoCache = '${info.model} (${info.computerName})';
         return _dispositivoCache!;
@@ -50,7 +50,7 @@ class ServicioActividad {
     } catch (e) {
       debugPrint('[Actividad] Error obteniendo info del dispositivo: $e');
     }
-    _dispositivoCache = Platform.operatingSystemVersion;
+    _dispositivoCache = defaultTargetPlatform.name;
     return _dispositivoCache!;
   }
 
@@ -81,7 +81,7 @@ class ServicioActividad {
     try {
       _profileId = profileId;
       final dispositivo = await _obtenerModeloDispositivo();
-      final plataforma = Platform.operatingSystem;
+      final plataforma = kIsWeb ? 'web' : defaultTargetPlatform.name.toLowerCase();
 
       // Buscar si ya existe una sesión activa en el mismo dispositivo
       final existente = await _client
@@ -106,7 +106,7 @@ class ServicioActividad {
       // Cerrar sesiones activas anteriores de este usuario en otros dispositivos
       await _client.from('session_logs').update({
         'is_active': false,
-        'logout_at': DateTime.now().toIso8601String(),
+        'logout_at': DateTime.now().toUtc().toIso8601String(),
       }).eq('profile_id', profileId).eq('is_active', true);
 
       // Crear nueva sesión
@@ -218,7 +218,7 @@ class ServicioActividad {
     try {
       await _client.from('session_logs').update({
         'is_active': false,
-        'logout_at': DateTime.now().toIso8601String(),
+        'logout_at': DateTime.now().toUtc().toIso8601String(),
       }).eq('id', _sessionId!);
     } catch (_) {}
     _sessionId = null;
@@ -234,7 +234,7 @@ class ServicioActividad {
         ahora.difference(_ultimaActualizacion!).inSeconds < 30) return;
     _ultimaActualizacion = ahora;
     await _client.from('session_logs').update({
-      'last_active_at': ahora.toIso8601String(),
+      'last_active_at': ahora.toUtc().toIso8601String(),
     }).eq('id', _sessionId!);
   }
 }

@@ -8,6 +8,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/booking_provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../common/app_widgets.dart';
+import '../employee/scan_qr_page.dart';
 
 class PaginaTodasReservas extends StatefulWidget {
   const PaginaTodasReservas({super.key});
@@ -41,6 +42,13 @@ class _PaginaTodasReservasState extends State<PaginaTodasReservas> {
             style: TextStyle(fontWeight: FontWeight.w700, fontSize: 22)),
         actions: [
           IconButton(
+            icon: const Icon(Icons.qr_code_scanner_rounded),
+            tooltip: 'Escanear QR',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const PaginaEscanearQR()),
+            ),
+          ),
+          IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () => proveedor.cargarTodasLasReservas(),
           ),
@@ -49,7 +57,7 @@ class _PaginaTodasReservasState extends State<PaginaTodasReservas> {
       floatingActionButton: FloatingActionButton.extended(
         heroTag: null,
         onPressed: () => context.push('/booking/service'),
-        backgroundColor: kPrimary,
+        backgroundColor: context.colorPrimario,
         icon: const Icon(Icons.add, color: Colors.white),
         label: const Text(
           'Nueva reserva',
@@ -138,19 +146,19 @@ class _ListaConSeparadores extends StatelessWidget {
       items.add(r);
     }
 
-    return ListView.builder(
+    return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-      itemCount: items.length,
-      itemBuilder: (context, i) {
-        final item = items[i];
-        if (item is String) {
-          return _SeparadorDia(etiqueta: item);
-        }
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: _TarjetaReservaAdmin(reserva: item as Reserva),
-        );
-      },
+      child: Column(
+        children: items.map((item) {
+          if (item is String) return _SeparadorDia(etiqueta: item);
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: _TarjetaReservaAdmin(
+                key: ValueKey((item as Reserva).id), reserva: item),
+          );
+        }).toList(),
+      ),
     );
   }
 }
@@ -198,12 +206,15 @@ class _ChipFiltro extends StatelessWidget {
         duration: const Duration(milliseconds: 150),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
         decoration: BoxDecoration(
-          color: selected ? kPrimary : kCard,
+          color: selected ? context.colorPrimario : kCard,
           borderRadius: BorderRadius.circular(20),
           border: selected ? null : Border.all(color: kDivider, width: 0.5),
           boxShadow: selected
               ? [
-                  BoxShadow(color: Color(0x664ECDC4), blurRadius: 8, offset: const Offset(0, 4)),
+                  BoxShadow(
+                      color: context.colorPrimario.withOpacity(0.4),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4)),
                 ]
               : kNeumorphicShadowsSmall,
         ),
@@ -219,7 +230,7 @@ class _ChipFiltro extends StatelessWidget {
 
 class _TarjetaReservaAdmin extends StatefulWidget {
   final Reserva reserva;
-  const _TarjetaReservaAdmin({required this.reserva});
+  const _TarjetaReservaAdmin({super.key, required this.reserva});
 
   @override
   State<_TarjetaReservaAdmin> createState() => _TarjetaReservaAdminState();
@@ -297,6 +308,10 @@ class _TarjetaReservaAdminState extends State<_TarjetaReservaAdmin> {
                   const SizedBox(width: 10),
 
                   // Estado
+                  if (r.cancelacionSolicitada) ...[
+                    const Icon(Icons.hourglass_top_rounded, size: 16, color: Colors.orange),
+                    const SizedBox(width: 4),
+                  ],
                   ChipEstado(etiqueta: r.estado.label, color: r.estado.color),
                   const SizedBox(width: 8),
 
@@ -382,23 +397,89 @@ class _TarjetaReservaAdminState extends State<_TarjetaReservaAdmin> {
                         ],
                       ),
                     ],
+                    if (r.estado == EstadoReserva.confirmed && r.cancelacionSolicitada) ...[
+                      const SizedBox(height: 12),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Row(
+                              children: [
+                                Icon(Icons.hourglass_top_rounded, size: 16, color: Colors.orange),
+                                SizedBox(width: 8),
+                                Expanded(
+                                  child: Text('El cliente solicitó cancelar esta reserva',
+                                      style: TextStyle(
+                                          color: Colors.orange,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w700)),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: OutlinedButton(
+                                    onPressed: () => context
+                                        .read<ProveedorReserva>()
+                                        .rechazarSolicitudCancelacion(r.id),
+                                    style: OutlinedButton.styleFrom(
+                                        foregroundColor: const Color(0xFF6E6E73),
+                                        side: const BorderSide(color: Color(0xFFD1D1D6))),
+                                    child: const Text('Rechazar'),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: ElevatedButton(
+                                    onPressed: () {
+                                      final perfil = context.read<ProveedorAuth>().perfil!;
+                                      context.read<ProveedorReserva>().cancelarReserva(
+                                            r.id, perfil.id,
+                                            motivo: 'Cancelación aprobada por admin');
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.red,
+                                        foregroundColor: Colors.white,
+                                        shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(10))),
+                                    child: const Text('Aprobar'),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                     if (r.estado == EstadoReserva.confirmed) ...[
                       const SizedBox(height: 12),
-                      SizedBox(
+                      Container(
                         width: double.infinity,
-                        child: ElevatedButton.icon(
-                          onPressed: () => context
-                              .read<ProveedorReserva>()
-                              .actualizarEstado(r.id, EstadoReserva.completed),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF34C759),
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10)),
-                          ),
-                          icon: const Icon(Icons.payments_rounded, size: 18),
-                          label: const Text('Marcar como pagada',
-                              style: TextStyle(fontWeight: FontWeight.w700)),
+                        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF34C759).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.qr_code_scanner_rounded, size: 16, color: Color(0xFF34C759)),
+                            SizedBox(width: 8),
+                            Flexible(
+                              child: Text('Escanea el QR del cliente para marcarla como pagada',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(color: Color(0xFF34C759), fontSize: 12, fontWeight: FontWeight.w600)),
+                            ),
+                          ],
                         ),
                       ),
                     ],

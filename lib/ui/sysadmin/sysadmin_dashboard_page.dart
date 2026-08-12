@@ -2,9 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/constants.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/config_provider.dart';
 import '../../data/activity_service.dart';
+import '../client/profile_page.dart';
+import '../common/app_widgets.dart';
 
 class PaginaTableroSysadmin extends StatefulWidget {
   const PaginaTableroSysadmin({super.key});
@@ -37,14 +41,18 @@ class _PaginaTableroSysadminState extends State<PaginaTableroSysadmin> {
           .select('id').eq('is_active', true);
       final pedidos = await _client.from('orders')
           .select('total').neq('status', 'cancelled');
+      final statsEmpleados = await _client.from('employee_stats').select('ingresos_totales');
       final ultimas = await _client.from('session_logs').select('''
           id, platform, device, is_active, login_at, last_active_at,
           profiles(full_name, role)
         ''').order('login_at', ascending: false).limit(10);
 
       final listaPedidos = List<Map<String, dynamic>>.from(pedidos);
-      final ingresos = listaPedidos.fold<double>(
+      final ingresosTienda = listaPedidos.fold<double>(
           0, (acc, p) => acc + ((p['total'] as num?)?.toDouble() ?? 0));
+      final ingresosServicios = (statsEmpleados as List).fold<double>(
+          0, (acc, e) => acc + (((e as Map)['ingresos_totales'] as num?)?.toDouble() ?? 0));
+      final ingresos = ingresosServicios + ingresosTienda;
 
       setState(() {
         _totalUsuarios = (usuarios as List).length;
@@ -62,6 +70,7 @@ class _PaginaTableroSysadminState extends State<PaginaTableroSysadmin> {
   @override
   Widget build(BuildContext context) {
     final perfil = context.watch<ProveedorAuth>().perfil;
+    final tiendaHabilitada = context.watch<ProveedorConfig>().tiendaHabilitada;
     final color = context.colorPrimario;
     final fmt = NumberFormat.currency(locale: 'es_MX', symbol: '\$');
 
@@ -93,14 +102,28 @@ class _PaginaTableroSysadminState extends State<PaginaTableroSysadmin> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Row(children: [
-                              Container(
-                                width: 42, height: 42,
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.15),
-                                  shape: BoxShape.circle,
+                              const CircleAvatar(
+                                radius: 21,
+                                backgroundColor: Colors.white,
+                                backgroundImage: NetworkImage(kUrlLogoBarberia),
+                              ),
+                              const SizedBox(width: 8),
+                              GestureDetector(
+                                onTap: () => Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                      builder: (_) => const PaginaPerfil()),
                                 ),
-                                child: const Icon(Icons.shield_outlined,
-                                    color: Colors.white, size: 20),
+                                child: CircleAvatar(
+                                  radius: 21,
+                                  backgroundColor: Colors.white.withOpacity(0.15),
+                                  backgroundImage: perfil?.urlAvatar != null
+                                      ? NetworkImage(perfil!.urlAvatar!)
+                                      : null,
+                                  child: perfil?.urlAvatar == null
+                                      ? const Icon(Icons.shield_outlined,
+                                          color: Colors.white, size: 20)
+                                      : null,
+                                ),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
@@ -119,6 +142,8 @@ class _PaginaTableroSysadminState extends State<PaginaTableroSysadmin> {
                                   ],
                                 ),
                               ),
+                              const IconoNotificaciones(color: Colors.white),
+                              const SizedBox(width: 4),
                               IconButton(
                                 onPressed: _cargar,
                                 icon: const Icon(Icons.refresh, color: Colors.white70),
@@ -149,8 +174,9 @@ class _PaginaTableroSysadminState extends State<PaginaTableroSysadmin> {
                               valor: '$_totalUsuarios', color: color),
                           _Stat(icono: Icons.wifi_rounded, label: 'Sesiones activas',
                               valor: '$_sesionesActivas', color: Colors.green),
-                          _Stat(icono: Icons.receipt_long_outlined, label: 'Pedidos',
-                              valor: '$_totalPedidos', color: Colors.orange),
+                          if (tiendaHabilitada)
+                            _Stat(icono: Icons.receipt_long_outlined, label: 'Pedidos',
+                                valor: '$_totalPedidos', color: Colors.orange),
                           _Stat(icono: Icons.trending_up_rounded, label: 'Ingresos',
                               valor: fmt.format(_ingresosTotales), color: Colors.teal),
                         ],

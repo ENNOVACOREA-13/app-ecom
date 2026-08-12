@@ -15,7 +15,7 @@ class RepositorioComision {
     await _client.from('commission_configs').upsert({
       'service_id': servicioId,
       'amount': monto,
-      'updated_at': DateTime.now().toIso8601String(),
+      'updated_at': DateTime.now().toUtc().toIso8601String(),
     }, onConflict: 'service_id');
   }
 
@@ -47,7 +47,7 @@ class RepositorioComision {
       'cutoff_day': diaCierre,
       'cutoff_hour': horaCierre,
       'cutoff_minute': minutoCierre,
-      'updated_at': DateTime.now().toIso8601String(),
+      'updated_at': DateTime.now().toUtc().toIso8601String(),
     }).eq('id', id);
   }
 
@@ -60,10 +60,10 @@ class RepositorioComision {
         .select()
         .eq('employee_id', empleadoId);
     if (desde != null) {
-      query = query.gte('earned_at', desde.toIso8601String());
+      query = query.gte('earned_at', desde.toUtc().toIso8601String());
     }
     if (hasta != null) {
-      query = query.lte('earned_at', hasta.toIso8601String());
+      query = query.lte('earned_at', hasta.toUtc().toIso8601String());
     }
     final datos = await query.order('earned_at', ascending: false);
     return (datos as List).map((e) => EntradaComision.fromMap(e)).toList();
@@ -78,7 +78,7 @@ class RepositorioComision {
         .from('commission_entries')
         .select()
         .eq('employee_id', empleadoId)
-        .gte('earned_at', inicioSemana.toIso8601String())
+        .gte('earned_at', inicioSemana.toUtc().toIso8601String())
         .order('earned_at', ascending: false);
     return (datos as List).map((e) => EntradaComision.fromMap(e)).toList();
   }
@@ -135,7 +135,7 @@ class RepositorioComision {
     final datos = await _client
         .from('commission_entries')
         .select('employee_id, commission_amount, profiles(full_name)')
-        .gte('earned_at', inicioSemana.toIso8601String())
+        .gte('earned_at', inicioSemana.toUtc().toIso8601String())
         .isFilter('cut_id', null);
     // Agrupar por empleado
     final mapa = <String, Map<String, dynamic>>{};

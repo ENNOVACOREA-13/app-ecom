@@ -96,7 +96,7 @@ class PaginaConfirmarReserva extends StatelessWidget {
                     Icons.attach_money,
                     'Total',
                     '\$${proveedor.totalPrecio.toStringAsFixed(0)}',
-                    colorValor: kPrimary,
+                    colorValor: context.colorPrimario,
                     negrita: true,
                   ),
                 ],
@@ -143,7 +143,7 @@ class _Fila extends StatelessWidget {
         Text(
           valor,
           style: TextStyle(
-            color: colorValor ?? kText,
+            color: colorValor ?? const Color(0xFF1C1C1E),
             fontWeight: negrita ? FontWeight.bold : FontWeight.normal,
             fontSize: negrita ? 16 : 14,
           ),

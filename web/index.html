@@ -31,6 +31,48 @@
 
   <title>barber_app</title>
   <link rel="manifest" href="manifest.json">
+  <!-- Stripe.js -->
+  <script src="https://js.stripe.com/v3/"></script>
+  <script>
+    // Inicializar Stripe con la clave publicable
+    window._stripeInstance = null;
+    window.initStripe = function(publishableKey) {
+      window._stripeInstance = Stripe(publishableKey);
+    };
+
+    // Crear PaymentElement y montar en un div
+    window._stripeElements = null;
+    window._stripePaymentElement = null;
+
+    window.stripeCreatePaymentElement = function(clientSecret, containerId) {
+      return new Promise(function(resolve, reject) {
+        try {
+          window._stripeElements = window._stripeInstance.elements({
+            clientSecret: clientSecret,
+            appearance: { theme: 'stripe' }
+          });
+          window._stripePaymentElement = window._stripeElements.create('payment');
+          window._stripePaymentElement.mount('#' + containerId);
+          resolve(true);
+        } catch(e) {
+          reject(e.message);
+        }
+      });
+    };
+
+    window.stripeConfirmPayment = function(returnUrl) {
+      return window._stripeInstance.confirmPayment({
+        elements: window._stripeElements,
+        confirmParams: { return_url: returnUrl },
+        redirect: 'if_required'
+      }).then(function(result) {
+        if (result.error) {
+          return { success: false, error: result.error.message };
+        }
+        return { success: true, paymentIntentId: result.paymentIntent.id };
+      });
+    };
+  </script>
 </head>
 <body>
   <script src="flutter_bootstrap.js" async></script>

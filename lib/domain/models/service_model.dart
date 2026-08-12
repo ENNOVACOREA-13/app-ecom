@@ -6,6 +6,8 @@ class ModeloServicio {
   final double precio;
   final String? urlImagen;
   final bool estaActivo;
+  final String? iconoNombre;
+  final String? iconoColor;
 
   const ModeloServicio({
     required this.id,
@@ -15,6 +17,8 @@ class ModeloServicio {
     required this.precio,
     this.urlImagen,
     required this.estaActivo,
+    this.iconoNombre,
+    this.iconoColor,
   });
 
   factory ModeloServicio.fromMap(Map<String, dynamic> map) {
@@ -26,6 +30,8 @@ class ModeloServicio {
       precio: (map['price'] as num).toDouble(),
       urlImagen: map['image_url'] as String?,
       estaActivo: map['is_active'] as bool? ?? true,
+      iconoNombre: map['icon_name'] as String?,
+      iconoColor: map['icon_color'] as String?,
     );
   }
 
@@ -36,6 +42,8 @@ class ModeloServicio {
         'price': precio,
         'image_url': urlImagen,
         'is_active': estaActivo,
+        'icon_name': iconoNombre,
+        'icon_color': iconoColor,
       };
 
   String get etiquetaDuracion {

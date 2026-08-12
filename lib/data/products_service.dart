@@ -42,7 +42,7 @@ class ProductsService {
       'price': price,
       'app_id': appId,
       'created_by': sb.auth.currentUser!.id,
-      'updated_at': DateTime.now().toIso8601String(),
+      'updated_at': DateTime.now().toUtc().toIso8601String(),
       'active': true,
       'stock': 0,
     });
@@ -53,7 +53,7 @@ class ProductsService {
     await sb.from('products').update({
       'name': name,
       'price': price,
-      'updated_at': DateTime.now().toIso8601String(),
+      'updated_at': DateTime.now().toUtc().toIso8601String(),
     }).eq('id', id);
   }
 

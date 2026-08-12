@@ -94,6 +94,17 @@ class RepositorioReserva {
         .toList();
   }
 
+  /// Una sola reserva por id (para validar el QR justo antes de marcarla pagada)
+  Future<Reserva?> obtenerReservaPorId(String id) async {
+    final datos = await _client
+        .from('bookings_detailed')
+        .select()
+        .eq('id', id)
+        .maybeSingle();
+    if (datos == null) return null;
+    return Reserva.fromMap(datos);
+  }
+
   /// Todas las reservas (admin)
   Future<List<Reserva>> obtenerTodasLasReservas({EstadoReserva? estado}) async {
     var consulta = _client.from('bookings_detailed').select();
@@ -120,6 +131,21 @@ class RepositorioReserva {
       'p_booking_id': idReserva,
       'p_status': nuevoEstado.toDbString(),
     });
+  }
+
+  /// Cliente solicita cancelar una reserva ya confirmada (requiere aprobación del admin)
+  Future<void> solicitarCancelacion(String idReserva) async {
+    await _client.rpc('solicitar_cancelacion_reserva', params: {
+      'p_booking_id': idReserva,
+    });
+  }
+
+  /// Admin rechaza la solicitud de cancelación (la reserva sigue confirmada)
+  Future<void> rechazarSolicitudCancelacion(String idReserva) async {
+    await _client
+        .from('bookings')
+        .update({'cancel_requested': false})
+        .eq('id', idReserva);
   }
 
   /// Estadísticas de empleado

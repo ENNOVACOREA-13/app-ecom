@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
+import '../../providers/config_provider.dart';
+import '../../providers/notification_provider.dart';
+import '../notifications/notifications_page.dart';
 
 // ── Botón primario ─────────────────────────────────────────────
 class BotonPrincipal extends StatelessWidget {
@@ -71,7 +75,7 @@ class CampoTexto extends StatelessWidget {
       keyboardType: tipoTeclado,
       validator: validador,
       maxLines: maxLineas,
-      style: const TextStyle(color: kText),
+      style: const TextStyle(color: Color(0xFF1C1C1E)),
       decoration: InputDecoration(
         labelText: etiqueta,
         prefixIcon: prefijo,
@@ -100,11 +104,11 @@ class AvatarRed extends StatelessWidget {
     }
     return CircleAvatar(
       radius: radio,
-      backgroundColor: kPrimary.withOpacity(0.2),
+      backgroundColor: context.colorPrimario.withOpacity(0.2),
       child: Text(
         (nombre?.isNotEmpty == true ? nombre![0] : '?').toUpperCase(),
         style: TextStyle(
-          color: kPrimary,
+          color: context.colorPrimario,
           fontSize: radio * 0.9,
           fontWeight: FontWeight.bold,
         ),
@@ -175,14 +179,21 @@ class TarjetaSeccion extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cfg = context.watch<ProveedorConfig>();
     return Container(
       width: double.infinity,
       padding: relleno ?? const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: kCard,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: kDivider),
-        boxShadow: const [BoxShadow(color: kShadow, blurRadius: 8, offset: Offset(0, 2))],
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(cfg.radioContenedorEfectivo),
+        border: Border.all(color: const Color(0xFFE5E5EA)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05 * cfg.sombraContenedorEfectiva),
+            blurRadius: 8 * cfg.sombraContenedorEfectiva,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: child,
     );
@@ -206,14 +217,21 @@ class TarjetaEstadistica extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = color ?? kPrimary;
+    final c = color ?? context.colorPrimario;
+    final cfg = context.watch<ProveedorConfig>();
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: kCard,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: kDivider),
-        boxShadow: const [BoxShadow(color: kShadow, blurRadius: 8, offset: Offset(0, 2))],
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(cfg.radioContenedorEfectivo),
+        border: Border.all(color: const Color(0xFFE5E5EA)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05 * cfg.sombraContenedorEfectiva),
+            blurRadius: 8 * cfg.sombraContenedorEfectiva,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -222,9 +240,50 @@ class TarjetaEstadistica extends StatelessWidget {
           const SizedBox(height: 12),
           Text(valor,
               style: const TextStyle(
-                  color: kText, fontSize: 24, fontWeight: FontWeight.bold)),
+                  color: Color(0xFF1C1C1E), fontSize: 24, fontWeight: FontWeight.bold)),
           const SizedBox(height: 4),
-          Text(etiqueta, style: const TextStyle(color: kTextSub, fontSize: 12)),
+          Text(etiqueta, style: const TextStyle(color: Color(0xFF8E8E93), fontSize: 12)),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Campanita de notificaciones (con contador) ─────────────────
+class IconoNotificaciones extends StatelessWidget {
+  final Color color;
+  const IconoNotificaciones({super.key, this.color = const Color(0xFF1C1C1E)});
+
+  @override
+  Widget build(BuildContext context) {
+    final noLeidas = context.watch<ProveedorNotificaciones>().noLeidas;
+    return GestureDetector(
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => const PaginaNotificaciones()),
+      ),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Icon(Icons.notifications_outlined, color: color, size: 26),
+          if (noLeidas > 0)
+            Positioned(
+              right: -2,
+              top: -2,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                constraints: const BoxConstraints(minWidth: 16),
+                decoration: const BoxDecoration(
+                  color: Colors.red,
+                  shape: BoxShape.circle,
+                ),
+                child: Text(
+                  noLeidas > 9 ? '9+' : '$noLeidas',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                      color: Colors.white, fontSize: 9, fontWeight: FontWeight.w800),
+                ),
+              ),
+            ),
         ],
       ),
     );

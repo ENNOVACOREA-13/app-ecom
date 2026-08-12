@@ -5,8 +5,10 @@ import '../../data/booking_repository.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/commission_provider.dart';
 import '../../domain/models/commission_model.dart';
+import '../../core/constants.dart';
 import '../../core/theme/app_theme.dart';
 import '../common/app_widgets.dart';
+import 'time_off_page.dart';
 
 class PaginaTableroEmpleado extends StatefulWidget {
   const PaginaTableroEmpleado({super.key});
@@ -59,14 +61,13 @@ class _PaginaTableroEmpleadoState extends State<PaginaTableroEmpleado> {
                   // Saludo
                   Container(
                     padding: const EdgeInsets.all(16),
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [kPrimaryLight, kCard],
+                        colors: [context.colorPrimario, context.colorPrimario.withOpacity(0.75)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
-                      borderRadius: BorderRadius.all(Radius.circular(20)),
-                      boxShadow: kNeumorphicShadows,
+                      borderRadius: const BorderRadius.all(Radius.circular(20)),
                     ),
                     child: Row(
                       children: [
@@ -79,15 +80,82 @@ class _PaginaTableroEmpleadoState extends State<PaginaTableroEmpleado> {
                               Text(
                                 perfil?.nombreCompleto ?? '',
                                 style: const TextStyle(
-                                    fontSize: 18, fontWeight: FontWeight.bold, color: kText),
+                                    fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
                               ),
-                              const Text('Empleado', style: TextStyle(color: kTextSub)),
+                              const Text('Empleado', style: TextStyle(color: Colors.white70)),
                             ],
                           ),
+                        ),
+                        const IconoNotificaciones(color: Colors.white),
+                        const SizedBox(width: 14),
+                        const CircleAvatar(
+                          radius: 20,
+                          backgroundColor: Colors.white,
+                          backgroundImage: NetworkImage(kUrlLogoBarberia),
                         ),
                       ],
                     ),
                   ),
+                  const SizedBox(height: 16),
+
+                  Material(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(14),
+                      onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                          builder: (_) => const PaginaDiasLibres())),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(14),
+                          boxShadow: kNeumorphicShadowsSmall,
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: context.colorPrimario.withOpacity(0.12),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(Icons.event_busy_outlined,
+                                  color: context.colorPrimario, size: 18),
+                            ),
+                            const SizedBox(width: 12),
+                            const Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('Mis días libres',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 14,
+                                          color: Color(0xFF1C1C1E))),
+                                  SizedBox(height: 2),
+                                  Text('Marca fechas en las que no estarás disponible',
+                                      style: TextStyle(fontSize: 11, color: Color(0xFF8E8E93))),
+                                ],
+                              ),
+                            ),
+                            const Icon(Icons.arrow_forward_ios_rounded,
+                                size: 14, color: Color(0xFF8E8E93)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 28),
+
+                  // ── Comisiones semana actual ──────────────
+                  const Text('Comisiones esta semana',
+                      style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1C1C1E))),
+                  const SizedBox(height: 12),
+                  _TarjetaComisionSemana(prov: comision),
                   const SizedBox(height: 28),
 
                   const Text('Estadísticas',
@@ -124,48 +192,11 @@ class _PaginaTableroEmpleadoState extends State<PaginaTableroEmpleado> {
                         etiqueta: 'Ingresos',
                         valor: '\$${(_estadisticas['ingresos_totales'] ?? 0).toStringAsFixed(0)}',
                         icono: Icons.attach_money,
-                        color: kPrimary,
+                        color: context.colorPrimario,
                       ),
                     ],
                   ),
 
-                  if (_estadisticas['rating_promedio'] != null) ...[
-                    const SizedBox(height: 24),
-                    TarjetaSeccion(
-                      child: Row(
-                        children: [
-                          const Icon(Icons.star, color: Colors.amber, size: 28),
-                          const SizedBox(width: 12),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                '${_estadisticas['rating_promedio']}',
-                                style: const TextStyle(
-                                    color: kText,
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.bold),
-                              ),
-                              Text(
-                                '${_estadisticas['total_reviews'] ?? 0} reseñas',
-                                style: const TextStyle(color: kTextSub, fontSize: 12),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-
-                  // ── Comisiones semana actual ──────────────
-                  const SizedBox(height: 28),
-                  const Text('Comisiones esta semana',
-                      style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF1C1C1E))),
-                  const SizedBox(height: 12),
-                  _TarjetaComisionSemana(prov: comision),
 
                   if (comision.cortes.isNotEmpty) ...[
                     const SizedBox(height: 24),
@@ -306,7 +337,7 @@ class _FilaCorteEmpleado extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: kCard,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: kNeumorphicShadowsSmall,
       ),
@@ -325,7 +356,7 @@ class _FilaCorteEmpleado extends StatelessWidget {
           Expanded(
             child: Text(
               '${fmt.format(corte.inicioSemana)} – ${fmt.format(corte.finSemana)}',
-              style: const TextStyle(color: kText, fontSize: 13),
+              style: const TextStyle(color: Color(0xFF1C1C1E), fontSize: 13),
             ),
           ),
           Column(

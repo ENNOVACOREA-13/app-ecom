@@ -16,10 +16,17 @@ class ProveedorAuth extends ChangeNotifier {
   bool _inicializando = true;
   String? _error;
   bool _sesionExpirada = false;
+  bool _cuentaDesactivada = false;
 
   bool get sesionExpirada => _sesionExpirada;
   void limpiarSesionExpirada() {
     _sesionExpirada = false;
+    notifyListeners();
+  }
+
+  bool get cuentaDesactivada => _cuentaDesactivada;
+  void limpiarCuentaDesactivada() {
+    _cuentaDesactivada = false;
     notifyListeners();
   }
 
@@ -32,6 +39,12 @@ class ProveedorAuth extends ChangeNotifier {
   Future<void> inicializar() async {
     try {
       _perfil = await _repo.obtenerPerfilActual();
+      if (_perfil != null && !_perfil!.estaActivo) {
+        debugPrint('[Auth] Cuenta desactivada, forzando logout');
+        _cuentaDesactivada = true;
+        await _repo.cerrarSesion();
+        _perfil = null;
+      }
       if (_perfil != null) {
         final rol = _perfil!.rol.name;
         // Para no-sysadmin, verificar si la sesión fue cerrada remotamente
@@ -65,6 +78,16 @@ class ProveedorAuth extends ChangeNotifier {
       // Solo mostrar modal a clientes, empleados y admins (no sysadmin)
       if (rol == 'sysadmin') return;
       _sesionExpirada = true;
+      await _repo.cerrarSesion();
+      _perfil = null;
+      notifyListeners();
+    };
+
+    // Escuchar desactivación de cuenta en tiempo real (admin/sysadmin la desactivó)
+    ServicioActividad.instancia.onCuentaDesactivada = () async {
+      if (_perfil == null) return;
+      _cuentaDesactivada = true;
+      await ServicioActividad.instancia.cerrarSesion();
       await _repo.cerrarSesion();
       _perfil = null;
       notifyListeners();
@@ -188,6 +211,7 @@ class ProveedorAuth extends ChangeNotifier {
   }
 
   String _parsearError(String e) {
+    if (e.contains('account_deactivated')) return 'Tu cuenta ha sido desactivada. Contacta al administrador';
     if (e.contains('Invalid login')) return 'Email o contraseña incorrectos';
     if (e.contains('already registered') || e.contains('User already registered')) return 'Este email ya está registrado';
     if (e.contains('Password should')) return 'La contraseña debe tener al menos 6 caracteres';

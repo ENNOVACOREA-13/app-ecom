@@ -42,7 +42,8 @@ class _PaginaPedidosAdminState extends State<PaginaPedidosAdmin> {
           ),
         ],
       ),
-      body: SafeArea(
+      body: EnvolturaResponsiva(
+        child: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -132,6 +133,7 @@ class _PaginaPedidosAdminState extends State<PaginaPedidosAdmin> {
             ),
           ],
         ),
+      ),
       ),
     );
   }

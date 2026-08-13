@@ -45,6 +45,7 @@ class _PaginaOlvideContrasenaState extends State<PaginaOlvideContrasena> {
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
+          child: EnvolturaFormularioResponsivo(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -90,6 +91,8 @@ class _PaginaOlvideContrasenaState extends State<PaginaOlvideContrasena> {
                         controlador: _correo,
                         tipoTeclado: TextInputType.emailAddress,
                         prefijo: const Icon(Icons.email_outlined, color: kTextSub),
+                        accionTeclado: TextInputAction.done,
+                        alEnviar: (_) => _enviar(),
                         validador: (v) {
                           if (v == null || v.isEmpty) return 'Ingresa tu email';
                           if (!RegExp(r'^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$')
@@ -118,6 +121,7 @@ class _PaginaOlvideContrasenaState extends State<PaginaOlvideContrasena> {
                 ],
               ),
             ],
+          ),
           ),
         ),
       ),

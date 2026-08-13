@@ -50,6 +50,10 @@ const List<IconoServicio> kIconosServicio = [
   IconoServicio('cut', Icons.cut, ['cortar', 'tijeras', 'recorte']),
   IconoServicio('grass', Icons.grass, ['barba', 'vello', 'recorte']),
   IconoServicio('face_retouching_off', Icons.face_retouching_off, ['afeitado', 'rasurado', 'limpieza']),
+  IconoServicio('shopping_bag', Icons.shopping_bag, ['tienda', 'compra', 'producto', 'bolsa']),
+  IconoServicio('local_mall', Icons.local_mall, ['tienda', 'compra', 'producto', 'mall']),
+  IconoServicio('checkroom_outlined', Icons.checkroom_outlined, ['ropa', 'chamarra', 'vestuario']),
+  IconoServicio('sports_bar', Icons.sports_bar, ['bebida', 'accesorio']),
 ];
 
 const IconData kIconoServicioPorDefecto = Icons.content_cut;

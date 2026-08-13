@@ -58,7 +58,8 @@ class PaginaConfirmarReserva extends StatelessWidget {
           ),
         ),
       ),
-      body: SingleChildScrollView(
+      body: EnvolturaResponsiva(
+        child: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -117,6 +118,7 @@ class PaginaConfirmarReserva extends StatelessWidget {
             ],
           ],
         ),
+      ),
       ),
     );
   }

@@ -13,10 +13,14 @@ class ServicioActividad {
   DateTime? _ultimaActualizacion;
   String? _dispositivoCache;
   RealtimeChannel? _canalSesion;
+  RealtimeChannel? _canalPerfil;
   bool _creandoSesion = false;
 
   /// Se dispara cuando la sesión fue cerrada remotamente (por sysadmin).
   void Function()? onSesionCerradaRemotamente;
+
+  /// Se dispara cuando la cuenta fue desactivada (por admin/sysadmin).
+  void Function()? onCuentaDesactivada;
 
   bool get activo => _sessionId != null || _creandoSesion;
 
@@ -100,6 +104,7 @@ class ServicioActividad {
         _ultimaActualizacion = DateTime.now();
         debugPrint('[Actividad] Sesión existente reusada: $_sessionId');
         _escucharCierrRemoto();
+        _escucharDesactivacion(profileId);
         return;
       }
 
@@ -131,6 +136,7 @@ class ServicioActividad {
       _ultimaActualizacion = DateTime.now();
       debugPrint('[Actividad] Nueva sesión creada: $_sessionId en $dispositivo');
       _escucharCierrRemoto();
+      _escucharDesactivacion(profileId);
     } catch (e) {
       debugPrint('[Actividad] Error al iniciar sesión: $e');
     } finally {
@@ -161,6 +167,30 @@ class ServicioActividad {
               _profileId = null;
               _ultimaActualizacion = null;
               onSesionCerradaRemotamente?.call();
+            }
+          },
+        )
+        .subscribe();
+  }
+
+  void _escucharDesactivacion(String profileId) {
+    _canalPerfil?.unsubscribe();
+    _canalPerfil = _client
+        .channel('perfil_activo_$profileId')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.update,
+          schema: 'public',
+          table: 'profiles',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'id',
+            value: profileId,
+          ),
+          callback: (payload) {
+            final nuevo = payload.newRecord;
+            if (nuevo['is_active'] == false) {
+              debugPrint('[Actividad] Cuenta desactivada remotamente');
+              onCuentaDesactivada?.call();
             }
           },
         )
@@ -214,6 +244,8 @@ class ServicioActividad {
   Future<void> cerrarSesion() async {
     _canalSesion?.unsubscribe();
     _canalSesion = null;
+    _canalPerfil?.unsubscribe();
+    _canalPerfil = null;
     if (_sessionId == null) return;
     try {
       await _client.from('session_logs').update({

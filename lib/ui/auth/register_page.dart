@@ -54,6 +54,7 @@ class _PaginaRegistroState extends State<PaginaRegistro> {
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
+          child: EnvolturaFormularioResponsivo(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -88,6 +89,7 @@ class _PaginaRegistroState extends State<PaginaRegistro> {
                       etiqueta: 'Nombre completo',
                       controlador: _nombre,
                       prefijo: const Icon(Icons.person_outline, color: kTextSub),
+                      accionTeclado: TextInputAction.next,
                       validador: (v) => (v == null || v.isEmpty) ? 'Ingresa tu nombre' : null,
                     ),
                     const SizedBox(height: 16),
@@ -96,6 +98,7 @@ class _PaginaRegistroState extends State<PaginaRegistro> {
                       controlador: _correo,
                       tipoTeclado: TextInputType.emailAddress,
                       prefijo: const Icon(Icons.email_outlined, color: kTextSub),
+                      accionTeclado: TextInputAction.next,
                       validador: (v) {
                         if (v == null || v.isEmpty) return 'Ingresa tu email';
                         if (!RegExp(r'^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$')
@@ -109,6 +112,7 @@ class _PaginaRegistroState extends State<PaginaRegistro> {
                       controlador: _telefono,
                       tipoTeclado: TextInputType.phone,
                       prefijo: const Icon(Icons.phone_outlined, color: kTextSub),
+                      accionTeclado: TextInputAction.next,
                     ),
                     const SizedBox(height: 16),
                     CampoTexto(
@@ -123,6 +127,7 @@ class _PaginaRegistroState extends State<PaginaRegistro> {
                         ),
                         onPressed: () => setState(() => _ocultar = !_ocultar),
                       ),
+                      accionTeclado: TextInputAction.next,
                       validador: (v) {
                         if (v == null || v.length < 6) return 'Mínimo 6 caracteres';
                         return null;
@@ -134,6 +139,8 @@ class _PaginaRegistroState extends State<PaginaRegistro> {
                       controlador: _confirmContrasena,
                       ocultar: _ocultar,
                       prefijo: const Icon(Icons.lock_outline, color: kTextSub),
+                      accionTeclado: TextInputAction.done,
+                      alEnviar: (_) => _enviar(),
                       validador: (v) {
                         if (v != _contrasena.text) return 'Las contraseñas no coinciden';
                         return null;
@@ -161,6 +168,7 @@ class _PaginaRegistroState extends State<PaginaRegistro> {
                 ],
               ),
             ],
+          ),
           ),
         ),
       ),

@@ -260,7 +260,8 @@ class _PaginaGestionEmpleadosState extends State<PaginaGestionEmpleados>
           IconButton(icon: const Icon(Icons.refresh), onPressed: _cargar),
         ],
       ),
-      body: _cargando
+      body: EnvolturaResponsiva(
+        child: _cargando
           ? const Center(child: CircularProgressIndicator())
           : TabBarView(
               controller: _pestanas,
@@ -280,6 +281,7 @@ class _PaginaGestionEmpleadosState extends State<PaginaGestionEmpleados>
                 ),
               ],
             ),
+      ),
     );
   }
 }

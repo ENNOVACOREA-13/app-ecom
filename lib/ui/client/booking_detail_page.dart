@@ -106,6 +106,29 @@ class _PaginaDetalleReservaState extends State<PaginaDetalleReserva> {
     final fechaTexto = DateFormat('dd MMM yyyy', 'es_ES').format(r.fechaReserva);
 
     final tamano = MediaQuery.of(context).size;
+    final esEscritorio = tamano.width >= kAnchoEscritorio;
+    final margenExtra = esEscritorio ? margenLateralEscritorio(tamano.width) : 0.0;
+
+    // ── Círculo decorativo del encabezado ──────────────────────────
+    // En escritorio el ancho de pantalla puede ser enorme, así que la
+    // fórmula original (basada solo en el ancho) dejaba las esquinas
+    // sin cubrir (por eso no se veía la flecha). Aquí calculamos un
+    // círculo garantizado a cubrir todo el ancho + margen de seguridad,
+    // y más grande/visible ("que abarque más") en escritorio.
+    final double diametroCirculo;
+    final double topCirculo;
+    if (esEscritorio) {
+      const alturaVisible = 240.0;
+      const margenSeguridad = 100.0;
+      final mitadCobertura = (tamano.width + margenSeguridad * 2) / 2;
+      diametroCirculo =
+          alturaVisible + (mitadCobertura * mitadCobertura) / alturaVisible;
+      topCirculo = -(diametroCirculo - alturaVisible);
+    } else {
+      diametroCirculo = tamano.width * 1.15;
+      topCirculo = (tamano.height * 0.4) - diametroCirculo;
+    }
+    final leftCirculo = (tamano.width - diametroCirculo) / 2;
 
     return Scaffold(
       backgroundColor: kBackground,
@@ -130,17 +153,18 @@ class _PaginaDetalleReservaState extends State<PaginaDetalleReserva> {
       body: Stack(
         children: [
           Positioned(
-            top: (tamano.height * 0.4) - (tamano.width * 1.15),
-            left: (tamano.width - (tamano.width * 1.15)) / 2,
+            top: topCirculo,
+            left: leftCirculo,
             child: Container(
-              width: tamano.width * 1.15,
-              height: tamano.width * 1.15,
+              width: diametroCirculo,
+              height: diametroCirculo,
               decoration: const BoxDecoration(color: Color(0xFF1C1C1E), shape: BoxShape.circle),
             ),
           ),
           SafeArea(
         child: SingleChildScrollView(
-          padding: EdgeInsets.fromLTRB(20, kToolbarHeight + 20, 20, 20),
+          padding: EdgeInsets.fromLTRB(20 + margenExtra,
+              kToolbarHeight + (esEscritorio ? 150 : 20), 20 + margenExtra, 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [

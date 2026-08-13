@@ -110,7 +110,8 @@ class _PaginaSeleccionarTurnoState extends State<PaginaSeleccionarTurno> {
               ),
             )
           : null,
-      body: SingleChildScrollView(
+      body: EnvolturaResponsiva(
+        child: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -324,6 +325,7 @@ class _PaginaSeleccionarTurnoState extends State<PaginaSeleccionarTurno> {
             const SizedBox(height: 24),
           ],
         ),
+      ),
       ),
     );
   }

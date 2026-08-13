@@ -36,7 +36,8 @@ class PaginaNotificaciones extends StatelessWidget {
             ),
         ],
       ),
-      body: SafeArea(
+      body: EnvolturaResponsiva(
+        child: SafeArea(
         child: RefreshIndicator(
           onRefresh: () => context.read<ProveedorNotificaciones>().cargar(),
           child: prov.cargando && notificaciones.isEmpty
@@ -61,6 +62,7 @@ class PaginaNotificaciones extends StatelessWidget {
                       ),
                     ),
         ),
+      ),
       ),
     );
   }

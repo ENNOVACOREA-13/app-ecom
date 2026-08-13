@@ -418,13 +418,15 @@ class PaginaTableroAdminState extends State<PaginaTableroAdmin> {
                           // ── Sección: Stats rápidas ───────────
                           const _SeccionTitulo('Resumen general'),
                           const SizedBox(height: 12),
-                          GridView.count(
+                          GridView(
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
-                            crossAxisCount: 2,
-                            crossAxisSpacing: 12,
-                            mainAxisSpacing: 12,
-                            childAspectRatio: 1.5,
+                            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                              maxCrossAxisExtent: 240,
+                              crossAxisSpacing: 12,
+                              mainAxisSpacing: 12,
+                              childAspectRatio: 1.5,
+                            ),
                             children: [
                               _TarjetaStat(
                                 etiqueta: 'Servicios\ncompletados',

@@ -162,13 +162,15 @@ class _PaginaTableroSysadminState extends State<PaginaTableroSysadmin> {
                       ),
 
                       // Stats grid
-                      GridView.count(
+                      GridView(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
-                        crossAxisCount: 2,
-                        crossAxisSpacing: 12,
-                        mainAxisSpacing: 12,
-                        childAspectRatio: 1.5,
+                        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                          maxCrossAxisExtent: 240,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                          childAspectRatio: 1.5,
+                        ),
                         children: [
                           _Stat(icono: Icons.people_outline, label: 'Usuarios',
                               valor: '$_totalUsuarios', color: color),

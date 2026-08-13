@@ -192,7 +192,8 @@ class _PaginaPerfilState extends State<PaginaPerfil> {
             ),
         ],
       ),
-      body: SafeArea(
+      body: EnvolturaResponsiva(
+        child: SafeArea(
         child: Column(
         children: [
           Expanded(
@@ -299,6 +300,7 @@ class _PaginaPerfilState extends State<PaginaPerfil> {
           ),
         ],
         ),
+      ),
       ),
     );
   }

@@ -51,7 +51,8 @@ class _PaginaReservasEmpleadoState extends State<PaginaReservasEmpleado> {
           ),
         ],
       ),
-      body: Column(
+      body: EnvolturaResponsiva(
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Filtros
@@ -85,6 +86,7 @@ class _PaginaReservasEmpleadoState extends State<PaginaReservasEmpleado> {
                     : _ListaConSeparadores(reservas: filtradas),
           ),
         ],
+      ),
       ),
     );
   }

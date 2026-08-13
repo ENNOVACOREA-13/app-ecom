@@ -20,7 +20,9 @@ class PaginaCarrito extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F7),
       extendBody: false,
-      body: carrito.vacio ? _carritoVacio(context) : _carritoConItems(context, carrito),
+      body: EnvolturaResponsiva(
+        child: carrito.vacio ? _carritoVacio(context) : _carritoConItems(context, carrito),
+      ),
     );
   }
 
@@ -137,6 +139,7 @@ class _TarjetaItem extends StatelessWidget {
     final subtotal = item.subtotal % 1 == 0
         ? '\$${item.subtotal.toInt()}'
         : '\$${item.subtotal.toStringAsFixed(2)}';
+    final alMaximo = item.cantidad >= item.producto.existencias;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -202,11 +205,26 @@ class _TarjetaItem extends StatelessWidget {
                       ),
                       _BtnQty(
                         icono: Icons.add,
-                        onTap: () => carrito.agregar(item.producto),
+                        onTap: alMaximo
+                            ? null
+                            : () {
+                                final agregado = carrito.agregar(item.producto);
+                                if (!agregado) {
+                                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                      content: Text(
+                                          'Ya tienes el máximo disponible de "${item.producto.nombre}"'),
+                                      backgroundColor: Colors.orange));
+                                }
+                              },
                         filled: true,
                       ),
                     ],
                   ),
+                  if (alMaximo) ...[
+                    const SizedBox(height: 6),
+                    const Text('Máximo stock disponible',
+                        style: TextStyle(color: Colors.orange, fontSize: 11)),
+                  ],
                 ],
               ),
             ),
@@ -246,25 +264,33 @@ class _TarjetaItem extends StatelessWidget {
 
 class _BtnQty extends StatelessWidget {
   final IconData icono;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final bool filled;
 
   const _BtnQty({required this.icono, required this.onTap, this.filled = false});
 
   @override
   Widget build(BuildContext context) {
+    final deshabilitado = onTap == null;
     return GestureDetector(
       onTap: onTap,
       child: Container(
         width: 30,
         height: 30,
         decoration: BoxDecoration(
-          color: filled ? context.colorPrimario : Colors.white,
+          color: deshabilitado
+              ? Colors.black12
+              : (filled ? context.colorPrimario : Colors.white),
           shape: BoxShape.circle,
-          border: filled ? null : Border.all(color: const Color(0xFFE0E0E0), width: 1.5),
+          border: filled || deshabilitado
+              ? null
+              : Border.all(color: const Color(0xFFE0E0E0), width: 1.5),
         ),
         child: Icon(icono,
-            size: 15, color: filled ? Colors.white : const Color(0xFF1C1C1E)),
+            size: 15,
+            color: deshabilitado
+                ? Colors.black38
+                : (filled ? Colors.white : const Color(0xFF1C1C1E))),
       ),
     );
   }

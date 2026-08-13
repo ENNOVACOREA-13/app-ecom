@@ -42,7 +42,8 @@ class _PaginaMisReservasState extends State<PaginaMisReservas> {
         icon: const Icon(Icons.add),
         label: const Text('Nueva'),
       ),
-      body: Column(
+      body: EnvolturaResponsiva(
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
@@ -60,6 +61,7 @@ class _PaginaMisReservasState extends State<PaginaMisReservas> {
                 ),
           ),
         ],
+        ),
       ),
     );
   }

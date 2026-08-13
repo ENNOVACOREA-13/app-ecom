@@ -33,7 +33,8 @@ class _PaginaSeleccionarServicioState extends State<PaginaSeleccionarServicio> {
       appBar: AppBar(
         leading: BackButton(onPressed: () => context.pop()),
       ),
-      body: Stack(
+      body: EnvolturaResponsiva(
+        child: Stack(
         children: [
           proveedorServicio.cargando
               ? const Center(child: CircularProgressIndicator())
@@ -179,6 +180,7 @@ class _PaginaSeleccionarServicioState extends State<PaginaSeleccionarServicio> {
               ),
             ),
         ],
+      ),
       ),
     );
   }

@@ -212,7 +212,8 @@ class _PaginaInsumosState extends State<PaginaInsumos> {
           ),
         ],
       ),
-      body: SafeArea(
+      body: EnvolturaResponsiva(
+        child: SafeArea(
         child: Column(
           children: [
             // Total comprado
@@ -287,6 +288,7 @@ class _PaginaInsumosState extends State<PaginaInsumos> {
             ),
           ],
         ),
+      ),
       ),
     );
   }

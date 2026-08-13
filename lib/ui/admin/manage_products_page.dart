@@ -137,7 +137,8 @@ class _PaginaInventarioState extends State<PaginaInventario> {
           ),
         ],
       ),
-      body: prov.cargando
+      body: EnvolturaResponsiva(
+        child: prov.cargando
           ? const Center(child: CircularProgressIndicator())
           : prov.productos.isEmpty
               ? Center(
@@ -180,6 +181,7 @@ class _PaginaInventarioState extends State<PaginaInventario> {
                     );
                   },
                 ),
+      ),
     );
   }
 }

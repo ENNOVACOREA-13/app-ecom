@@ -5,6 +5,65 @@ import 'package:google_fonts/google_fonts.dart';
 // ── Color primario por defecto (fallback) ────────────────────────────────────
 const kPrimary      = Color(0xFF4ECDC4);
 
+// ── Responsivo de escritorio ──────────────────────────────────────────────
+// Ancho a partir del cual se considera "escritorio".
+const kAnchoEscritorio = 700.0;
+
+// Margen lateral en escritorio: un porcentaje del ancho de pantalla (con
+// tope) para que la app siga sintiéndose responsiva —no un ancho fijo tipo
+// móvil— y solo evite que el contenido se vea estirado de borde a borde.
+double margenLateralEscritorio(double anchoPantalla) =>
+    (anchoPantalla * 0.06).clamp(24.0, 90.0);
+
+/// Envuelve el body de una página con márgenes laterales en escritorio;
+/// en móvil no cambia nada. Pensado para envolver directamente el
+/// `body:` de un `Scaffold` en páginas de una sola columna (listas,
+/// formularios, dashboards). Para páginas con elementos decorativos
+/// de borde a borde (imágenes, encabezados curvos) aplica el margen
+/// manualmente solo al contenido, no al `body` completo.
+class EnvolturaResponsiva extends StatelessWidget {
+  final Widget child;
+  const EnvolturaResponsiva({super.key, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    final ancho = MediaQuery.of(context).size.width;
+    if (ancho < kAnchoEscritorio) return child;
+    final margen = margenLateralEscritorio(ancho);
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: margen),
+      child: child,
+    );
+  }
+}
+
+/// Igual que [EnvolturaResponsiva], pero para pantallas de formulario
+/// (login, registro, recuperar contraseña): en escritorio centra el
+/// contenido en una columna angosta tipo tarjeta en vez de solo
+/// agregar márgenes, porque un formulario estirado a todo lo ancho
+/// se ve mal.
+class EnvolturaFormularioResponsivo extends StatelessWidget {
+  final Widget child;
+  final double anchoMaximo;
+  const EnvolturaFormularioResponsivo({
+    super.key,
+    required this.child,
+    this.anchoMaximo = 460,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final ancho = MediaQuery.of(context).size.width;
+    if (ancho < kAnchoEscritorio) return child;
+    return Center(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: anchoMaximo),
+        child: child,
+      ),
+    );
+  }
+}
+
 // ── Colores fijos (no dinámicos) ─────────────────────────────────────────────
 const kBackground   = Color(0xFFFFFFFF);
 const kSurface      = Color(0xFF1C1C1E);

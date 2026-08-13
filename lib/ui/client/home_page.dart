@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -18,6 +19,8 @@ import '../../providers/config_provider.dart';
 import '../cart/cart_page.dart';
 import '../common/app_widgets.dart';
 import '../auth/guest_wall_page.dart';
+import '../../providers/product_category_provider.dart';
+import '../products/product_detail_page.dart';
 
 class PaginaInicio extends StatefulWidget {
   final bool modoEdicion;
@@ -31,6 +34,7 @@ class _PaginaInicioState extends State<PaginaInicio> {
   final _ctrlBusqueda = TextEditingController();
   final _carritoKey = GlobalKey();
   String _busqueda = '';
+  String? _categoriaIdFiltro;
   ProveedorConfig? _cfgVistaPrevia;
 
   @override
@@ -40,6 +44,7 @@ class _PaginaInicioState extends State<PaginaInicio> {
       context.read<ProveedorServicio>().cargarServicios();
       if (context.read<ProveedorConfig>().tiendaHabilitada) {
         context.read<ProveedorProducto>().cargarProductos(esVistaAdmin: false);
+        context.read<ProveedorCategoriasProducto>().cargarCategorias();
       }
       if (widget.modoEdicion) {
         _cfgVistaPrevia = context.read<ProveedorConfig>();
@@ -442,7 +447,7 @@ class _PaginaInicioState extends State<PaginaInicio> {
               maxCrossAxisExtent: 230,
               crossAxisSpacing: 14,
               mainAxisSpacing: 14,
-              childAspectRatio: 0.62,
+              childAspectRatio: 0.68,
             ),
             delegate: SliverChildBuilderDelegate(
               (context, i) => EntradaAnimada(
@@ -465,13 +470,14 @@ class _PaginaInicioState extends State<PaginaInicio> {
     final tiendaHabilitada = provConfig.tiendaHabilitada;
     final servicios = provServicio.servicios;
     final todosProductos = tiendaHabilitada ? provProducto.productos : <Producto>[];
-    final productos = _busqueda.isEmpty
-        ? todosProductos
-        : todosProductos
-            .where((p) =>
-                p.nombre.toLowerCase().contains(_busqueda.toLowerCase()) ||
-                (p.descripcion?.toLowerCase().contains(_busqueda.toLowerCase()) ?? false))
-            .toList();
+    final productos = todosProductos.where((p) {
+      final coincideBusqueda = _busqueda.isEmpty ||
+          p.nombre.toLowerCase().contains(_busqueda.toLowerCase()) ||
+          (p.descripcion?.toLowerCase().contains(_busqueda.toLowerCase()) ?? false);
+      final coincideCategoria =
+          _categoriaIdFiltro == null || p.categoriaId == _categoriaIdFiltro;
+      return coincideBusqueda && coincideCategoria;
+    }).toList();
     final nombre = perfil?.nombreCompleto.split(' ').first ?? '';
 
     return Scaffold(
@@ -573,6 +579,17 @@ class _PaginaInicioState extends State<PaginaInicio> {
             Expanded(
               child: Builder(builder: (context) {
                 final seccionesDisponibles = <String, List<Widget>>{
+                  'chips_categorias': tiendaHabilitada
+                      ? [
+                          SliverToBoxAdapter(
+                            child: _CategoriasProductosChips(
+                              seleccionadaId: _categoriaIdFiltro,
+                              onSeleccionar: (id) => setState(() => _categoriaIdFiltro = id),
+                            ),
+                          ),
+                        ]
+                      : const [],
+                  'banner_hero': const [SliverToBoxAdapter(child: _BannerReferencia())],
                   'categorias': _slivsCategorias(
                     provServicio: provServicio,
                     provConfig: provConfig,
@@ -589,9 +606,6 @@ class _PaginaInicioState extends State<PaginaInicio> {
                 return CustomScrollView(
                   physics: const ClampingScrollPhysics(),
                   slivers: [
-                    // ── Banner hero (fijo, de referencia — nunca se toca) ─
-                    const SliverToBoxAdapter(child: _BannerReferencia()),
-
                     for (final s in provConfig.seccionesHomeEfectivas)
                       if (s['visible'] == true && seccionesDisponibles.containsKey(s['key']))
                         ...seccionesDisponibles[s['key']]!,
@@ -608,7 +622,91 @@ class _PaginaInicioState extends State<PaginaInicio> {
   }
 }
 
-// ── Banner hero fijo (solo de referencia — nunca lo toca sysadmin) ─
+// ── Chips de categorías de productos ────────────────────────────────
+// Filtran "Productos Populares" en la misma pantalla — no navegan a otra.
+// Orden/visibilidad configurable desde "Orden de secciones" (key: chips_categorias).
+class _CategoriasProductosChips extends StatelessWidget {
+  final String? seleccionadaId;
+  final ValueChanged<String?> onSeleccionar;
+
+  const _CategoriasProductosChips({
+    required this.seleccionadaId,
+    required this.onSeleccionar,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final categorias = context.watch<ProveedorCategoriasProducto>().categorias;
+    if (categorias.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 4, bottom: 4),
+      child: SizedBox(
+        height: 44,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          itemCount: categorias.length + 1,
+          separatorBuilder: (_, __) => const SizedBox(width: 10),
+          itemBuilder: (context, i) {
+            final esTodas = i == 0;
+            final c = esTodas ? null : categorias[i - 1];
+            final seleccionado = esTodas ? seleccionadaId == null : c!.id == seleccionadaId;
+            return GestureDetector(
+              onTap: () => onSeleccionar(esTodas ? null : c!.id),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                decoration: BoxDecoration(
+                  color: seleccionado
+                      ? context.colorPrimario.withOpacity(0.12)
+                      : Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: seleccionado ? context.colorPrimario : const Color(0xFFE5E5EA),
+                    width: seleccionado ? 1.5 : 1,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (!esTodas && c!.imagenUrl != null)
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(999),
+                        child: Image.network(c.imagenUrl!,
+                            width: 18, height: 18, fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Icon(
+                                obtenerIconoServicio(c.icono),
+                                size: 18,
+                                color: seleccionado
+                                    ? context.colorPrimario
+                                    : const Color(0xFF1C1C1E))),
+                      )
+                    else
+                      Icon(esTodas ? Icons.apps_rounded : obtenerIconoServicio(c!.icono),
+                          size: 18,
+                          color: seleccionado
+                              ? context.colorPrimario
+                              : const Color(0xFF1C1C1E)),
+                    const SizedBox(width: 8),
+                    Text(esTodas ? 'Todas' : c!.nombre,
+                        style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: seleccionado
+                                ? context.colorPrimario
+                                : const Color(0xFF1C1C1E))),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+// ── Banner hero ("Reservar ahora") ──────────────────────────────────
+// Orden/visibilidad configurable desde "Orden de secciones" (key: banner_hero).
 class _BannerReferencia extends StatelessWidget {
   const _BannerReferencia();
 
@@ -713,14 +811,46 @@ class _BannerReferencia extends StatelessWidget {
 
 // ── Banner promocional dinámico (imagen configurable desde sysadmin,
 // no se muestra nada si no hay imagen) ──────────────────────────
-class _BannerPromo extends StatelessWidget {
+class _BannerPromo extends StatefulWidget {
   const _BannerPromo();
+
+  @override
+  State<_BannerPromo> createState() => _BannerPromoState();
+}
+
+class _BannerPromoState extends State<_BannerPromo> {
+  final _pageController = PageController();
+  Timer? _timer;
+  int _pagina = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(seconds: 4), (_) {
+      if (!mounted || !_pageController.hasClients) return;
+      final total = context.read<ProveedorConfig>().bannerImagenesEfectivas.length;
+      if (total <= 1) return;
+      final siguiente = (_pagina + 1) % total;
+      _pageController.animateToPage(
+        siguiente,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _pageController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final cfg = context.watch<ProveedorConfig>();
-    final bannerUrl = cfg.bannerUrlEfectivo;
-    if (bannerUrl == null || bannerUrl.isEmpty) return const SizedBox.shrink();
+    final imagenes = cfg.bannerImagenesEfectivas;
+    if (imagenes.isEmpty) return const SizedBox.shrink();
 
     final tieneTexto = cfg.bannerTextoEfectivo != null && cfg.bannerTextoEfectivo!.trim().isNotEmpty;
     final texto = cfg.bannerTextoEfectivo ?? '';
@@ -754,26 +884,27 @@ class _BannerPromo extends StatelessWidget {
                 }
                 if (context.mounted) context.push('/booking/service');
               },
-        child: Container(
-          height: 130,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final alturaBanner = (constraints.maxWidth / 2.1).clamp(130.0, 460.0);
+            return Container(
+          height: alturaBanner,
           clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: context.colorPrimario.withOpacity(0.3),
-                blurRadius: 16,
-                offset: const Offset(0, 6),
-              ),
-            ],
           ),
           child: Stack(
             children: [
               Positioned.fill(
-                child: Image.network(
-                  bannerUrl,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                child: PageView.builder(
+                  controller: _pageController,
+                  itemCount: imagenes.length,
+                  onPageChanged: (i) => setState(() => _pagina = i),
+                  itemBuilder: (_, i) => Image.network(
+                    imagenes[i],
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                  ),
                 ),
               ),
               if (tieneTexto)
@@ -833,8 +964,32 @@ class _BannerPromo extends StatelessWidget {
                     ),
                   ),
                 ),
+              if (imagenes.length > 1)
+                Positioned(
+                  bottom: 10,
+                  left: 0,
+                  right: 0,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(imagenes.length, (i) {
+                      final activo = i == _pagina;
+                      return AnimatedContainer(
+                        duration: const Duration(milliseconds: 250),
+                        margin: const EdgeInsets.symmetric(horizontal: 3),
+                        width: activo ? 16 : 6,
+                        height: 6,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(activo ? 0.95 : 0.5),
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                      );
+                    }),
+                  ),
+                ),
             ],
           ),
+            );
+          },
         ),
       ),
     );
@@ -937,7 +1092,9 @@ class _TarjetaProductoH extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final sinStock = producto.existencias == 0;
+    final enCarrito = context.watch<ProveedorCarrito>().cantidadProducto(producto.id);
+    final agotado = producto.existencias == 0;
+    final sinStock = agotado || enCarrito >= producto.existencias;
     final precio = producto.precio % 1 == 0
         ? '\$${producto.precio.toInt()}'
         : '\$${producto.precio.toStringAsFixed(2)}';
@@ -955,12 +1112,17 @@ class _TarjetaProductoH extends StatelessWidget {
     if (tieneOferta && pctOff != null) {
       badgeText = '−$pctOff%';
       badgeTextColor = const Color(0xFF1C8A4A);
-    } else if (sinStock) {
+    } else if (agotado) {
       badgeText = 'Agotado';
       badgeTextColor = Colors.red.shade700;
     }
 
-    return Container(
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => PaginaDetalleProducto(producto: producto)),
+      ),
+      child: Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: const BorderRadius.all(Radius.circular(20)),
@@ -989,81 +1151,81 @@ class _TarjetaProductoH extends StatelessWidget {
                                 errorBuilder: (_, __, ___) => _placeholder())
                             : _placeholder(),
                       ),
-                // Corazón arriba-izquierda
-                Positioned(
-                  top: 8,
-                  left: 8,
-                  child: Consumer<ProveedorGuardados>(
-                    builder: (ctx, guardados, _) {
-                      final guardado = guardados.estaGuardado(producto.id);
-                      return GestureDetector(
-                        onTap: () => guardados.toggleGuardado(producto.id),
-                        child: Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.12),
-                                blurRadius: 4,
-                                offset: const Offset(0, 1),
-                              ),
-                            ],
-                          ),
-                          child: Icon(
-                            guardado
-                                ? Icons.favorite_rounded
-                                : Icons.favorite_border_rounded,
-                            size: 16,
-                            color: const Color(0xFFFF3B30),
+                      if (badgeText != null)
+                        Positioned(
+                          top: 8,
+                          left: 8,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 9, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(999),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.12),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 1),
+                                ),
+                              ],
+                            ),
+                            child: Text(badgeText,
+                                style: TextStyle(
+                                    color: badgeTextColor,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700)),
                           ),
                         ),
-                      );
-                    },
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: Consumer<ProveedorGuardados>(
+                          builder: (ctx, guardados, _) {
+                            final guardado = guardados.estaGuardado(producto.id);
+                            return GestureDetector(
+                              onTap: () => guardados.toggleGuardado(producto.id),
+                              child: Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: context.colorPrimario,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.18),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 1),
+                                    ),
+                                  ],
+                                ),
+                                child: Icon(
+                                  guardado
+                                      ? Icons.favorite_rounded
+                                      : Icons.favorite_border_rounded,
+                                  size: 16,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                if (badgeText != null)
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 9, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(999),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.12),
-                            blurRadius: 4,
-                            offset: const Offset(0, 1),
-                          ),
-                        ],
-                      ),
-                      child: Text(badgeText,
-                          style: TextStyle(
-                              color: badgeTextColor,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700)),
-                    ),
-                  ),
-                    ],          // Stack.children
-                  ),            // Stack
-                ),              // ClipRRect
-              ),                // Container
-            ),                  // AspectRatio
-          ),                    // Padding
+              ),
+            ),
+          ),
 
           // ── Info ─────────────────────────────────────────
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
+              padding: const EdgeInsets.fromLTRB(10, 6, 10, 8),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
                     producto.nombre,
+                    textAlign: TextAlign.center,
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
@@ -1074,91 +1236,27 @@ class _TarjetaProductoH extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
-                  // Stock + precio
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Row(mainAxisSize: MainAxisSize.min, children: [
-                        Icon(
-                          sinStock
-                              ? Icons.remove_circle_outline
-                              : Icons.check_circle_outline,
-                          size: 11,
-                          color: sinStock
-                              ? Colors.red.shade400
-                              : Colors.green.shade500,
-                        ),
-                        const SizedBox(width: 3),
-                        Text(
-                          sinStock
-                              ? 'Sin stock'
-                              : '${producto.existencias} uds.',
-                          style: TextStyle(
-                              fontSize: 10,
-                              color: sinStock
-                                  ? Colors.red.shade400
-                                  : Colors.green.shade600,
-                              fontWeight: FontWeight.w500),
-                        ),
-                      ]),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (tieneOferta)
-                            Text(precio,
-                                style: const TextStyle(
-                                    color: Color(0xFFAEAEB2),
-                                    fontSize: 9,
-                                    decoration: TextDecoration.lineThrough)),
-                          Text(
-                            tieneOferta ? precioOferta! : precio,
-                            style: TextStyle(
-                                color: tieneOferta
-                                    ? const Color(0xFF1C8A4A)
-                                    : const Color(0xFF1C1C1E),
-                                fontSize: 14,
-                                fontWeight: FontWeight.w800),
-                          ),
-                        ],
-                      ),
-                    ],
+                  PildoraPrecioCarrito(
+                    precio: tieneOferta ? precioOferta! : precio,
+                    precioTachado: tieneOferta ? precio : null,
+                    sinStock: sinStock,
+                    onTap: sinStock
+                        ? null
+                        : () {
+                            AnimacionCarrito.volar(
+                              contextOrigen: context,
+                              destinoKey: carritoKey,
+                              imagenUrl: producto.urlImagen,
+                            );
+                            context.read<ProveedorCarrito>().agregar(producto);
+                          },
                   ),
-                  const Spacer(),
-                  // ── Botones ───────────────────────────────
-                  Row(children: [
-                    Expanded(
-                      child: Consumer<ProveedorGuardados>(
-                        builder: (ctx, guardados, _) => _BotonTarjetaH(
-                          label: 'Al carrito',
-                          onTap: sinStock
-                              ? null
-                              : () {
-                                  AnimacionCarrito.volar(
-                                    contextOrigen: context,
-                                    destinoKey: carritoKey,
-                                    imagenUrl: producto.urlImagen,
-                                  );
-                                  context.read<ProveedorCarrito>().agregar(producto);
-                                },
-                          outlined: true,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: _BotonTarjetaH(
-                        label: 'Comprar',
-                        onTap: sinStock ? null : () {},
-                      ),
-                    ),
-                  ]),
                 ],
               ),
             ),
           ),
         ],
+      ),
       ),
     );
   }
@@ -1170,55 +1268,6 @@ class _TarjetaProductoH extends StatelessWidget {
               size: 28, color: kTextMuted),
         ),
       );
-}
-
-// ── Botón de tarjeta producto ─────────────────────────────────
-class _BotonTarjetaH extends StatelessWidget {
-  final String label;
-  final VoidCallback? onTap;
-  final bool outlined;
-
-  const _BotonTarjetaH({
-    required this.label,
-    required this.onTap,
-    this.outlined = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    const bg = Color(0xFF1C1C1E);
-    return SizedBox(
-      height: 34,
-      child: outlined
-          ? OutlinedButton(
-              onPressed: onTap,
-              style: OutlinedButton.styleFrom(
-                padding: EdgeInsets.zero,
-                side: BorderSide(
-                    color: onTap == null ? Colors.black26 : bg, width: 1.5),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20)),
-              ),
-              child: Icon(Icons.shopping_cart_outlined,
-                  size: 18,
-                  color: onTap == null ? Colors.black26 : bg),
-            )
-          : ElevatedButton(
-              onPressed: onTap,
-              style: ElevatedButton.styleFrom(
-                padding: EdgeInsets.zero,
-                backgroundColor: onTap == null ? Colors.black26 : bg,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20)),
-              ),
-              child: Text(label,
-                  style: const TextStyle(
-                      fontSize: 11, fontWeight: FontWeight.w700)),
-            ),
-    );
-  }
 }
 
 // ── Ícono carrito con badge ───────────────────────────────────

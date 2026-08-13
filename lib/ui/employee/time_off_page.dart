@@ -126,7 +126,8 @@ class _PaginaDiasLibresState extends State<PaginaDiasLibres> {
         backgroundColor: context.colorPrimario,
         child: const Icon(Icons.add, color: Colors.white),
       ),
-      body: _cargando
+      body: EnvolturaResponsiva(
+        child: _cargando
           ? const Center(child: CircularProgressIndicator())
           : _diasLibres.isEmpty
               ? const EstadoVacio(
@@ -191,6 +192,7 @@ class _PaginaDiasLibresState extends State<PaginaDiasLibres> {
                     );
                   },
                 ),
+      ),
     );
   }
 }

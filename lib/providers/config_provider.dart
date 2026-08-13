@@ -8,7 +8,7 @@ class ProveedorConfig extends ChangeNotifier {
 
   // ── Valores publicados (en vivo) ──────────────────────────────
   Color _colorPrimario = kPrimary;
-  String? _bannerUrl;
+  List<String> _bannerImagenes = [];
   String? _bannerTexto;
   String _bannerAlineacion = 'left';
   String? _bannerBotonTexto;
@@ -28,7 +28,7 @@ class ProveedorConfig extends ChangeNotifier {
   bool _tieneBorrador = false;
   bool _modoVistaPrevia = false;
   Color _draftColorPrimario = kPrimary;
-  String? _draftBannerUrl;
+  List<String> _draftBannerImagenes = [];
   String? _draftBannerTexto;
   String _draftBannerAlineacion = 'left';
   String? _draftBannerBotonTexto;
@@ -45,7 +45,7 @@ class ProveedorConfig extends ChangeNotifier {
 
   // ── Getters: en vivo ───────────────────────────────────────────
   Color get colorPrimario => _colorPrimario;
-  String? get bannerUrl => _bannerUrl;
+  List<String> get bannerImagenes => List.unmodifiable(_bannerImagenes);
   String? get bannerTexto => _bannerTexto;
   String get bannerAlineacion => _bannerAlineacion;
   String? get bannerBotonTexto => _bannerBotonTexto;
@@ -64,7 +64,7 @@ class ProveedorConfig extends ChangeNotifier {
   bool get tieneBorrador => _tieneBorrador;
   bool get modoVistaPrevia => _modoVistaPrevia;
   Color get colorPrimarioBorrador => _draftColorPrimario;
-  String? get bannerUrlBorrador => _draftBannerUrl;
+  List<String> get bannerImagenesBorrador => List.unmodifiable(_draftBannerImagenes);
   String? get bannerTextoBorrador => _draftBannerTexto;
   String get bannerAlineacionBorrador => _draftBannerAlineacion;
   String? get bannerBotonTextoBorrador => _draftBannerBotonTexto;
@@ -80,7 +80,8 @@ class ProveedorConfig extends ChangeNotifier {
 
   // ── Getters "efectivos": borrador si hay vista previa activa, si no en vivo ─
   Color get colorPrimarioEfectivo => _modoVistaPrevia ? _draftColorPrimario : _colorPrimario;
-  String? get bannerUrlEfectivo => _modoVistaPrevia ? _draftBannerUrl : _bannerUrl;
+  List<String> get bannerImagenesEfectivas =>
+      _modoVistaPrevia ? bannerImagenesBorrador : bannerImagenes;
   String? get bannerTextoEfectivo => _modoVistaPrevia ? _draftBannerTexto : _bannerTexto;
   String get bannerAlineacionEfectiva =>
       _modoVistaPrevia ? _draftBannerAlineacion : _bannerAlineacion;
@@ -125,7 +126,7 @@ class ProveedorConfig extends ChangeNotifier {
     final borrador = await _repo.obtenerBorrador();
 
     if (color != null) _colorPrimario = color;
-    _bannerUrl = banner.url;
+    _bannerImagenes = banner.imagenes;
     _bannerTexto = banner.texto;
     _bannerAlineacion = banner.alineacion;
     _bannerBotonTexto = banner.botonTexto;
@@ -143,7 +144,9 @@ class ProveedorConfig extends ChangeNotifier {
     if (borrador != null) {
       _tieneBorrador = true;
       _draftColorPrimario = colorDesdeHex(borrador['primary_color'] as String?) ?? _colorPrimario;
-      _draftBannerUrl = borrador['banner_image_url'] as String?;
+      final draftImagenes = borrador['banner_images'] as List?;
+      _draftBannerImagenes =
+          draftImagenes != null ? draftImagenes.cast<String>() : _bannerImagenes;
       _draftBannerTexto = borrador['banner_text'] as String?;
       _draftBannerAlineacion = borrador['banner_align'] as String? ?? _bannerAlineacion;
       _draftBannerBotonTexto = borrador['banner_button_text'] as String?;
@@ -157,8 +160,8 @@ class ProveedorConfig extends ChangeNotifier {
       _draftSombraContenedor = (borrador['container_shadow'] as num?)?.toDouble() ?? _sombraContenedor;
       _draftProductosTitulo = borrador['home_productos_titulo'] as String? ?? _productosTitulo;
       final draftSecciones = borrador['home_sections'] as List?;
-      _draftSeccionesHome =
-          draftSecciones != null ? draftSecciones.cast<Map<String, dynamic>>() : _seccionesHome;
+      _draftSeccionesHome = completarSeccionesHome(
+          draftSecciones != null ? draftSecciones.cast<Map<String, dynamic>>() : _seccionesHome);
     } else {
       _tieneBorrador = false;
       _reiniciarBorradorDesdeVivo();
@@ -169,7 +172,7 @@ class ProveedorConfig extends ChangeNotifier {
 
   void _reiniciarBorradorDesdeVivo() {
     _draftColorPrimario = _colorPrimario;
-    _draftBannerUrl = _bannerUrl;
+    _draftBannerImagenes = List<String>.from(_bannerImagenes);
     _draftBannerTexto = _bannerTexto;
     _draftBannerAlineacion = _bannerAlineacion;
     _draftBannerBotonTexto = _bannerBotonTexto;
@@ -186,7 +189,7 @@ class ProveedorConfig extends ChangeNotifier {
 
   Map<String, dynamic> _snapshotBorrador() => {
         'primary_color': colorAHex(_draftColorPrimario),
-        'banner_image_url': _draftBannerUrl,
+        'banner_images': _draftBannerImagenes,
         'banner_text': _draftBannerTexto,
         'banner_align': _draftBannerAlineacion,
         'banner_button_text': _draftBannerBotonTexto,
@@ -213,13 +216,13 @@ class ProveedorConfig extends ChangeNotifier {
   }
 
   Future<bool> actualizarBorradorBanner({
-    required String? url,
+    required List<String> imagenes,
     required String? texto,
     required String alineacion,
     required String? botonTexto,
     required String? botonLink,
   }) async {
-    _draftBannerUrl = url;
+    _draftBannerImagenes = imagenes.take(5).toList();
     _draftBannerTexto = texto;
     _draftBannerAlineacion = alineacion;
     _draftBannerBotonTexto = botonTexto;
@@ -263,7 +266,7 @@ class ProveedorConfig extends ChangeNotifier {
     final exito = await _repo.publicarBorrador(_snapshotBorrador());
     if (exito) {
       _colorPrimario = _draftColorPrimario;
-      _bannerUrl = _draftBannerUrl;
+      _bannerImagenes = List<String>.from(_draftBannerImagenes);
       _bannerTexto = _draftBannerTexto;
       _bannerAlineacion = _draftBannerAlineacion;
       _bannerBotonTexto = _draftBannerBotonTexto;

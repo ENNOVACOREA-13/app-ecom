@@ -16,14 +16,20 @@ class ProveedorCarrito extends ChangeNotifier {
   double get total => _items.fold(0.0, (s, i) => s + i.subtotal);
   bool get vacio => _items.isEmpty;
 
-  void agregar(Producto producto) {
+  /// Agrega [cantidad] unidades del producto sin superar el stock disponible.
+  /// Devuelve `false` si ya se había alcanzado el máximo y no se agregó nada.
+  bool agregar(Producto producto, {int cantidad = 1}) {
     final idx = _items.indexWhere((i) => i.producto.id == producto.id);
+    final actual = idx >= 0 ? _items[idx].cantidad : 0;
+    final nuevaCantidad = (actual + cantidad).clamp(0, producto.existencias);
+    if (nuevaCantidad <= actual) return false;
     if (idx >= 0) {
-      _items[idx].cantidad++;
+      _items[idx].cantidad = nuevaCantidad;
     } else {
-      _items.add(ItemCarrito(producto: producto));
+      _items.add(ItemCarrito(producto: producto, cantidad: nuevaCantidad));
     }
     notifyListeners();
+    return true;
   }
 
   void decrementar(String productoId) {

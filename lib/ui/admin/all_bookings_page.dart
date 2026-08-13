@@ -65,7 +65,8 @@ class _PaginaTodasReservasState extends State<PaginaTodasReservas> {
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
         ),
       ),
-      body: Column(
+      body: EnvolturaResponsiva(
+        child: Column(
         children: [
           // Filtros de estado
           SingleChildScrollView(
@@ -113,6 +114,7 @@ class _PaginaTodasReservasState extends State<PaginaTodasReservas> {
                     : _ListaConSeparadores(reservas: filtradas),
           ),
         ],
+      ),
       ),
     );
   }

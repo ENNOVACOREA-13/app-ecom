@@ -76,13 +76,15 @@ class _PaginaConfigComisionesState extends State<PaginaConfigComisiones>
             ),
           ),
         ],
-        body: TabBarView(
+        body: EnvolturaResponsiva(
+          child: TabBarView(
           controller: _tabs,
           children: const [
             _TabConfiguracion(),
             _TabCortes(),
             _TabAjustes(),
           ],
+        ),
         ),
       ),
     );

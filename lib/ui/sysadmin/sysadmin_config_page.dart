@@ -37,8 +37,17 @@ class PaginaConfigSysadminState extends State<PaginaConfigSysadmin> {
           .from('profiles')
           .select()
           .order('created_at', ascending: false);
-      setState(() => _usuarios = List<Map<String, dynamic>>.from(datos));
-    } catch (_) {} finally {
+      // Las cuentas sysadmin nunca se listan ni se editan desde aquí.
+      setState(() => _usuarios = List<Map<String, dynamic>>.from(datos)
+          .where((u) => u['role'] != 'sysadmin')
+          .toList());
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al cargar usuarios: $e')),
+        );
+      }
+    } finally {
       setState(() => _cargando = false);
     }
   }
@@ -478,6 +487,10 @@ class PaginaConfigSysadminState extends State<PaginaConfigSysadmin> {
                             final activo = u['is_active'] as bool? ?? true;
                             final nombre =
                                 u['full_name'] as String? ?? 'Sin nombre';
+                            final miPropiaCuenta = u['id'] ==
+                                context.read<ProveedorAuth>().perfil?.id;
+                            final esProtegida =
+                                rol == 'sysadmin' || miPropiaCuenta;
 
                             return Container(
                               margin: const EdgeInsets.only(bottom: 8),
@@ -518,12 +531,15 @@ class PaginaConfigSysadminState extends State<PaginaConfigSysadmin> {
                                     ],
                                   ),
                                 ),
-                                // Toggle activo/inactivo
+                                // Toggle activo/inactivo (bloqueado para
+                                // cuentas sysadmin y la propia cuenta)
                                 Switch(
                                   value: activo,
                                   activeColor: color,
-                                  onChanged: (_) =>
-                                      _toggleActivo(u['id'], activo),
+                                  onChanged: esProtegida
+                                      ? null
+                                      : (_) =>
+                                          _toggleActivo(u['id'], activo),
                                 ),
                                 // Menú de acciones
                                 PopupMenuButton<String>(
@@ -544,17 +560,18 @@ class PaginaConfigSysadminState extends State<PaginaConfigSysadmin> {
                                         Text('Editar'),
                                       ]),
                                     ),
-                                    const PopupMenuItem(
-                                      value: 'eliminar',
-                                      child: Row(children: [
-                                        Icon(Icons.delete_outline,
-                                            size: 18, color: Colors.red),
-                                        SizedBox(width: 8),
-                                        Text('Eliminar',
-                                            style:
-                                                TextStyle(color: Colors.red)),
-                                      ]),
-                                    ),
+                                    if (rol != 'sysadmin')
+                                      const PopupMenuItem(
+                                        value: 'eliminar',
+                                        child: Row(children: [
+                                          Icon(Icons.delete_outline,
+                                              size: 18, color: Colors.red),
+                                          SizedBox(width: 8),
+                                          Text('Eliminar',
+                                              style: TextStyle(
+                                                  color: Colors.red)),
+                                        ]),
+                                      ),
                                   ],
                                 ),
                               ]),

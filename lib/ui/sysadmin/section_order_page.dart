@@ -4,6 +4,8 @@ import '../../core/theme/app_theme.dart';
 import '../../providers/config_provider.dart';
 
 const Map<String, ({String etiqueta, IconData icono})> _kEtiquetasSeccion = {
+  'chips_categorias': (etiqueta: 'Chips de categorías (tienda)', icono: Icons.apps_rounded),
+  'banner_hero': (etiqueta: 'Banner principal (reservar)', icono: Icons.content_cut),
   'categorias': (etiqueta: 'Categorías de Servicios', icono: Icons.content_cut),
   'banner_promo': (etiqueta: 'Banner promocional', icono: Icons.image_outlined),
   'productos': (etiqueta: 'Productos Populares', icono: Icons.shopping_bag_outlined),
@@ -73,14 +75,15 @@ class _PaginaOrdenSeccionesState extends State<PaginaOrdenSecciones> {
             ),
         ],
       ),
-      body: SafeArea(
+      body: EnvolturaResponsiva(
+        child: SafeArea(
         child: Column(
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
               child: Text(
                 'Arrastra para reordenar y usa el switch para mostrar u ocultar cada sección '
-                'en la pantalla de inicio. El banner principal siempre va primero. '
+                'en la pantalla de inicio. '
                 'Los cambios se guardan como borrador — usa "Publicar cambios" en Diseñador '
                 'de vista para que los vean los clientes reales.',
                 style: TextStyle(fontSize: 12, color: const Color(0xFF8E8E93)),
@@ -90,6 +93,7 @@ class _PaginaOrdenSeccionesState extends State<PaginaOrdenSecciones> {
               child: ReorderableListView.builder(
                 padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
                 itemCount: _secciones.length,
+                buildDefaultDragHandles: false,
                 onReorder: _onReorder,
                 itemBuilder: (context, i) {
                   final s = _secciones[i];
@@ -99,7 +103,6 @@ class _PaginaOrdenSeccionesState extends State<PaginaOrdenSecciones> {
                   return Container(
                     key: ValueKey(key),
                     margin: const EdgeInsets.only(bottom: 10),
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(14),
@@ -107,34 +110,51 @@ class _PaginaOrdenSeccionesState extends State<PaginaOrdenSecciones> {
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.drag_handle_rounded, color: Color(0xFF8E8E93)),
-                        const SizedBox(width: 10),
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: context.colorPrimario.withOpacity(0.12),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(info?.icono ?? Icons.widgets_outlined,
-                              color: context.colorPrimario, size: 18),
-                        ),
-                        const SizedBox(width: 12),
                         Expanded(
-                          child: Text(
-                            info?.etiqueta ?? key,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                              color: visible
-                                  ? const Color(0xFF1C1C1E)
-                                  : const Color(0xFFAEAEB2),
+                          child: ReorderableDragStartListener(
+                            index: i,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 14, vertical: 10),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.drag_handle_rounded,
+                                      color: Color(0xFF8E8E93)),
+                                  const SizedBox(width: 10),
+                                  Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: context.colorPrimario.withOpacity(0.12),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(info?.icono ?? Icons.widgets_outlined,
+                                        color: context.colorPrimario, size: 18),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      info?.etiqueta ?? key,
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 14,
+                                        color: visible
+                                            ? const Color(0xFF1C1C1E)
+                                            : const Color(0xFFAEAEB2),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
-                        Switch(
-                          value: visible,
-                          activeColor: context.colorPrimario,
-                          onChanged: (v) => _toggleVisible(i, v),
+                        Padding(
+                          padding: const EdgeInsets.only(right: 10),
+                          child: Switch(
+                            value: visible,
+                            activeColor: context.colorPrimario,
+                            onChanged: (v) => _toggleVisible(i, v),
+                          ),
                         ),
                       ],
                     ),
@@ -144,6 +164,7 @@ class _PaginaOrdenSeccionesState extends State<PaginaOrdenSecciones> {
             ),
           ],
         ),
+      ),
       ),
     );
   }

@@ -11,6 +11,7 @@ class Producto {
   final EstadoProducto estado;
   final String creadoPor;
   final DateTime creadoEn;
+  final String? categoriaId;
 
   const Producto({
     required this.id,
@@ -23,6 +24,7 @@ class Producto {
     required this.estado,
     required this.creadoPor,
     required this.creadoEn,
+    this.categoriaId,
   });
 
   factory Producto.fromMap(Map<String, dynamic> map) {
@@ -37,6 +39,7 @@ class Producto {
       estado: EstadoProducto.fromString(map['status'] as String? ?? 'active'),
       creadoPor: map['created_by'] as String? ?? '',
       creadoEn: DateTime.tryParse(map['created_at'] as String? ?? '') ?? DateTime.now(),
+      categoriaId: map['category_id'] as String?,
     );
   }
 
@@ -48,6 +51,7 @@ class Producto {
         'stock': existencias,
         'image_url': urlImagen,
         'status': estado.toDbString(),
+        'category_id': categoriaId,
       };
 
   bool get estaDisponible => estado == EstadoProducto.active && existencias > 0;

@@ -269,7 +269,8 @@ class _PaginaLogsState extends State<PaginaLogs>
           ),
         ],
       ),
-      body: SafeArea(
+      body: EnvolturaResponsiva(
+        child: SafeArea(
         child: Column(
           children: [
             const SizedBox(height: 8),
@@ -420,6 +421,7 @@ class _PaginaLogsState extends State<PaginaLogs>
             ),
           ],
         ),
+      ),
       ),
     );
   }

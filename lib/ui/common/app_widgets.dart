@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
@@ -54,6 +55,8 @@ class CampoTexto extends StatelessWidget {
   final Widget? prefijo;
   final Widget? sufijo;
   final int maxLineas;
+  final TextInputAction? accionTeclado;
+  final void Function(String)? alEnviar;
 
   const CampoTexto({
     super.key,
@@ -65,6 +68,8 @@ class CampoTexto extends StatelessWidget {
     this.prefijo,
     this.sufijo,
     this.maxLineas = 1,
+    this.accionTeclado,
+    this.alEnviar,
   });
 
   @override
@@ -75,6 +80,14 @@ class CampoTexto extends StatelessWidget {
       keyboardType: tipoTeclado,
       validator: validador,
       maxLines: maxLineas,
+      textInputAction: accionTeclado,
+      onFieldSubmitted: alEnviar,
+      // Solo texto plano: evita pegar imágenes u otro contenido enriquecido
+      // que el portapapeles pudiera traer junto con el texto (no aplica a
+      // campos multilínea como bio/descripción).
+      inputFormatters: maxLineas == 1
+          ? [FilteringTextInputFormatter.singleLineFormatter]
+          : null,
       style: const TextStyle(color: Color(0xFF1C1C1E)),
       decoration: InputDecoration(
         labelText: etiqueta,
@@ -285,6 +298,65 @@ class IconoNotificaciones extends StatelessWidget {
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+// ── Píldora ovalada: precio + botón circular de agregar al carrito ───
+class PildoraPrecioCarrito extends StatelessWidget {
+  final String precio;
+  final String? precioTachado;
+  final bool sinStock;
+  final VoidCallback? onTap;
+
+  const PildoraPrecioCarrito({
+    super.key,
+    required this.precio,
+    this.precioTachado,
+    required this.sinStock,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.only(left: 18, right: 4, top: 4, bottom: 4),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF2F2F7),
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (precioTachado != null)
+              Padding(
+                padding: const EdgeInsets.only(right: 6),
+                child: Text(precioTachado!,
+                    style: const TextStyle(
+                        color: Color(0xFFAEAEB2),
+                        fontSize: 10,
+                        decoration: TextDecoration.lineThrough)),
+              ),
+            Text(precio,
+                style: const TextStyle(
+                    color: Color(0xFF1C1C1E), fontSize: 15, fontWeight: FontWeight.w800)),
+            const SizedBox(width: 14),
+            GestureDetector(
+              onTap: onTap,
+              child: Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: sinStock ? Colors.black26 : const Color(0xFF1C1C1E),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.add, color: Colors.white, size: 17),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

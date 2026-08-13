@@ -42,6 +42,7 @@ class _PaginaLoginState extends State<PaginaLogin> {
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
+          child: EnvolturaFormularioResponsivo(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -111,6 +112,7 @@ class _PaginaLoginState extends State<PaginaLogin> {
                       controlador: _correo,
                       tipoTeclado: TextInputType.emailAddress,
                       prefijo: const Icon(Icons.email_outlined, color: kTextSub),
+                      accionTeclado: TextInputAction.next,
                       validador: (v) {
                         if (v == null || v.isEmpty) return 'Ingresa tu email';
                         if (!RegExp(r'^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$')
@@ -131,6 +133,8 @@ class _PaginaLoginState extends State<PaginaLogin> {
                         ),
                         onPressed: () => setState(() => _ocultar = !_ocultar),
                       ),
+                      accionTeclado: TextInputAction.done,
+                      alEnviar: (_) => _enviar(),
                       validador: (v) {
                         if (v == null || v.isEmpty) return 'Ingresa tu contraseña';
                         return null;
@@ -198,6 +202,7 @@ class _PaginaLoginState extends State<PaginaLogin> {
                 ],
               ),
             ],
+          ),
           ),
         ),
       ),

@@ -8,6 +8,8 @@ import '../../providers/product_provider.dart';
 import '../../providers/saved_provider.dart';
 import '../../providers/cart_provider.dart';
 import '../cart/cart_page.dart';
+import '../common/app_widgets.dart';
+import '../products/product_detail_page.dart';
 
 class PaginaGuardados extends StatefulWidget {
   const PaginaGuardados({super.key});
@@ -42,7 +44,8 @@ class _PaginaGuardadosState extends State<PaginaGuardados> {
 
     return Scaffold(
       backgroundColor: kBackground,
-      body: SafeArea(
+      body: EnvolturaResponsiva(
+        child: SafeArea(
         child: CustomScrollView(
           slivers: [
             // Header
@@ -136,7 +139,7 @@ class _PaginaGuardadosState extends State<PaginaGuardados> {
                     maxCrossAxisExtent: 230,
                     crossAxisSpacing: 14,
                     mainAxisSpacing: 14,
-                    childAspectRatio: 0.62,
+                    childAspectRatio: 0.68,
                   ),
                   delegate: SliverChildBuilderDelegate(
                     (context, i) {
@@ -153,6 +156,7 @@ class _PaginaGuardadosState extends State<PaginaGuardados> {
           ],
         ),
       ),
+      ),
     );
   }
 }
@@ -164,7 +168,9 @@ class _TarjetaGuardado extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final sinStock = producto.existencias == 0;
+    final enCarrito = context.watch<ProveedorCarrito>().cantidadProducto(producto.id);
+    final agotado = producto.existencias == 0;
+    final sinStock = agotado || enCarrito >= producto.existencias;
     final precio = producto.precio % 1 == 0
         ? '\$${producto.precio.toInt()}'
         : '\$${producto.precio.toStringAsFixed(2)}';
@@ -181,12 +187,17 @@ class _TarjetaGuardado extends StatelessWidget {
     if (tieneOferta && pctOff != null) {
       badgeText = '−$pctOff%';
       badgeTextColor = const Color(0xFF1C8A4A);
-    } else if (sinStock) {
+    } else if (agotado) {
       badgeText = 'Agotado';
       badgeTextColor = Colors.red.shade700;
     }
 
-    return Container(
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => PaginaDetalleProducto(producto: producto)),
+      ),
+      child: Container(
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.all(Radius.circular(20)),
@@ -212,27 +223,9 @@ class _TarjetaGuardado extends StatelessWidget {
                             ? Image.network(producto.urlImagen!, fit: BoxFit.cover, errorBuilder: (_, __, ___) => _placeholder())
                             : _placeholder(),
                       ),
-                      // Corazón arriba-izquierda (rojo = guardado, toca para quitar)
-                      Positioned(
-                        top: 8, left: 8,
-                        child: Consumer<ProveedorGuardados>(
-                          builder: (ctx, guardados, _) => GestureDetector(
-                            onTap: () => guardados.toggleGuardado(producto.id),
-                            child: Container(
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                shape: BoxShape.circle,
-                                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.12), blurRadius: 4, offset: const Offset(0, 1))],
-                              ),
-                              child: const Icon(Icons.favorite_rounded, size: 16, color: Color(0xFFFF3B30)),
-                            ),
-                          ),
-                        ),
-                      ),
                       if (badgeText != null)
                         Positioned(
-                          top: 8, right: 8,
+                          top: 8, left: 8,
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                             decoration: BoxDecoration(
@@ -243,6 +236,24 @@ class _TarjetaGuardado extends StatelessWidget {
                             child: Text(badgeText, style: TextStyle(color: badgeTextColor, fontSize: 10, fontWeight: FontWeight.w700)),
                           ),
                         ),
+                      // Corazón arriba-derecha (siempre guardado en esta pantalla, toca para quitar)
+                      Positioned(
+                        top: 8, right: 8,
+                        child: Consumer<ProveedorGuardados>(
+                          builder: (ctx, guardados, _) => GestureDetector(
+                            onTap: () => guardados.toggleGuardado(producto.id),
+                            child: Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: context.colorPrimario,
+                                shape: BoxShape.circle,
+                                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.18), blurRadius: 4, offset: const Offset(0, 1))],
+                              ),
+                              child: const Icon(Icons.favorite_rounded, size: 16, color: Colors.white),
+                            ),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -251,45 +262,32 @@ class _TarjetaGuardado extends StatelessWidget {
           ),
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
+              padding: const EdgeInsets.fromLTRB(10, 6, 10, 8),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(producto.nombre,
+                      textAlign: TextAlign.center,
                       style: const TextStyle(color: Color(0xFF1C1C1E), fontSize: 12, fontWeight: FontWeight.w700, height: 1.3),
                       maxLines: 1, overflow: TextOverflow.ellipsis),
                   const SizedBox(height: 4),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(mainAxisSize: MainAxisSize.min, children: [
-                        Icon(sinStock ? Icons.remove_circle_outline : Icons.check_circle_outline,
-                            size: 11, color: sinStock ? Colors.red.shade400 : Colors.green.shade500),
-                        const SizedBox(width: 3),
-                        Text(sinStock ? 'Sin stock' : '${producto.existencias} uds.',
-                            style: TextStyle(fontSize: 10, color: sinStock ? Colors.red.shade400 : Colors.green.shade600, fontWeight: FontWeight.w500)),
-                      ]),
-                      Column(crossAxisAlignment: CrossAxisAlignment.end, mainAxisSize: MainAxisSize.min, children: [
-                        if (tieneOferta) Text(precio, style: const TextStyle(color: Color(0xFFAEAEB2), fontSize: 9, decoration: TextDecoration.lineThrough)),
-                        Text(tieneOferta ? precioOferta! : precio,
-                            style: TextStyle(color: tieneOferta ? const Color(0xFF1C8A4A) : const Color(0xFF1C1C1E), fontSize: 14, fontWeight: FontWeight.w800)),
-                      ]),
-                    ],
+                  PildoraPrecioCarrito(
+                    precio: tieneOferta ? precioOferta! : precio,
+                    precioTachado: tieneOferta ? precio : null,
+                    sinStock: sinStock,
+                    onTap: sinStock
+                        ? null
+                        : () {
+                            AnimacionCarrito.volar(contextOrigen: context, destinoKey: carritoKey, imagenUrl: producto.urlImagen);
+                            context.read<ProveedorCarrito>().agregar(producto);
+                          },
                   ),
-                  const Spacer(),
-                  Row(children: [
-                    Expanded(child: _BotonGuardado(label: 'Al carrito', onTap: sinStock ? null : () {
-                      AnimacionCarrito.volar(contextOrigen: context, destinoKey: carritoKey, imagenUrl: producto.urlImagen);
-                      context.read<ProveedorCarrito>().agregar(producto);
-                    }, outlined: true)),
-                    const SizedBox(width: 6),
-                    Expanded(child: _BotonGuardado(label: 'Comprar', onTap: sinStock ? null : () {})),
-                  ]),
                 ],
               ),
             ),
           ),
         ],
+      ),
       ),
     );
   }
@@ -300,54 +298,6 @@ class _TarjetaGuardado extends StatelessWidget {
           child: Icon(Icons.inventory_2_outlined, size: 32, color: kTextMuted),
         ),
       );
-}
-
-class _BotonGuardado extends StatelessWidget {
-  final String label;
-  final VoidCallback? onTap;
-  final bool outlined;
-
-  const _BotonGuardado({
-    required this.label,
-    required this.onTap,
-    this.outlined = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    const bg = Color(0xFF1C1C1E);
-    return SizedBox(
-      height: 34,
-      child: outlined
-          ? OutlinedButton(
-              onPressed: onTap,
-              style: OutlinedButton.styleFrom(
-                padding: EdgeInsets.zero,
-                side: BorderSide(
-                    color: onTap == null ? Colors.black26 : bg, width: 1.5),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20)),
-              ),
-              child: Icon(Icons.shopping_cart_outlined,
-                  size: 18,
-                  color: onTap == null ? Colors.black26 : bg),
-            )
-          : ElevatedButton(
-              onPressed: onTap,
-              style: ElevatedButton.styleFrom(
-                padding: EdgeInsets.zero,
-                backgroundColor: onTap == null ? Colors.black26 : bg,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20)),
-              ),
-              child: Text(label,
-                  style: const TextStyle(
-                      fontSize: 11, fontWeight: FontWeight.w700)),
-            ),
-    );
-  }
 }
 
 class _IconoCarrito extends StatelessWidget {

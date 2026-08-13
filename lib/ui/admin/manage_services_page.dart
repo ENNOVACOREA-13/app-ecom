@@ -433,7 +433,8 @@ class _PaginaGestionServiciosState extends State<PaginaGestionServicios> {
         foregroundColor: Colors.white,
         child: const Icon(Icons.add),
       ),
-      body: proveedor.cargando
+      body: EnvolturaResponsiva(
+        child: proveedor.cargando
           ? const Center(child: CircularProgressIndicator())
           : proveedor.servicios.isEmpty
               ? const EstadoVacio(
@@ -557,6 +558,7 @@ class _PaginaGestionServiciosState extends State<PaginaGestionServicios> {
                     );
                   },
                 ),
+      ),
     );
   }
 }

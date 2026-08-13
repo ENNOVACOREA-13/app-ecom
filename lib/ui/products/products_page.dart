@@ -5,19 +5,30 @@ import '../../domain/enums/user_role.dart';
 import '../../domain/models/service_model.dart' show ModeloServicio;
 import '../../providers/auth_provider.dart';
 import '../../providers/product_provider.dart';
+import '../../providers/product_category_provider.dart';
 import '../../providers/service_provider.dart';
 import '../../providers/saved_provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/cart_fly_animation.dart';
 import '../../core/entrada_animada.dart';
+import '../../core/service_icons.dart';
 import '../../providers/cart_provider.dart';
 import '../../data/ftp_upload_service.dart';
 import '../auth/guest_wall_page.dart';
+import '../common/app_widgets.dart';
 import '../cart/cart_page.dart';
 import '../saved/saved_page.dart';
+import 'product_detail_page.dart';
 
 class PaginaProductos extends StatefulWidget {
-  const PaginaProductos({super.key});
+  final String? categoriaIdInicial;
+  final String? categoriaNombreInicial;
+
+  const PaginaProductos({
+    super.key,
+    this.categoriaIdInicial,
+    this.categoriaNombreInicial,
+  });
 
   @override
   State<PaginaProductos> createState() => _PaginaProductosState();
@@ -27,14 +38,17 @@ class _PaginaProductosState extends State<PaginaProductos> {
   final _ctrlBusqueda = TextEditingController();
   final _carritoKey = GlobalKey();
   String _busqueda = '';
+  String? _categoriaIdFiltro;
 
   @override
   void initState() {
     super.initState();
+    _categoriaIdFiltro = widget.categoriaIdInicial;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final esAdmin = context.read<ProveedorAuth>().perfil?.rol.isAdmin ?? false;
       context.read<ProveedorProducto>().cargarProductos(esVistaAdmin: esAdmin);
       context.read<ProveedorServicio>().cargarServicios();
+      context.read<ProveedorCategoriasProducto>().cargarCategorias();
     });
   }
 
@@ -237,21 +251,24 @@ class _PaginaProductosState extends State<PaginaProductos> {
   Widget build(BuildContext context) {
     final proveedor = context.watch<ProveedorProducto>();
     final provServicio = context.watch<ProveedorServicio>();
+    final categorias = context.watch<ProveedorCategoriasProducto>().categorias;
     final perfil = context.watch<ProveedorAuth>().perfil;
     final puedeCrear = perfil?.rol.isAdmin ?? false;
     final servicios = provServicio.servicios;
 
-    final productosFiltrados = _busqueda.isEmpty
-        ? proveedor.productos
-        : proveedor.productos
-            .where((p) =>
-                p.nombre.toLowerCase().contains(_busqueda.toLowerCase()) ||
-                (p.descripcion?.toLowerCase().contains(_busqueda.toLowerCase()) ?? false))
-            .toList();
+    final productosFiltrados = proveedor.productos.where((p) {
+      final coincideBusqueda = _busqueda.isEmpty ||
+          p.nombre.toLowerCase().contains(_busqueda.toLowerCase()) ||
+          (p.descripcion?.toLowerCase().contains(_busqueda.toLowerCase()) ?? false);
+      final coincideCategoria =
+          _categoriaIdFiltro == null || p.categoriaId == _categoriaIdFiltro;
+      return coincideBusqueda && coincideCategoria;
+    }).toList();
 
     return Scaffold(
       backgroundColor: kBackground,
-      body: SafeArea(
+      body: EnvolturaResponsiva(
+        child: SafeArea(
         child: CustomScrollView(
           slivers: [
             // ── Header ──────────────────────────────────────────
@@ -327,6 +344,79 @@ class _PaginaProductosState extends State<PaginaProductos> {
                 ),
               ),
             ),
+
+            // ── Chips de categorías de productos ─────────────────
+            if (categorias.isNotEmpty)
+              SliverToBoxAdapter(
+                child: SizedBox(
+                  height: 44,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                    itemCount: categorias.length + 1,
+                    separatorBuilder: (_, __) => const SizedBox(width: 10),
+                    itemBuilder: (context, i) {
+                      final esTodas = i == 0;
+                      final c = esTodas ? null : categorias[i - 1];
+                      final seleccionado =
+                          esTodas ? _categoriaIdFiltro == null : c!.id == _categoriaIdFiltro;
+                      return GestureDetector(
+                        onTap: () => setState(
+                            () => _categoriaIdFiltro = esTodas ? null : c!.id),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: seleccionado
+                                ? context.colorPrimario.withOpacity(0.12)
+                                : Colors.white,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: seleccionado
+                                  ? context.colorPrimario
+                                  : const Color(0xFFE5E5EA),
+                              width: seleccionado ? 1.5 : 1,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (!esTodas && c!.imagenUrl != null)
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(999),
+                                  child: Image.network(c.imagenUrl!,
+                                      width: 18, height: 18, fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) => Icon(
+                                          obtenerIconoServicio(c.icono),
+                                          size: 18,
+                                          color: seleccionado
+                                              ? context.colorPrimario
+                                              : const Color(0xFF1C1C1E))),
+                                )
+                              else
+                                Icon(
+                                    esTodas
+                                        ? Icons.apps_rounded
+                                        : obtenerIconoServicio(c!.icono),
+                                    size: 18,
+                                    color: seleccionado
+                                        ? context.colorPrimario
+                                        : const Color(0xFF1C1C1E)),
+                              const SizedBox(width: 8),
+                              Text(esTodas ? 'Todas' : c!.nombre,
+                                  style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color: seleccionado
+                                          ? context.colorPrimario
+                                          : const Color(0xFF1C1C1E))),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
 
             // ── Banner hero ──────────────────────────────────────
             SliverToBoxAdapter(
@@ -588,6 +678,7 @@ class _PaginaProductosState extends State<PaginaProductos> {
               ),
           ],
         ),
+      ),
       ),
       floatingActionButton: puedeCrear
           ? FloatingActionButton(
@@ -971,7 +1062,9 @@ class _TarjetaProducto extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final sinStock = producto.existencias == 0;
+    final enCarrito = context.watch<ProveedorCarrito>().cantidadProducto(producto.id);
+    final agotado = producto.existencias == 0;
+    final sinStock = agotado || enCarrito >= producto.existencias;
     final precio = producto.precio % 1 == 0
         ? '\$${producto.precio.toInt()}'
         : '\$${producto.precio.toStringAsFixed(2)}';
@@ -990,12 +1083,17 @@ class _TarjetaProducto extends StatelessWidget {
     if (tieneOferta && pctOff != null) {
       badgeText = '−$pctOff%';
       badgeTextColor = const Color(0xFF1C8A4A);
-    } else if (sinStock) {
+    } else if (agotado) {
       badgeText = 'Agotado';
       badgeTextColor = Colors.red.shade700;
     }
 
-    return Container(
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => PaginaDetalleProducto(producto: producto)),
+      ),
+      child: Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: const BorderRadius.all(Radius.circular(20)),
@@ -1024,82 +1122,83 @@ class _TarjetaProducto extends StatelessWidget {
                                 errorBuilder: (_, __, ___) => _placeholder())
                             : _placeholder(),
                       ),
-                // Corazón arriba-izquierda
-                Positioned(
-                  top: 8,
-                  left: 8,
-                  child: Consumer<ProveedorGuardados>(
-                    builder: (ctx, guardados, _) {
-                      final guardado = guardados.estaGuardado(producto.id);
-                      return GestureDetector(
-                        onTap: () => guardados.toggleGuardado(producto.id),
-                        child: Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.12),
-                                blurRadius: 4,
-                                offset: const Offset(0, 1),
-                              ),
-                            ],
-                          ),
-                          child: Icon(
-                            guardado
-                                ? Icons.favorite_rounded
-                                : Icons.favorite_border_rounded,
-                            size: 16,
-                            color: const Color(0xFFFF3B30),
+                      // Badge pastilla arriba-izquierda
+                      if (badgeText != null)
+                        Positioned(
+                          top: 8,
+                          left: 8,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 9, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(999),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.12),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 1),
+                                ),
+                              ],
+                            ),
+                            child: Text(badgeText,
+                                style: TextStyle(
+                                    color: badgeTextColor,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700)),
                           ),
                         ),
-                      );
-                    },
+                      // Corazón arriba-derecha
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: Consumer<ProveedorGuardados>(
+                          builder: (ctx, guardados, _) {
+                            final guardado = guardados.estaGuardado(producto.id);
+                            return GestureDetector(
+                              onTap: () => guardados.toggleGuardado(producto.id),
+                              child: Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: context.colorPrimario,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.18),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 1),
+                                    ),
+                                  ],
+                                ),
+                                child: Icon(
+                                  guardado
+                                      ? Icons.favorite_rounded
+                                      : Icons.favorite_border_rounded,
+                                  size: 16,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                // Badge pastilla arriba-derecha
-                if (badgeText != null)
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 9, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(999),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.12),
-                            blurRadius: 4,
-                            offset: const Offset(0, 1),
-                          ),
-                        ],
-                      ),
-                      child: Text(badgeText,
-                          style: TextStyle(
-                              color: badgeTextColor,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700)),
-                    ),
-                  ),
-                    ],          // Stack.children
-                  ),            // Stack
-                ),              // ClipRRect
-              ),                // Container
-            ),                  // AspectRatio
-          ),                    // Padding
+              ),
+            ),
+          ),
 
           // ── Info ─────────────────────────────────────────
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
+              padding: const EdgeInsets.fromLTRB(10, 6, 10, 8),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Nombre
                   Text(producto.nombre,
+                      textAlign: TextAlign.center,
                       style: const TextStyle(
                           color: Color(0xFF1C1C1E),
                           fontSize: 12,
@@ -1109,62 +1208,39 @@ class _TarjetaProducto extends StatelessWidget {
                       overflow: TextOverflow.ellipsis),
                   const SizedBox(height: 4),
 
-                  // Stock + precio (misma fila que rating+precio del screenshot)
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            sinStock
-                                ? Icons.remove_circle_outline
-                                : Icons.check_circle_outline,
-                            size: 11,
-                            color: sinStock
-                                ? Colors.red.shade400
-                                : Colors.green.shade500,
-                          ),
-                          const SizedBox(width: 3),
-                          Text(
-                            sinStock
-                                ? 'Sin stock'
-                                : '${producto.existencias} uds.',
-                            style: TextStyle(
-                                fontSize: 10,
-                                color: sinStock
-                                    ? Colors.red.shade400
-                                    : Colors.green.shade600,
-                                fontWeight: FontWeight.w500),
-                          ),
-                        ],
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (tieneOferta)
-                            Text(precio,
-                                style: const TextStyle(
-                                    color: Color(0xFFAEAEB2),
-                                    fontSize: 9,
-                                    decoration: TextDecoration.lineThrough)),
-                          Text(tieneOferta ? precioOferta! : precio,
-                              style: TextStyle(
-                                  color: tieneOferta
-                                      ? const Color(0xFF1C8A4A)
-                                      : const Color(0xFF1C1C1E),
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w800)),
-                        ],
-                      ),
-                    ],
-                  ),
+                  if (puedeGestionar)
+                    Text(tieneOferta ? precioOferta! : precio,
+                        style: TextStyle(
+                            color: tieneOferta
+                                ? const Color(0xFF1C8A4A)
+                                : const Color(0xFF1C1C1E),
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800))
+                  else
+                    PildoraPrecioCarrito(
+                      precio: tieneOferta ? precioOferta! : precio,
+                      precioTachado: tieneOferta ? precio : null,
+                      sinStock: sinStock,
+                      onTap: sinStock
+                          ? null
+                          : () {
+                              final auth = context.read<ProveedorAuth>();
+                              if (auth.perfil == null) {
+                                mostrarLoginRequerido(context);
+                                return;
+                              }
+                              AnimacionCarrito.volar(
+                                contextOrigen: context,
+                                destinoKey: carritoKey,
+                                imagenUrl: producto.urlImagen,
+                              );
+                              context.read<ProveedorCarrito>().agregar(producto);
+                            },
+                    ),
 
                   const Spacer(),
 
-                  // ── Botones ───────────────────────────────
+                  // ── Admin: Editar/Eliminar ────────────────
                   if (puedeGestionar)
                     Row(children: [
                       Expanded(
@@ -1178,50 +1254,13 @@ class _TarjetaProducto extends StatelessWidget {
                               label: 'Eliminar',
                               onTap: alEliminar,
                               color: Colors.red.shade700)),
-                    ])
-                  else
-                    Row(children: [
-                      Expanded(
-                        child: Consumer<ProveedorGuardados>(
-                          builder: (ctx, _, __) {
-                            return _BotonProducto(
-                              label: 'Al carrito',
-                              onTap: sinStock
-                                  ? null
-                                  : () {
-                                      final auth =
-                                          context.read<ProveedorAuth>();
-                                      if (auth.perfil == null) {
-                                        mostrarLoginRequerido(ctx);
-                                        return;
-                                      }
-                                      AnimacionCarrito.volar(
-                                        contextOrigen: context,
-                                        destinoKey: carritoKey,
-                                        imagenUrl: producto.urlImagen,
-                                      );
-                                      context
-                                          .read<ProveedorCarrito>()
-                                          .agregar(producto);
-                                    },
-                              outlined: true,
-                            );
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: _BotonProducto(
-                          label: 'Comprar',
-                          onTap: sinStock ? null : () {},
-                        ),
-                      ),
                     ]),
                 ],
               ),
             ),
           ),
         ],
+      ),
       ),
     );
   }

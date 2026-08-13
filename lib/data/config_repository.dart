@@ -2,10 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 const List<Map<String, dynamic>> kSeccionesHomePorDefecto = [
+  {'key': 'chips_categorias', 'visible': true},
+  {'key': 'banner_hero', 'visible': true},
   {'key': 'categorias', 'visible': true},
   {'key': 'banner_promo', 'visible': true},
   {'key': 'productos', 'visible': true},
 ];
+
+/// Agrega al final las secciones por defecto que falten en [secciones]
+/// (p. ej. tras publicar un nuevo tipo de sección) sin alterar el orden
+/// ni la visibilidad de las que el sysadmin ya configuró.
+List<Map<String, dynamic>> completarSeccionesHome(List<Map<String, dynamic>> secciones) {
+  final claves = secciones.map((s) => s['key'] as String).toSet();
+  final faltantes = kSeccionesHomePorDefecto
+      .where((s) => !claves.contains(s['key']))
+      .map((s) => Map<String, dynamic>.from(s));
+  return [...faltantes, ...secciones];
+}
 
 class RepositorioConfig {
   final _db = Supabase.instance.client;
@@ -69,45 +82,22 @@ class RepositorioConfig {
     }
   }
 
-  Future<({String? url, String? texto, String alineacion, String? botonTexto, String? botonLink})>
+  Future<({List<String> imagenes, String? texto, String alineacion, String? botonTexto, String? botonLink})>
       obtenerBannerConfig() async {
     try {
       final data = await _db
           .from('app_config')
-          .select('banner_image_url, banner_text, banner_align, banner_button_text, banner_button_link')
+          .select('banner_images, banner_text, banner_align, banner_button_text, banner_button_link')
           .single();
       return (
-        url: data['banner_image_url'] as String?,
+        imagenes: ((data['banner_images'] as List?) ?? []).cast<String>(),
         texto: data['banner_text'] as String?,
         alineacion: data['banner_align'] as String? ?? 'left',
         botonTexto: data['banner_button_text'] as String?,
         botonLink: data['banner_button_link'] as String?,
       );
     } catch (_) {
-      return (url: null, texto: null, alineacion: 'left', botonTexto: null, botonLink: null);
-    }
-  }
-
-  Future<bool> actualizarBannerConfig({
-    required String? url,
-    required String? texto,
-    required String alineacion,
-    required String? botonTexto,
-    required String? botonLink,
-  }) async {
-    try {
-      await _db.from('app_config').upsert({
-        'id': true,
-        'banner_image_url': url,
-        'banner_text': texto,
-        'banner_align': alineacion,
-        'banner_button_text': botonTexto,
-        'banner_button_link': botonLink,
-        'updated_at': DateTime.now().toUtc().toIso8601String(),
-      });
-      return true;
-    } catch (_) {
-      return false;
+      return (imagenes: <String>[], texto: null, alineacion: 'left', botonTexto: null, botonLink: null);
     }
   }
 
@@ -215,7 +205,7 @@ class RepositorioConfig {
           .single();
       final lista = data['home_sections'] as List?;
       if (lista == null || lista.isEmpty) return kSeccionesHomePorDefecto;
-      return lista.cast<Map<String, dynamic>>();
+      return completarSeccionesHome(lista.cast<Map<String, dynamic>>());
     } catch (_) {
       return kSeccionesHomePorDefecto;
     }
@@ -280,7 +270,7 @@ class RepositorioConfig {
         'font_family': borrador['font_family'],
         'container_radius': borrador['container_radius'],
         'container_shadow': borrador['container_shadow'],
-        'banner_image_url': borrador['banner_image_url'],
+        'banner_images': borrador['banner_images'],
         'banner_text': borrador['banner_text'],
         'banner_align': borrador['banner_align'],
         'banner_button_text': borrador['banner_button_text'],

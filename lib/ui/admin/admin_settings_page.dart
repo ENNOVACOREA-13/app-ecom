@@ -42,7 +42,8 @@ class PaginaConfigAdmin extends StatelessWidget {
     return Scaffold(
       backgroundColor: kBackground,
       appBar: AppBar(),
-      body: ListView(
+      body: EnvolturaResponsiva(
+        child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
         children: [
           _OpcionConfig(
@@ -103,6 +104,7 @@ class PaginaConfigAdmin extends StatelessWidget {
             ),
           ),
         ],
+      ),
       ),
     );
   }

@@ -9,6 +9,7 @@ import '../../providers/config_provider.dart';
 import '../client/home_page.dart';
 import '../common/app_widgets.dart';
 import 'section_order_page.dart';
+import 'product_categories_page.dart';
 
 class PaginaDisenadorVista extends StatelessWidget {
   const PaginaDisenadorVista({super.key});
@@ -340,12 +341,13 @@ class PaginaDisenadorVista extends StatelessWidget {
 
   Future<void> _editarBanner(BuildContext context) async {
     final cfg = context.read<ProveedorConfig>();
-    String? urlLocal = cfg.bannerUrlBorrador;
+    final imagenesLocal = List<String>.from(cfg.bannerImagenesBorrador);
     final textoCtrl = TextEditingController(text: cfg.bannerTextoBorrador ?? '');
     final botonTextoCtrl = TextEditingController(text: cfg.bannerBotonTextoBorrador ?? '');
     final botonLinkCtrl = TextEditingController(text: cfg.bannerBotonLinkBorrador ?? '');
     String alineacionLocal = cfg.bannerAlineacionBorrador;
     bool subiendoLocal = false;
+    const maxImagenes = 5;
 
     await showModalBottomSheet(
       context: context,
@@ -372,63 +374,100 @@ class PaginaDisenadorVista extends StatelessWidget {
                 ]),
                 const SizedBox(height: 16),
 
-                // Imagen
-                GestureDetector(
-                  onTap: subiendoLocal
-                      ? null
-                      : () async {
-                          setS(() => subiendoLocal = true);
-                          final url = await ServicioFTP.seleccionarYSubirImagen(
-                            nombreArchivo: 'banner-promo',
-                            onError: (e) {
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context)
-                                    .showSnackBar(SnackBar(content: Text(e)));
-                              }
-                            },
-                          );
-                          setS(() {
-                            subiendoLocal = false;
-                            if (url != null) urlLocal = url;
-                          });
-                        },
-                  child: Container(
-                    height: 110,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF2F2F7),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: kTextMuted.withOpacity(0.25)),
-                    ),
-                    clipBehavior: Clip.antiAlias,
-                    child: subiendoLocal
-                        ? const Center(child: CircularProgressIndicator())
-                        : (urlLocal != null && urlLocal!.isNotEmpty)
-                            ? Image.network(urlLocal!, fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) =>
-                                    const Icon(Icons.image_outlined, color: kTextSub))
-                            : const Center(
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.add_photo_alternate_outlined, color: kTextSub),
-                                    SizedBox(height: 4),
-                                    Text('Toca para elegir imagen',
-                                        style: TextStyle(color: kTextSub, fontSize: 12)),
-                                  ],
+                // Imágenes (carrusel, hasta 5)
+                Text('Imágenes (${imagenesLocal.length}/$maxImagenes)',
+                    style: const TextStyle(
+                        fontSize: 13, color: kTextSub, fontWeight: FontWeight.w500)),
+                const SizedBox(height: 8),
+                SizedBox(
+                  height: 90,
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    children: [
+                      for (int i = 0; i < imagenesLocal.length; i++)
+                        Padding(
+                          padding: const EdgeInsets.only(right: 10),
+                          child: Stack(
+                            children: [
+                              Container(
+                                width: 90,
+                                height: 90,
+                                clipBehavior: Clip.antiAlias,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF2F2F7),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: kTextMuted.withOpacity(0.25)),
+                                ),
+                                child: Image.network(imagenesLocal[i], fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) =>
+                                        const Icon(Icons.image_outlined, color: kTextSub)),
+                              ),
+                              Positioned(
+                                top: 2,
+                                right: 2,
+                                child: GestureDetector(
+                                  onTap: () => setS(() => imagenesLocal.removeAt(i)),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(3),
+                                    decoration: const BoxDecoration(
+                                        color: Colors.black54, shape: BoxShape.circle),
+                                    child: const Icon(Icons.close, size: 14, color: Colors.white),
+                                  ),
                                 ),
                               ),
+                            ],
+                          ),
+                        ),
+                      if (imagenesLocal.length < maxImagenes)
+                        GestureDetector(
+                          onTap: subiendoLocal
+                              ? null
+                              : () async {
+                                  setS(() => subiendoLocal = true);
+                                  final url = await ServicioFTP.seleccionarYSubirImagen(
+                                    nombreArchivo: 'banner-promo-${imagenesLocal.length}',
+                                    onError: (e) {
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(SnackBar(content: Text(e)));
+                                      }
+                                    },
+                                  );
+                                  setS(() {
+                                    subiendoLocal = false;
+                                    if (url != null) imagenesLocal.add(url);
+                                  });
+                                },
+                          child: Container(
+                            width: 90,
+                            height: 90,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF2F2F7),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: kTextMuted.withOpacity(0.25)),
+                            ),
+                            child: subiendoLocal
+                                ? const Center(
+                                    child: SizedBox(
+                                        width: 20, height: 20,
+                                        child: CircularProgressIndicator(strokeWidth: 2)))
+                                : const Center(
+                                    child: Icon(Icons.add_photo_alternate_outlined,
+                                        color: kTextSub),
+                                  ),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
-                if (urlLocal != null && urlLocal!.isNotEmpty)
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton.icon(
-                      onPressed: () => setS(() => urlLocal = null),
-                      icon: const Icon(Icons.delete_outline, size: 18, color: Colors.red),
-                      label: const Text('Quitar imagen', style: TextStyle(color: Colors.red)),
-                    ),
-                  ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 4),
+                Text(
+                  imagenesLocal.length > 1
+                      ? 'Se mostrarán en carrusel automático'
+                      : 'Agrega hasta $maxImagenes imágenes para un carrusel',
+                  style: const TextStyle(color: kTextSub, fontSize: 11),
+                ),
+                const SizedBox(height: 12),
 
                 // Texto
                 TextField(
@@ -521,7 +560,7 @@ class PaginaDisenadorVista extends StatelessWidget {
                     onPressed: () async {
                       Navigator.pop(ctx);
                       final exito = await cfg.actualizarBorradorBanner(
-                            url: urlLocal,
+                            imagenes: imagenesLocal,
                             texto: textoCtrl.text.trim().isEmpty ? null : textoCtrl.text.trim(),
                             alineacion: alineacionLocal,
                             botonTexto: botonTextoCtrl.text.trim().isEmpty
@@ -987,6 +1026,54 @@ class PaginaDisenadorVista extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
+            Material(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(16),
+                onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => const PaginaCategoriasProducto(),
+                )),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFFE5E5EA)),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: context.colorPrimario.withOpacity(0.12),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(Icons.category_outlined, color: context.colorPrimario),
+                      ),
+                      const SizedBox(width: 14),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Categorías de productos',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 14,
+                                    color: Color(0xFF1C1C1E))),
+                            SizedBox(height: 2),
+                            Text('Crea, edita y asigna productos a categorías',
+                                style: TextStyle(fontSize: 11, color: Color(0xFF8E8E93))),
+                          ],
+                        ),
+                      ),
+                      const Icon(Icons.arrow_forward_ios_rounded,
+                          size: 14, color: Color(0xFF8E8E93)),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
             Consumer<ProveedorConfig>(
               builder: (_, bannerCfg, __) => Material(
                 color: Colors.white,
@@ -1008,9 +1095,8 @@ class PaginaDisenadorVista extends StatelessWidget {
                             width: 44,
                             height: 44,
                             color: context.colorPrimario.withOpacity(0.1),
-                            child: (bannerCfg.bannerUrlBorrador != null &&
-                                    bannerCfg.bannerUrlBorrador!.isNotEmpty)
-                                ? Image.network(bannerCfg.bannerUrlBorrador!,
+                            child: bannerCfg.bannerImagenesBorrador.isNotEmpty
+                                ? Image.network(bannerCfg.bannerImagenesBorrador.first,
                                     fit: BoxFit.cover,
                                     errorBuilder: (_, __, ___) => Icon(
                                         Icons.image_outlined, color: context.colorPrimario))
@@ -1018,18 +1104,22 @@ class PaginaDisenadorVista extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 14),
-                        const Expanded(
+                        Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Banner promocional',
+                              const Text('Banner promocional',
                                   style: TextStyle(
                                       fontWeight: FontWeight.w700,
                                       fontSize: 14,
                                       color: Color(0xFF1C1C1E))),
-                              SizedBox(height: 2),
-                              Text('Imagen, texto y posición del banner del home',
-                                  style: TextStyle(fontSize: 11, color: Color(0xFF8E8E93))),
+                              const SizedBox(height: 2),
+                              Text(
+                                bannerCfg.bannerImagenesBorrador.length > 1
+                                    ? '${bannerCfg.bannerImagenesBorrador.length} imágenes en carrusel'
+                                    : 'Imagen, texto y posición del banner del home',
+                                style: const TextStyle(fontSize: 11, color: Color(0xFF8E8E93)),
+                              ),
                             ],
                           ),
                         ),

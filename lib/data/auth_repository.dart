@@ -13,6 +13,10 @@ class RepositorioAuth {
     if (resultado.user == null) throw Exception('Credenciales incorrectas');
 
     final perfil = await _obtenerPerfilConReintento(resultado.user!.id);
+    if (!perfil.estaActivo) {
+      await _client.auth.signOut();
+      throw Exception('account_deactivated');
+    }
     if (!perfil.emailVerificado) {
       await _client.auth.signOut();
       throw Exception('email_not_verified');

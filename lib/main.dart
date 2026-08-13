@@ -13,6 +13,7 @@ import 'providers/auth_provider.dart';
 import 'providers/booking_provider.dart';
 import 'providers/service_provider.dart';
 import 'providers/product_provider.dart';
+import 'providers/product_category_provider.dart';
 import 'providers/cart_provider.dart';
 import 'providers/order_provider.dart';
 import 'providers/saved_provider.dart';
@@ -81,6 +82,7 @@ class _BarberAppState extends State<BarberApp> {
         ChangeNotifierProvider(create: (_) => ProveedorReserva()),
         ChangeNotifierProvider(create: (_) => ProveedorServicio()),
         ChangeNotifierProvider(create: (_) => ProveedorProducto()),
+        ChangeNotifierProvider(create: (_) => ProveedorCategoriasProducto()..cargarCategorias()),
         ChangeNotifierProvider(create: (_) => ProveedorCarrito()),
         ChangeNotifierProvider(create: (_) => ProveedorPedido()),
         ChangeNotifierProvider(create: (_) => ProveedorGuardados()),
@@ -156,7 +158,12 @@ class _SesionExpiradaListenerState extends State<_SesionExpiradaListener> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     final auth = context.watch<ProveedorAuth>();
-    if (auth.sesionExpirada && !auth.inicializando && !_mostrandoDialogo) {
+    if (auth.cuentaDesactivada && !auth.inicializando && !_mostrandoDialogo) {
+      _mostrandoDialogo = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _mostrarDialogoDesactivada();
+      });
+    } else if (auth.sesionExpirada && !auth.inicializando && !_mostrandoDialogo) {
       _mostrandoDialogo = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _mostrarDialogoExpiracion();
@@ -185,6 +192,37 @@ class _SesionExpiradaListenerState extends State<_SesionExpiradaListener> {
               onPressed: () {
                 Navigator.pop(ctx);
                 context.read<ProveedorAuth>().limpiarSesionExpirada();
+                _mostrandoDialogo = false;
+              },
+              child: const Text('Aceptar'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _mostrarDialogoDesactivada() {
+    final navContext = rootNavigatorKey.currentContext;
+    if (navContext == null) return;
+    showDialog(
+      context: navContext,
+      barrierDismissible: false,
+      useRootNavigator: true,
+      builder: (ctx) => AlertDialog(
+        icon: const Icon(Icons.block, size: 48, color: Colors.red),
+        title: const Text('Cuenta desactivada'),
+        content: const Text(
+          'Tu cuenta ha sido desactivada por el administrador.\nContacta al administrador si crees que es un error.',
+          textAlign: TextAlign.center,
+        ),
+        actions: [
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                context.read<ProveedorAuth>().limpiarCuentaDesactivada();
                 _mostrandoDialogo = false;
               },
               child: const Text('Aceptar'),

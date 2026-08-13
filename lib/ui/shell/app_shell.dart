@@ -33,10 +33,21 @@ import '../sysadmin/sysadmin_config_page.dart';
 import '../sysadmin/view_designer_page.dart';
 import '../../data/activity_service.dart';
 
-// Carrito & Guardados
-import '../cart/cart_page.dart';
+// Guardados
 import '../saved/saved_page.dart';
 import '../auth/guest_wall_page.dart';
+
+// Envuelve el contenido de cada pestaña con márgenes laterales en
+// escritorio; en móvil lo deja tal cual.
+Widget _contenidoResponsivo(BuildContext context, Widget child) {
+  final anchoPantalla = MediaQuery.of(context).size.width;
+  if (anchoPantalla < kAnchoEscritorio) return child;
+  final margen = margenLateralEscritorio(anchoPantalla);
+  return Padding(
+    padding: EdgeInsets.symmetric(horizontal: margen),
+    child: child,
+  );
+}
 
 class CarcasaApp extends StatefulWidget {
   const CarcasaApp({super.key});
@@ -107,25 +118,42 @@ class _CarcasaAppState extends State<CarcasaApp> with SingleTickerProviderStateM
     final indiceSafe = _indiceActual.clamp(0, pestanas.length - 1);
     final esAdmin =
         perfil.rol == RolUsuario.admin || perfil.rol == RolUsuario.superAdmin;
+    final esEscritorio = MediaQuery.of(context).size.width >= kAnchoEscritorio;
 
-    return Scaffold(
-      extendBody: true,
-      body: FadeTransition(
+    void alSeleccionar(int i) {
+      _cambiarTab(i);
+      _refrescarAlCambiarTab(i, perfil.rol);
+    }
+
+    final contenido = _contenidoResponsivo(
+      context,
+      FadeTransition(
         opacity: _fadeController,
         child: IndexedStack(
           index: indiceSafe,
           children: pestanas.map((t) => t.pagina).toList(),
         ),
       ),
-      bottomNavigationBar: _BarraNavegacion(
-        pestanas: pestanas,
-        indiceSafe: indiceSafe,
-        mostrarCarrito: false,
-        onTap: (i) {
-          _cambiarTab(i);
-          _refrescarAlCambiarTab(i, perfil.rol);
-        },
-      ),
+    );
+
+    return Scaffold(
+      extendBody: true,
+      body: esEscritorio
+          ? _MenuHamburguesaEscritorio(
+              pestanas: pestanas,
+              indiceSafe: indiceSafe,
+              onTap: alSeleccionar,
+              child: contenido,
+            )
+          : contenido,
+      bottomNavigationBar: esEscritorio
+          ? null
+          : _BarraNavegacion(
+              pestanas: pestanas,
+              indiceSafe: indiceSafe,
+              mostrarCarrito: false,
+              onTap: alSeleccionar,
+            ),
     );
   }
 
@@ -210,10 +238,6 @@ class _CarcasaAppState extends State<CarcasaApp> with SingleTickerProviderStateM
           _Pestana(Icons.calendar_today_outlined, 'Mis Reservas',
               const PaginaMisReservas(),
               imagen: 'IMG/RESERVAS.png', id: 'client_reservas'),
-          if (tiendaHabilitada)
-            _Pestana(
-                Icons.shopping_cart_outlined, 'Carrito', const PaginaCarrito(),
-                imagen: 'IMG/CARRITO_NAV.png', id: 'client_carrito'),
           if (tiendaHabilitada)
             _Pestana(Icons.favorite_border_rounded, 'Favoritos',
                 const PaginaGuardados(),
@@ -347,8 +371,6 @@ class _ShellInvitado extends StatelessWidget {
   ];
 
   static const _pestanasTienda = [
-    _Pestana(Icons.shopping_cart_outlined, 'Carrito', PaginaCarrito(),
-        imagen: 'IMG/CARRITO_NAV.png'),
     _Pestana(Icons.favorite_border_rounded, 'Favoritos',
         PaginaMuroInvitado(mensaje: 'Inicia sesión para ver tus favoritos'),
         imagen: 'IMG/FAVORITOS.png'),
@@ -368,21 +390,191 @@ class _ShellInvitado extends StatelessWidget {
       ..._pestanasFinal,
     ];
     final indice = indiceActual.clamp(0, pestanas.length - 1);
-    return Scaffold(
-      extendBody: true,
-      body: FadeTransition(
+    final esEscritorio = MediaQuery.of(context).size.width >= kAnchoEscritorio;
+    final contenido = _contenidoResponsivo(
+      context,
+      FadeTransition(
         opacity: fadeController,
         child: IndexedStack(
           index: indice,
           children: pestanas.map((t) => t.pagina).toList(),
         ),
       ),
-      bottomNavigationBar: _BarraNavegacion(
-        pestanas: pestanas,
-        indiceSafe: indice,
-        mostrarCarrito: true,
-        onTap: onTap,
-      ),
+    );
+    return Scaffold(
+      extendBody: true,
+      body: esEscritorio
+          ? _MenuHamburguesaEscritorio(
+              pestanas: pestanas,
+              indiceSafe: indice,
+              onTap: onTap,
+              child: contenido,
+            )
+          : contenido,
+      bottomNavigationBar: esEscritorio
+          ? null
+          : _BarraNavegacion(
+              pestanas: pestanas,
+              indiceSafe: indice,
+              mostrarCarrito: true,
+              onTap: onTap,
+            ),
+    );
+  }
+}
+
+// ── Menú de hamburguesa para escritorio (se desliza de arriba) ───
+// Reserva su propia barra fija (no flota sobre el contenido de cada
+// página), así el botón nunca queda tapando el encabezado de nadie.
+// ── Barra lateral fija de escritorio (tipo ChatGPT) ───────────────
+// Se puede colapsar a una franja angosta solo con íconos, o expandir
+// para ver también las etiquetas. Empuja el contenido en vez de
+// flotar encima de él.
+class _MenuHamburguesaEscritorio extends StatefulWidget {
+  final List<_Pestana> pestanas;
+  final int indiceSafe;
+  final ValueChanged<int> onTap;
+  final Widget child;
+
+  const _MenuHamburguesaEscritorio({
+    required this.pestanas,
+    required this.indiceSafe,
+    required this.onTap,
+    required this.child,
+  });
+
+  @override
+  State<_MenuHamburguesaEscritorio> createState() =>
+      _MenuHamburguesaEscritorioState();
+}
+
+class _MenuHamburguesaEscritorioState
+    extends State<_MenuHamburguesaEscritorio> {
+  bool _abierta = true;
+
+  void _alternar() => setState(() => _abierta = !_abierta);
+
+  static const _anchoAbierta = 232.0;
+  static const _anchoCerrada = 72.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final ancho = _abierta ? _anchoAbierta : _anchoCerrada;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOutCubic,
+          width: ancho,
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            border: Border(right: BorderSide(color: Color(0xFFE5E5EA))),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: 12),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                child: Align(
+                  alignment:
+                      _abierta ? Alignment.centerRight : Alignment.center,
+                  child: GestureDetector(
+                    onTap: _alternar,
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFF2F2F7),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                          _abierta
+                              ? Icons.menu_open_rounded
+                              : Icons.menu_rounded,
+                          size: 19,
+                          color: const Color(0xFF1C1C1E)),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Expanded(
+                child: ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  itemCount: widget.pestanas.length,
+                  itemBuilder: (context, i) {
+                    final seleccionado = i == widget.indiceSafe;
+                    final p = widget.pestanas[i];
+                    final textoColor = seleccionado
+                        ? context.colorPrimario
+                        : const Color(0xFF6E6E73);
+                    // Mismo lenguaje visual que el resto de la app: ícono
+                    // dentro de un círculo (categorías, opciones de config,
+                    // notificaciones), no un simple ícono suelto.
+                    final icono = Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: seleccionado
+                            ? context.colorPrimario
+                            : const Color(0xFFF2F2F7),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                          seleccionado ? _iconoActivo(p.icono) : p.icono,
+                          color: seleccionado
+                              ? Colors.white
+                              : const Color(0xFF6E6E73),
+                          size: 18),
+                    );
+
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Material(
+                        color: seleccionado
+                            ? context.colorPrimario.withOpacity(0.08)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(14),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(14),
+                          onTap: () => widget.onTap(i),
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(
+                                horizontal: _abierta ? 8 : 0, vertical: 8),
+                            child: _abierta
+                                ? Row(
+                                    children: [
+                                      icono,
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Text(p.etiqueta,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                                color: textoColor,
+                                                fontSize: 13,
+                                                fontWeight: seleccionado
+                                                    ? FontWeight.w700
+                                                    : FontWeight.w500)),
+                                      ),
+                                    ],
+                                  )
+                                : Center(child: icono),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+        Expanded(child: widget.child),
+      ],
     );
   }
 }

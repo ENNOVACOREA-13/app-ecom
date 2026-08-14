@@ -14,10 +14,10 @@ class PaginaTableroEmpleado extends StatefulWidget {
   const PaginaTableroEmpleado({super.key});
 
   @override
-  State<PaginaTableroEmpleado> createState() => _PaginaTableroEmpleadoState();
+  State<PaginaTableroEmpleado> createState() => PaginaTableroEmpleadoState();
 }
 
-class _PaginaTableroEmpleadoState extends State<PaginaTableroEmpleado> {
+class PaginaTableroEmpleadoState extends State<PaginaTableroEmpleado> {
   final _repo = RepositorioReserva();
   Map<String, dynamic> _estadisticas = {};
   bool _cargando = true;
@@ -27,6 +27,8 @@ class _PaginaTableroEmpleadoState extends State<PaginaTableroEmpleado> {
     super.initState();
     _cargar();
   }
+
+  Future<void> recargar() => _cargar();
 
   Future<void> _cargar() async {
     final id = context.read<ProveedorAuth>().perfil?.id;

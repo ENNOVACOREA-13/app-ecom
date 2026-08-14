@@ -131,7 +131,13 @@ class RepositorioAuth {
       bytes,
       fileOptions: FileOptions(upsert: true, contentType: 'image/$formato'),
     );
-    return _client.storage.from('avatars').getPublicUrl(ruta);
+    // La ruta siempre es la misma (upsert sobre el mismo archivo), así que
+    // se agrega un parámetro con la hora para invalidar la caché de imagen
+    // (CachedNetworkImageProvider cachea por URL): sin esto, el avatar
+    // nuevo no se ve hasta refrescar el navegador aunque el archivo ya
+    // haya cambiado en el storage.
+    final url = _client.storage.from('avatars').getPublicUrl(ruta);
+    return '$url?t=${DateTime.now().millisecondsSinceEpoch}';
   }
 
   Stream<AuthState> get cambiosEstadoAuth => _client.auth.onAuthStateChange;

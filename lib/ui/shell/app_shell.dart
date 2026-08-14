@@ -59,6 +59,7 @@ class CarcasaApp extends StatefulWidget {
 class _CarcasaAppState extends State<CarcasaApp> with SingleTickerProviderStateMixin {
   int _indiceActual = 0;
   final _keyDashboardAdmin = GlobalKey<PaginaTableroAdminState>();
+  final _keyDashboardEmpleado = GlobalKey<PaginaTableroEmpleadoState>();
   final _keyConfigSysadmin = GlobalKey<PaginaConfigSysadminState>();
   late final AnimationController _fadeController;
 
@@ -177,6 +178,9 @@ class _CarcasaAppState extends State<CarcasaApp> with SingleTickerProviderStateM
       case 'employee_reservas':
         reserva.cargarReservasEmpleado(perfil.id);
         break;
+      case 'employee_dashboard':
+        _keyDashboardEmpleado.currentState?.recargar();
+        break;
       case 'admin_dashboard':
         _keyDashboardAdmin.currentState?.recargar();
         break;
@@ -223,7 +227,7 @@ class _CarcasaAppState extends State<CarcasaApp> with SingleTickerProviderStateM
       case RolUsuario.employee:
         return [
           _Pestana(Icons.dashboard_outlined, 'Mi Panel',
-              const PaginaTableroEmpleado(),
+              PaginaTableroEmpleado(key: _keyDashboardEmpleado),
               imagen: 'IMG/INICIO.png', id: 'employee_dashboard'),
           _Pestana(Icons.calendar_today_outlined, 'Mis Reservas',
               const PaginaReservasEmpleado(),

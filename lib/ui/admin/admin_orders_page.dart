@@ -4,6 +4,7 @@ import '../../domain/enums/order_status.dart';
 import '../../domain/models/order.dart';
 import '../../providers/order_provider.dart';
 import '../../core/theme/app_theme.dart';
+import '../common/app_widgets.dart';
 
 class PaginaPedidosAdmin extends StatefulWidget {
   const PaginaPedidosAdmin({super.key});
@@ -124,11 +125,21 @@ class _PaginaPedidosAdminState extends State<PaginaPedidosAdmin> {
                       : ListView.separated(
                           padding:
                               const EdgeInsets.fromLTRB(20, 4, 20, 100),
-                          itemCount: filtrados.length,
+                          itemCount: filtrados.length +
+                              (proveedor.hayMasPedidos ? 1 : 0),
                           separatorBuilder: (_, __) =>
                               const SizedBox(height: 12),
-                          itemBuilder: (context, i) =>
-                              _TarjetaPedido(pedido: filtrados[i]),
+                          itemBuilder: (context, i) {
+                            if (i >= filtrados.length) {
+                              return BotonCargarMas(
+                                cargando: proveedor.cargandoMas,
+                                onTap: () => context
+                                    .read<ProveedorPedido>()
+                                    .cargarMasPedidos(),
+                              );
+                            }
+                            return _TarjetaPedido(pedido: filtrados[i]);
+                          },
                         ),
             ),
           ],
@@ -395,9 +406,19 @@ class _TarjetaPedido extends StatelessWidget {
               children: EstadoPedido.values
                   .where((e) => e != pedido.estado)
                   .map((e) => GestureDetector(
-                        onTap: () => context
-                            .read<ProveedorPedido>()
-                            .actualizarEstado(pedido.id, e.toDbString()),
+                        onTap: () async {
+                          try {
+                            await context
+                                .read<ProveedorPedido>()
+                                .actualizarEstado(pedido.id, e.toDbString());
+                          } catch (err) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('No se pudo actualizar el pedido: $err')),
+                              );
+                            }
+                          }
+                        },
                         child: Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 14, vertical: 7),

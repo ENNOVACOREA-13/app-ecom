@@ -7,6 +7,29 @@ import '../../providers/config_provider.dart';
 import '../../providers/notification_provider.dart';
 import '../notifications/notifications_page.dart';
 
+// ── Botón "Cargar más" (pie de lista paginada) ──────────────────
+class BotonCargarMas extends StatelessWidget {
+  final bool cargando;
+  final VoidCallback onTap;
+  const BotonCargarMas({super.key, required this.cargando, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      child: Center(
+        child: cargando
+            ? const SizedBox(
+                width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+            : OutlinedButton(
+                onPressed: onTap,
+                child: const Text('Cargar más'),
+              ),
+      ),
+    );
+  }
+}
+
 // ── Botón primario ─────────────────────────────────────────────
 class BotonPrincipal extends StatelessWidget {
   final String etiqueta;
@@ -299,6 +322,121 @@ class IconoNotificaciones extends StatelessWidget {
             ),
         ],
       ),
+    );
+  }
+}
+
+// ── Fila de opción: ícono en círculo + título/subtítulo + flecha ──────
+class FilaOpcion extends StatelessWidget {
+  final IconData icono;
+  final String titulo;
+  final String subtitulo;
+  final VoidCallback onTap;
+
+  const FilaOpcion({
+    super.key,
+    required this.icono,
+    required this.titulo,
+    required this.subtitulo,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: kNeumorphicShadowsSmall,
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: context.colorPrimario.withOpacity(0.12),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icono, color: context.colorPrimario, size: 20),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(titulo,
+                      style: const TextStyle(
+                          color: Color(0xFF1C1C1E), fontWeight: FontWeight.w700, fontSize: 14)),
+                  Text(subtitulo,
+                      style: const TextStyle(color: kTextMuted, fontSize: 11)),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: kTextMuted),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Perforación de ticket: línea punteada con muescas circulares ──────
+// (el "corte" clásico de un recibo entre secciones de una tarjeta blanca)
+class PerforacionTicket extends StatelessWidget {
+  const PerforacionTicket({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 1,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          const Positioned.fill(child: _LineaPunteadaTicket()),
+          Positioned(left: -12, top: -12, child: _MuescaTicket(radio: 12)),
+          Positioned(right: -12, top: -12, child: _MuescaTicket(radio: 12)),
+        ],
+      ),
+    );
+  }
+}
+
+class _LineaPunteadaTicket extends StatelessWidget {
+  const _LineaPunteadaTicket();
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const anchoGuion = 6.0;
+        const espacio = 5.0;
+        final cantidad = (constraints.maxWidth / (anchoGuion + espacio)).floor();
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: List.generate(
+            cantidad,
+            (_) => Container(width: anchoGuion, height: 1.5, color: const Color(0xFFD1D1D6)),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _MuescaTicket extends StatelessWidget {
+  final double radio;
+  const _MuescaTicket({required this.radio});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: radio * 2,
+      height: radio * 2,
+      decoration: const BoxDecoration(color: Color(0xFFF2F2F7), shape: BoxShape.circle),
     );
   }
 }

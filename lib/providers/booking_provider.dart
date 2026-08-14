@@ -7,6 +7,8 @@ import '../domain/models/slot.dart';
 import '../domain/enums/booking_status.dart';
 
 class ProveedorReserva extends ChangeNotifier {
+  static const _tamanoPaginaAdmin = 100;
+
   final _repo = RepositorioReserva();
 
   // Flujo de creación de reserva
@@ -20,6 +22,9 @@ class ProveedorReserva extends ChangeNotifier {
   List<Turno> _turnos = [];
   bool _cargandoTurnos = false;
   bool _cargandoReservas = false;
+  bool _cargandoMasReservas = false;
+  bool _hayMasReservasAdmin = true;
+  EstadoReserva? _estadoTodasReservas;
   bool _creando = false;
   String? _error;
 
@@ -40,6 +45,8 @@ class ProveedorReserva extends ChangeNotifier {
   List<Turno> get turnos => _turnos;
   bool get cargandoTurnos => _cargandoTurnos;
   bool get cargandoReservas => _cargandoReservas;
+  bool get cargandoMasReservas => _cargandoMasReservas;
+  bool get hayMasReservasAdmin => _hayMasReservasAdmin;
   bool get creando => _creando;
   String? get error => _error;
 
@@ -126,7 +133,6 @@ class ProveedorReserva extends ChangeNotifier {
         idServicio: _serviciosSeleccionados.first.id,
         fecha: _fechaSeleccionada!,
         horaInicio: _turnoSeleccionado!.inicio,
-        precioTotal: totalPrecio,
         idsExtras: _serviciosSeleccionados.skip(1).map((s) => s.id).toList(),
       );
       _creando = false;
@@ -168,13 +174,36 @@ class ProveedorReserva extends ChangeNotifier {
 
   Future<void> cargarTodasLasReservas({EstadoReserva? estado}) async {
     _cargandoReservas = true;
+    _estadoTodasReservas = estado;
     notifyListeners();
     try {
-      _reservas = await _repo.obtenerTodasLasReservas(estado: estado);
+      final pagina = await _repo.obtenerTodasLasReservas(
+          estado: estado, desde: 0, cantidad: _tamanoPaginaAdmin);
+      _reservas = pagina;
+      _hayMasReservasAdmin = pagina.length == _tamanoPaginaAdmin;
     } catch (e) {
       _error = _mapearErrorReserva(e.toString());
     }
     _cargandoReservas = false;
+    notifyListeners();
+  }
+
+  Future<void> cargarMasReservas() async {
+    if (_cargandoMasReservas || !_hayMasReservasAdmin) return;
+    _cargandoMasReservas = true;
+    notifyListeners();
+    try {
+      final pagina = await _repo.obtenerTodasLasReservas(
+        estado: _estadoTodasReservas,
+        desde: _reservas.length,
+        cantidad: _tamanoPaginaAdmin,
+      );
+      _reservas = [..._reservas, ...pagina];
+      _hayMasReservasAdmin = pagina.length == _tamanoPaginaAdmin;
+    } catch (e) {
+      _error = _mapearErrorReserva(e.toString());
+    }
+    _cargandoMasReservas = false;
     notifyListeners();
   }
 
@@ -188,15 +217,7 @@ class ProveedorReserva extends ChangeNotifier {
     // Actualización local optimista
     _reservas = _reservas.map((b) {
       if (b.id != idReserva) return b;
-      return Reserva(
-        id: b.id, idCliente: b.idCliente, idEmpleado: b.idEmpleado,
-        idServicio: b.idServicio, fechaReserva: b.fechaReserva,
-        horaInicio: b.horaInicio, horaFin: b.horaFin,
-        estado: EstadoReserva.cancelled, precioTotal: b.precioTotal,
-        notas: b.notas, creadoEn: b.creadoEn, fechaPago: b.fechaPago,
-        nombreCliente: b.nombreCliente, nombreEmpleado: b.nombreEmpleado,
-        nombreServicio: b.nombreServicio, duracionServicio: b.duracionServicio,
-      );
+      return b.copyWith(estado: EstadoReserva.cancelled);
     }).toList();
     notifyListeners();
   }
@@ -205,17 +226,9 @@ class ProveedorReserva extends ChangeNotifier {
     await _repo.actualizarEstado(idReserva, nuevoEstado);
     _reservas = _reservas.map((b) {
       if (b.id != idReserva) return b;
-      return Reserva(
-        id: b.id, idCliente: b.idCliente, idEmpleado: b.idEmpleado,
-        idServicio: b.idServicio, fechaReserva: b.fechaReserva,
-        horaInicio: b.horaInicio, horaFin: b.horaFin,
-        estado: nuevoEstado, precioTotal: b.precioTotal,
-        notas: b.notas, creadoEn: b.creadoEn,
-        fechaPago: nuevoEstado == EstadoReserva.completed
-            ? (b.fechaPago ?? DateTime.now())
-            : b.fechaPago,
-        nombreCliente: b.nombreCliente, nombreEmpleado: b.nombreEmpleado,
-        nombreServicio: b.nombreServicio, duracionServicio: b.duracionServicio,
+      return b.copyWith(
+        estado: nuevoEstado,
+        fechaPago: nuevoEstado == EstadoReserva.completed ? (b.fechaPago ?? DateTime.now()) : b.fechaPago,
       );
     }).toList();
     notifyListeners();
@@ -228,16 +241,7 @@ class ProveedorReserva extends ChangeNotifier {
     await _repo.solicitarCancelacion(idReserva);
     _reservas = _reservas.map((b) {
       if (b.id != idReserva) return b;
-      return Reserva(
-        id: b.id, idCliente: b.idCliente, idEmpleado: b.idEmpleado,
-        idServicio: b.idServicio, fechaReserva: b.fechaReserva,
-        horaInicio: b.horaInicio, horaFin: b.horaFin,
-        estado: b.estado, precioTotal: b.precioTotal,
-        notas: b.notas, creadoEn: b.creadoEn, fechaPago: b.fechaPago,
-        cancelacionSolicitada: true,
-        nombreCliente: b.nombreCliente, nombreEmpleado: b.nombreEmpleado,
-        nombreServicio: b.nombreServicio, duracionServicio: b.duracionServicio,
-      );
+      return b.copyWith(cancelacionSolicitada: true);
     }).toList();
     notifyListeners();
   }
@@ -246,16 +250,7 @@ class ProveedorReserva extends ChangeNotifier {
     await _repo.rechazarSolicitudCancelacion(idReserva);
     _reservas = _reservas.map((b) {
       if (b.id != idReserva) return b;
-      return Reserva(
-        id: b.id, idCliente: b.idCliente, idEmpleado: b.idEmpleado,
-        idServicio: b.idServicio, fechaReserva: b.fechaReserva,
-        horaInicio: b.horaInicio, horaFin: b.horaFin,
-        estado: b.estado, precioTotal: b.precioTotal,
-        notas: b.notas, creadoEn: b.creadoEn, fechaPago: b.fechaPago,
-        cancelacionSolicitada: false,
-        nombreCliente: b.nombreCliente, nombreEmpleado: b.nombreEmpleado,
-        nombreServicio: b.nombreServicio, duracionServicio: b.duracionServicio,
-      );
+      return b.copyWith(cancelacionSolicitada: false);
     }).toList();
     notifyListeners();
   }

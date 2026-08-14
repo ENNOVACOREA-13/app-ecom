@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/activity_service.dart';
+import '../common/app_widgets.dart';
 
 class PaginaLogs extends StatefulWidget {
   const PaginaLogs({super.key});
@@ -15,10 +16,16 @@ class _PaginaLogsState extends State<PaginaLogs>
   late TabController _tabCtrl;
   final _client = Supabase.instance.client;
 
+  static const _tamanoPagina = 100;
+
   List<Map<String, dynamic>> _sesiones = [];
   List<Map<String, dynamic>> _actividad = [];
   bool _cargandoSesiones = true;
   bool _cargandoActividad = true;
+  bool _cargandoMasSesiones = false;
+  bool _cargandoMasActividad = false;
+  bool _haySesionesRestantes = true;
+  bool _hayActividadRestante = true;
   String _filtroEvento = 'todos';
   String _filtroSesion = 'todas'; // todas | activas | cerradas
 
@@ -190,28 +197,92 @@ class _PaginaLogsState extends State<PaginaLogs>
   Future<void> _cargarSesiones() async {
     setState(() => _cargandoSesiones = true);
     try {
-      final datos = await _client.from('session_logs').select('''
+      final datos = await _client
+          .from('session_logs')
+          .select('''
         id, platform, device, is_active,
         login_at, last_active_at, logout_at,
         profiles(id, full_name, role, avatar_url)
-      ''').order('login_at', ascending: false).limit(200);
-      setState(() => _sesiones = List<Map<String, dynamic>>.from(datos));
+      ''')
+          .order('login_at', ascending: false)
+          .range(0, _tamanoPagina - 1);
+      final pagina = List<Map<String, dynamic>>.from(datos);
+      setState(() {
+        _sesiones = pagina;
+        _haySesionesRestantes = pagina.length == _tamanoPagina;
+      });
     } catch (_) {} finally {
       setState(() => _cargandoSesiones = false);
+    }
+  }
+
+  Future<void> _cargarMasSesiones() async {
+    if (_cargandoMasSesiones || !_haySesionesRestantes) return;
+    setState(() => _cargandoMasSesiones = true);
+    try {
+      final desde = _sesiones.length;
+      final datos = await _client
+          .from('session_logs')
+          .select('''
+        id, platform, device, is_active,
+        login_at, last_active_at, logout_at,
+        profiles(id, full_name, role, avatar_url)
+      ''')
+          .order('login_at', ascending: false)
+          .range(desde, desde + _tamanoPagina - 1);
+      final pagina = List<Map<String, dynamic>>.from(datos);
+      setState(() {
+        _sesiones = [..._sesiones, ...pagina];
+        _haySesionesRestantes = pagina.length == _tamanoPagina;
+      });
+    } catch (_) {} finally {
+      setState(() => _cargandoMasSesiones = false);
     }
   }
 
   Future<void> _cargarActividad() async {
     setState(() => _cargandoActividad = true);
     try {
-      final datos = await _client.from('activity_logs').select('''
+      final datos = await _client
+          .from('activity_logs')
+          .select('''
         id, event_type, event_name, created_at, extra,
         profiles(id, full_name, role),
         session_logs(platform, device)
-      ''').order('created_at', ascending: false).limit(500);
-      setState(() => _actividad = List<Map<String, dynamic>>.from(datos));
+      ''')
+          .order('created_at', ascending: false)
+          .range(0, _tamanoPagina - 1);
+      final pagina = List<Map<String, dynamic>>.from(datos);
+      setState(() {
+        _actividad = pagina;
+        _hayActividadRestante = pagina.length == _tamanoPagina;
+      });
     } catch (_) {} finally {
       setState(() => _cargandoActividad = false);
+    }
+  }
+
+  Future<void> _cargarMasActividad() async {
+    if (_cargandoMasActividad || !_hayActividadRestante) return;
+    setState(() => _cargandoMasActividad = true);
+    try {
+      final desde = _actividad.length;
+      final datos = await _client
+          .from('activity_logs')
+          .select('''
+        id, event_type, event_name, created_at, extra,
+        profiles(id, full_name, role),
+        session_logs(platform, device)
+      ''')
+          .order('created_at', ascending: false)
+          .range(desde, desde + _tamanoPagina - 1);
+      final pagina = List<Map<String, dynamic>>.from(datos);
+      setState(() {
+        _actividad = [..._actividad, ...pagina];
+        _hayActividadRestante = pagina.length == _tamanoPagina;
+      });
+    } catch (_) {} finally {
+      setState(() => _cargandoMasActividad = false);
     }
   }
 
@@ -356,11 +427,20 @@ class _PaginaLogsState extends State<PaginaLogs>
                                     child: ListView.builder(
                                       padding: const EdgeInsets.fromLTRB(
                                           20, 4, 20, 100),
-                                      itemCount: _sesionesFiltradas.length,
-                                      itemBuilder: (_, i) => _TarjetaSesion(
-                                          sesion: _sesionesFiltradas[i],
-                                          color: color,
-                                          onCerrar: _cerrarSesionIndividual),
+                                      itemCount: _sesionesFiltradas.length +
+                                          (_haySesionesRestantes ? 1 : 0),
+                                      itemBuilder: (_, i) {
+                                        if (i >= _sesionesFiltradas.length) {
+                                          return BotonCargarMas(
+                                            cargando: _cargandoMasSesiones,
+                                            onTap: _cargarMasSesiones,
+                                          );
+                                        }
+                                        return _TarjetaSesion(
+                                            sesion: _sesionesFiltradas[i],
+                                            color: color,
+                                            onCerrar: _cerrarSesionIndividual);
+                                      },
                                     ),
                                   ),
                           ),
@@ -408,10 +488,19 @@ class _PaginaLogsState extends State<PaginaLogs>
                                   child: ListView.builder(
                                     padding: const EdgeInsets.fromLTRB(
                                         20, 4, 20, 100),
-                                    itemCount: _actividadFiltrada.length,
-                                    itemBuilder: (_, i) => _FilaActividad(
-                                        evento: _actividadFiltrada[i],
-                                        color: color),
+                                    itemCount: _actividadFiltrada.length +
+                                        (_hayActividadRestante ? 1 : 0),
+                                    itemBuilder: (_, i) {
+                                      if (i >= _actividadFiltrada.length) {
+                                        return BotonCargarMas(
+                                          cargando: _cargandoMasActividad,
+                                          onTap: _cargarMasActividad,
+                                        );
+                                      }
+                                      return _FilaActividad(
+                                          evento: _actividadFiltrada[i],
+                                          color: color);
+                                    },
                                   ),
                                 ),
                     ),

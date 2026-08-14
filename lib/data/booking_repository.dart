@@ -29,13 +29,14 @@ class RepositorioReserva {
   }
 
   /// Crear una reserva (vía función SECURITY DEFINER para evitar problemas de RLS)
+  /// El precio real se calcula en el servidor (crear_reserva) a partir del
+  /// precio vigente del servicio — el cliente no lo controla.
   Future<Reserva> crearReserva({
     required String idCliente,
     required String idEmpleado,
     required String idServicio,
     required DateTime fecha,
     required String horaInicio,
-    required double precioTotal,
     String? notas,
     List<String> idsExtras = const [],
   }) async {
@@ -52,7 +53,6 @@ class RepositorioReserva {
       'p_service_id': idServicio,
       'p_date': fechaTexto,
       'p_start_time': '$horaInicio:00',
-      'p_total_price': precioTotal,
       'p_notes': notas,
       'p_extra_ids': idsExtras.isEmpty ? null : idsExtras,
     });
@@ -106,12 +106,18 @@ class RepositorioReserva {
   }
 
   /// Todas las reservas (admin)
-  Future<List<Reserva>> obtenerTodasLasReservas({EstadoReserva? estado}) async {
+  Future<List<Reserva>> obtenerTodasLasReservas({
+    EstadoReserva? estado,
+    int desde = 0,
+    int cantidad = 100,
+  }) async {
     var consulta = _client.from('bookings_detailed').select();
     if (estado != null) {
       consulta = consulta.eq('status', estado.toDbString());
     }
-    final datos = await consulta.order('booking_date', ascending: false);
+    final datos = await consulta
+        .order('booking_date', ascending: false)
+        .range(desde, desde + cantidad - 1);
     return (datos as List).map((e) => Reserva.fromMap(e)).toList();
   }
 

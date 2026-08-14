@@ -264,23 +264,7 @@ class _PaginaDetalleReservaState extends State<PaginaDetalleReserva> {
                         ),
 
                         if (esTicketPagado) ...[
-                          SizedBox(
-                            height: 1,
-                            child: Stack(
-                              clipBehavior: Clip.none,
-                              children: [
-                                const Positioned.fill(child: _LineaPunteada()),
-                                Positioned(
-                                  left: -12, top: -12,
-                                  child: _Circulo(radio: 12, color: const Color(0xFFF2F2F7)),
-                                ),
-                                Positioned(
-                                  right: -12, top: -12,
-                                  child: _Circulo(radio: 12, color: const Color(0xFFF2F2F7)),
-                                ),
-                              ],
-                            ),
-                          ),
+                          const PerforacionTicket(),
                           Padding(
                             padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
                             child: Column(
@@ -315,23 +299,7 @@ class _PaginaDetalleReservaState extends State<PaginaDetalleReserva> {
                               ],
                             ),
                           ),
-                          SizedBox(
-                            height: 1,
-                            child: Stack(
-                              clipBehavior: Clip.none,
-                              children: [
-                                const Positioned.fill(child: _LineaPunteada()),
-                                Positioned(
-                                  left: -12, top: -12,
-                                  child: _Circulo(radio: 12, color: const Color(0xFFF2F2F7)),
-                                ),
-                                Positioned(
-                                  right: -12, top: -12,
-                                  child: _Circulo(radio: 12, color: const Color(0xFFF2F2F7)),
-                                ),
-                              ],
-                            ),
-                          ),
+                          const PerforacionTicket(),
                           Padding(
                             padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
                             child: Column(
@@ -352,23 +320,7 @@ class _PaginaDetalleReservaState extends State<PaginaDetalleReserva> {
                             ),
                           ),
                         ] else if (r.estado == EstadoReserva.confirmed) ...[
-                          SizedBox(
-                            height: 1,
-                            child: Stack(
-                              clipBehavior: Clip.none,
-                              children: [
-                                const Positioned.fill(child: _LineaPunteada()),
-                                Positioned(
-                                  left: -12, top: -12,
-                                  child: _Circulo(radio: 12, color: const Color(0xFFF2F2F7)),
-                                ),
-                                Positioned(
-                                  right: -12, top: -12,
-                                  child: _Circulo(radio: 12, color: const Color(0xFFF2F2F7)),
-                                ),
-                              ],
-                            ),
-                          ),
+                          const PerforacionTicket(),
                           Padding(
                             padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
                             child: Column(
@@ -495,41 +447,3 @@ class _CampoDetalle extends StatelessWidget {
   }
 }
 
-// ── Línea punteada (perforación del ticket) ─────────────────────
-class _LineaPunteada extends StatelessWidget {
-  const _LineaPunteada();
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        const anchoGuion = 6.0;
-        const espacio = 5.0;
-        final cantidad = (constraints.maxWidth / (anchoGuion + espacio)).floor();
-        return Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: List.generate(
-            cantidad,
-            (_) => Container(width: anchoGuion, height: 1.5, color: const Color(0xFFD1D1D6)),
-          ),
-        );
-      },
-    );
-  }
-}
-
-// ── Círculo "muesca" del ticket ──────────────────────────────────
-class _Circulo extends StatelessWidget {
-  final double radio;
-  final Color color;
-  const _Circulo({required this.radio, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: radio * 2,
-      height: radio * 2,
-      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-    );
-  }
-}

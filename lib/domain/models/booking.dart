@@ -63,6 +63,46 @@ class Reserva {
     );
   }
 
+  Reserva copyWith({
+    String? id,
+    String? idCliente,
+    String? idEmpleado,
+    String? idServicio,
+    DateTime? fechaReserva,
+    String? horaInicio,
+    String? horaFin,
+    EstadoReserva? estado,
+    double? precioTotal,
+    String? notas,
+    DateTime? creadoEn,
+    DateTime? fechaPago,
+    bool? cancelacionSolicitada,
+    String? nombreCliente,
+    String? nombreEmpleado,
+    String? nombreServicio,
+    int? duracionServicio,
+  }) {
+    return Reserva(
+      id: id ?? this.id,
+      idCliente: idCliente ?? this.idCliente,
+      idEmpleado: idEmpleado ?? this.idEmpleado,
+      idServicio: idServicio ?? this.idServicio,
+      fechaReserva: fechaReserva ?? this.fechaReserva,
+      horaInicio: horaInicio ?? this.horaInicio,
+      horaFin: horaFin ?? this.horaFin,
+      estado: estado ?? this.estado,
+      precioTotal: precioTotal ?? this.precioTotal,
+      notas: notas ?? this.notas,
+      creadoEn: creadoEn ?? this.creadoEn,
+      fechaPago: fechaPago ?? this.fechaPago,
+      cancelacionSolicitada: cancelacionSolicitada ?? this.cancelacionSolicitada,
+      nombreCliente: nombreCliente ?? this.nombreCliente,
+      nombreEmpleado: nombreEmpleado ?? this.nombreEmpleado,
+      nombreServicio: nombreServicio ?? this.nombreServicio,
+      duracionServicio: duracionServicio ?? this.duracionServicio,
+    );
+  }
+
   /// El cliente puede cancelar directo solo si está pendiente.
   bool get puedeCancelarDirecto => estado == EstadoReserva.pending;
 

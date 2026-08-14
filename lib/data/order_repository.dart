@@ -40,49 +40,22 @@ class RepositorioPedido {
     return (data as List).map((m) => Pedido.fromMap(m)).toList();
   }
 
-  Future<List<Pedido>> obtenerTodosPedidos() async {
+  Future<List<Pedido>> obtenerTodosPedidos({int desde = 0, int cantidad = 100}) async {
     final data = await _client
         .from('orders')
         .select('*, order_items(*), profiles(full_name, phone)')
-        .order('created_at', ascending: false);
+        .order('created_at', ascending: false)
+        .range(desde, desde + cantidad - 1);
     return (data as List).map((m) => Pedido.fromMap(m)).toList();
   }
 
   Future<void> actualizarEstado(String pedidoId, String estado) async {
-    // Verificar estado actual para evitar restaurar stock doble
-    final pedidoActual = await _client
-        .from('orders')
-        .select('status')
-        .eq('id', pedidoId)
-        .single();
-    final estadoActual = pedidoActual['status'] as String? ?? '';
-
-    await _client.from('orders').update({
-      'status': estado,
-      'updated_at': DateTime.now().toUtc().toIso8601String(),
-    }).eq('id', pedidoId);
-
-    // Restaurar stock solo si se cancela y no estaba ya cancelado
-    if (estado == 'cancelled' && estadoActual != 'cancelled') {
-      final itemsData = await _client
-          .from('order_items')
-          .select('product_id, quantity')
-          .eq('order_id', pedidoId);
-
-      for (final item in itemsData as List) {
-        final productId = item['product_id'] as String;
-        final cantidad = item['quantity'] as int;
-        final row = await _client
-            .from('products')
-            .select('stock')
-            .eq('id', productId)
-            .single();
-        final stockActual = (row['stock'] as int? ?? 0);
-        await _client
-            .from('products')
-            .update({'stock': stockActual + cantidad})
-            .eq('id', productId);
-      }
-    }
+    // Cambia el estado y restaura el stock (si aplica) atómicamente en el
+    // servidor, para evitar condiciones de carrera con cancelaciones
+    // concurrentes que compartan un mismo producto.
+    await _client.rpc('actualizar_estado_pedido', params: {
+      'p_order_id': pedidoId,
+      'p_status': estado,
+    });
   }
 }

@@ -249,7 +249,7 @@ class _PaginaPerfilState extends State<PaginaPerfil> {
                 ],
               )
             else ...[
-              _OpcionPerfil(
+              FilaOpcion(
                 icono: Icons.receipt_long_outlined,
                 titulo: 'Tickets',
                 subtitulo: 'Historial de tus citas pagadas',
@@ -341,61 +341,6 @@ class _FilaInfo extends StatelessWidget {
   }
 }
 
-class _OpcionPerfil extends StatelessWidget {
-  final IconData icono;
-  final String titulo;
-  final String subtitulo;
-  final VoidCallback onTap;
-
-  const _OpcionPerfil({
-    required this.icono,
-    required this.titulo,
-    required this.subtitulo,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: kNeumorphicShadowsSmall,
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: context.colorPrimario.withOpacity(0.12),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icono, color: context.colorPrimario, size: 20),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(titulo,
-                      style: const TextStyle(
-                          color: Color(0xFF1C1C1E), fontWeight: FontWeight.w700, fontSize: 14)),
-                  Text(subtitulo,
-                      style: const TextStyle(color: kTextMuted, fontSize: 11)),
-                ],
-              ),
-            ),
-            const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: kTextMuted),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 class _ChipRol extends StatelessWidget {
   final String rol;

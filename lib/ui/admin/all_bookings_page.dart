@@ -111,7 +111,12 @@ class _PaginaTodasReservasState extends State<PaginaTodasReservas> {
                         icono: Icons.calendar_today_outlined,
                         titulo: 'Sin reservas',
                       )
-                    : _ListaConSeparadores(reservas: filtradas),
+                    : _ListaConSeparadores(
+                        reservas: filtradas,
+                        hayMas: proveedor.hayMasReservasAdmin,
+                        cargandoMas: proveedor.cargandoMasReservas,
+                        onCargarMas: () => proveedor.cargarMasReservas(),
+                      ),
           ),
         ],
       ),
@@ -122,7 +127,15 @@ class _PaginaTodasReservasState extends State<PaginaTodasReservas> {
 
 class _ListaConSeparadores extends StatelessWidget {
   final List<Reserva> reservas;
-  const _ListaConSeparadores({required this.reservas});
+  final bool hayMas;
+  final bool cargandoMas;
+  final VoidCallback onCargarMas;
+  const _ListaConSeparadores({
+    required this.reservas,
+    required this.hayMas,
+    required this.cargandoMas,
+    required this.onCargarMas,
+  });
 
   String _etiquetaDia(DateTime fecha) {
     final hoy = DateTime.now();
@@ -164,7 +177,10 @@ class _ListaConSeparadores extends StatelessWidget {
                   key: ValueKey((item as Reserva).id), reserva: item),
             ),
           );
-        }).toList(),
+        }).toList()
+          ..addAll(hayMas
+              ? [BotonCargarMas(cargando: cargandoMas, onTap: onCargarMas)]
+              : const []),
       ),
     );
   }

@@ -116,17 +116,7 @@ class _TarjetaTicket extends StatelessWidget {
                 ],
               ),
             ),
-            SizedBox(
-              height: 1,
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  const Positioned.fill(child: _LineaPunteadaTicket()),
-                  Positioned(left: -10, top: -10, child: _CirculoTicket(radio: 10)),
-                  Positioned(right: -10, top: -10, child: _CirculoTicket(radio: 10)),
-                ],
-              ),
-            ),
+            const PerforacionTicket(),
             Padding(
               padding: const EdgeInsets.fromLTRB(18, 14, 18, 16),
               child: Row(
@@ -161,44 +151,6 @@ class _TarjetaTicket extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-// ── Línea punteada (perforación del ticket) ─────────────────────
-class _LineaPunteadaTicket extends StatelessWidget {
-  const _LineaPunteadaTicket();
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        const anchoGuion = 6.0;
-        const espacio = 5.0;
-        final cantidad = (constraints.maxWidth / (anchoGuion + espacio)).floor();
-        return Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: List.generate(
-            cantidad,
-            (_) => Container(width: anchoGuion, height: 1.5, color: const Color(0xFFD1D1D6)),
-          ),
-        );
-      },
-    );
-  }
-}
-
-// ── Círculo "muesca" del ticket ──────────────────────────────────
-class _CirculoTicket extends StatelessWidget {
-  final double radio;
-  const _CirculoTicket({required this.radio});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: radio * 2,
-      height: radio * 2,
-      decoration: const BoxDecoration(color: Color(0xFFF2F2F7), shape: BoxShape.circle),
     );
   }
 }

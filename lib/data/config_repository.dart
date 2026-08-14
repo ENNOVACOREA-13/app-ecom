@@ -41,12 +41,12 @@ class RepositorioConfig {
     try {
       final hex =
           '#${color.value.toRadixString(16).substring(2).toUpperCase()}';
-      await _db.from('app_config').upsert({
+      final res = await _db.from('app_config').upsert({
         'id': true,
         'primary_color': hex,
         'updated_at': DateTime.now().toUtc().toIso8601String(),
-      });
-      return true;
+      }).select();
+      return (res).isNotEmpty;
     } catch (_) {
       return false;
     }
@@ -71,12 +71,12 @@ class RepositorioConfig {
 
   Future<bool> actualizarTiendaHabilitada(bool habilitada) async {
     try {
-      await _db.from('app_config').upsert({
+      final res = await _db.from('app_config').upsert({
         'id': true,
         'store_enabled': habilitada,
         'updated_at': DateTime.now().toUtc().toIso8601String(),
-      });
-      return true;
+      }).select();
+      return (res).isNotEmpty;
     } catch (_) {
       return false;
     }
@@ -123,14 +123,14 @@ class RepositorioConfig {
     required double tamanoIcono,
   }) async {
     try {
-      await _db.from('app_config').upsert({
+      final res = await _db.from('app_config').upsert({
         'id': true,
         'home_categorias_titulo': titulo,
         'home_categorias_forma': forma,
         'categorias_icono_tamano': tamanoIcono,
         'updated_at': DateTime.now().toUtc().toIso8601String(),
-      });
-      return true;
+      }).select();
+      return (res).isNotEmpty;
     } catch (_) {
       return false;
     }
@@ -159,14 +159,14 @@ class RepositorioConfig {
     required double sombraContenedor,
   }) async {
     try {
-      await _db.from('app_config').upsert({
+      final res = await _db.from('app_config').upsert({
         'id': true,
         'font_family': fontFamily,
         'container_radius': radioContenedor,
         'container_shadow': sombraContenedor,
         'updated_at': DateTime.now().toUtc().toIso8601String(),
-      });
-      return true;
+      }).select();
+      return (res).isNotEmpty;
     } catch (_) {
       return false;
     }
@@ -186,12 +186,12 @@ class RepositorioConfig {
 
   Future<bool> actualizarTituloProductos(String titulo) async {
     try {
-      await _db.from('app_config').upsert({
+      final res = await _db.from('app_config').upsert({
         'id': true,
         'home_productos_titulo': titulo,
         'updated_at': DateTime.now().toUtc().toIso8601String(),
-      });
-      return true;
+      }).select();
+      return (res).isNotEmpty;
     } catch (_) {
       return false;
     }
@@ -213,12 +213,12 @@ class RepositorioConfig {
 
   Future<bool> actualizarSeccionesHome(List<Map<String, dynamic>> secciones) async {
     try {
-      await _db.from('app_config').upsert({
+      final res = await _db.from('app_config').upsert({
         'id': true,
         'home_sections': secciones,
         'updated_at': DateTime.now().toUtc().toIso8601String(),
-      });
-      return true;
+      }).select();
+      return (res).isNotEmpty;
     } catch (_) {
       return false;
     }
@@ -238,12 +238,12 @@ class RepositorioConfig {
 
   Future<bool> guardarBorrador(Map<String, dynamic> borrador) async {
     try {
-      await _db.from('app_config').upsert({
+      final res = await _db.from('app_config').upsert({
         'id': true,
         'draft_config': borrador,
         'updated_at': DateTime.now().toUtc().toIso8601String(),
-      });
-      return true;
+      }).select();
+      return (res).isNotEmpty;
     } catch (_) {
       return false;
     }
@@ -251,12 +251,12 @@ class RepositorioConfig {
 
   Future<bool> descartarBorrador() async {
     try {
-      await _db.from('app_config').upsert({
+      final res = await _db.from('app_config').upsert({
         'id': true,
         'draft_config': null,
         'updated_at': DateTime.now().toUtc().toIso8601String(),
-      });
-      return true;
+      }).select();
+      return (res).isNotEmpty;
     } catch (_) {
       return false;
     }
@@ -264,7 +264,7 @@ class RepositorioConfig {
 
   Future<bool> publicarBorrador(Map<String, dynamic> borrador) async {
     try {
-      await _db.from('app_config').upsert({
+      final res = await _db.from('app_config').upsert({
         'id': true,
         'primary_color': borrador['primary_color'],
         'font_family': borrador['font_family'],
@@ -282,8 +282,8 @@ class RepositorioConfig {
         'home_sections': borrador['home_sections'],
         'draft_config': null,
         'updated_at': DateTime.now().toUtc().toIso8601String(),
-      });
-      return true;
+      }).select();
+      return (res).isNotEmpty;
     } catch (_) {
       return false;
     }

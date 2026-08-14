@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../domain/enums/booking_status.dart';
 import '../../domain/models/booking.dart';
 import '../../providers/auth_provider.dart';
@@ -103,7 +104,12 @@ class _PaginaDetalleReservaState extends State<PaginaDetalleReserva> {
   @override
   Widget build(BuildContext context) {
     final r = reserva;
+    final esTicketPagado = r.estado == EstadoReserva.completed;
     final fechaTexto = DateFormat('dd MMM yyyy', 'es_ES').format(r.fechaReserva);
+    final fechaPagoTexto =
+        r.fechaPago != null ? DateFormat('dd MMM yyyy, HH:mm', 'es_ES').format(r.fechaPago!) : null;
+    final perfil = context.watch<ProveedorAuth>().perfil;
+    final email = Supabase.instance.client.auth.currentUser?.email;
 
     final tamano = MediaQuery.of(context).size;
     final esEscritorio = tamano.width >= kAnchoEscritorio;
@@ -140,9 +146,9 @@ class _PaginaDetalleReservaState extends State<PaginaDetalleReserva> {
         iconTheme: const IconThemeData(color: Colors.white),
         titleTextStyle: const TextStyle(
             color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700),
-        title: const Text('Detalles de reserva'),
+        title: Text(esTicketPagado ? 'Ticket de pago' : 'Detalles de reserva'),
         actions: [
-          if (r.estado == EstadoReserva.confirmed)
+          if (r.estado == EstadoReserva.confirmed || esTicketPagado)
             IconButton(
               icon: const Icon(Icons.share_outlined),
               tooltip: 'Compartir QR',
@@ -165,7 +171,9 @@ class _PaginaDetalleReservaState extends State<PaginaDetalleReserva> {
         child: SingleChildScrollView(
           padding: EdgeInsets.fromLTRB(20 + margenExtra,
               kToolbarHeight + (esEscritorio ? 150 : 20), 20 + margenExtra, 20),
-          child: Column(
+          child: EnvolturaFormularioResponsivo(
+            anchoMaximo: 480,
+            child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               RepaintBoundary(
@@ -245,12 +253,105 @@ class _PaginaDetalleReservaState extends State<PaginaDetalleReserva> {
                                   ),
                                 ],
                               ),
+                              if (esTicketPagado && fechaPagoTexto != null) ...[
+                                const SizedBox(height: 18),
+                                _CampoDetalle(
+                                    etiqueta: 'Fecha de pago', valor: fechaPagoTexto, destacado: true),
+                              ],
                               const SizedBox(height: 20),
                             ],
                           ),
                         ),
 
-                        if (r.estado == EstadoReserva.confirmed) ...[
+                        if (esTicketPagado) ...[
+                          SizedBox(
+                            height: 1,
+                            child: Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                const Positioned.fill(child: _LineaPunteada()),
+                                Positioned(
+                                  left: -12, top: -12,
+                                  child: _Circulo(radio: 12, color: const Color(0xFFF2F2F7)),
+                                ),
+                                Positioned(
+                                  right: -12, top: -12,
+                                  child: _Circulo(radio: 12, color: const Color(0xFFF2F2F7)),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text('Datos del cliente',
+                                    style: TextStyle(
+                                        color: Color(0xFF8E8E93),
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600)),
+                                const SizedBox(height: 12),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: _CampoDetalle(
+                                          etiqueta: 'Nombre',
+                                          valor: perfil?.nombreCompleto.isNotEmpty == true
+                                              ? perfil!.nombreCompleto
+                                              : '—'),
+                                    ),
+                                    Expanded(
+                                      child: _CampoDetalle(
+                                          etiqueta: 'Teléfono',
+                                          valor: perfil?.telefono?.isNotEmpty == true
+                                              ? perfil!.telefono!
+                                              : '—'),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 18),
+                                _CampoDetalle(etiqueta: 'Email', valor: email ?? '—'),
+                              ],
+                            ),
+                          ),
+                          SizedBox(
+                            height: 1,
+                            child: Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                const Positioned.fill(child: _LineaPunteada()),
+                                Positioned(
+                                  left: -12, top: -12,
+                                  child: _Circulo(radio: 12, color: const Color(0xFFF2F2F7)),
+                                ),
+                                Positioned(
+                                  right: -12, top: -12,
+                                  child: _Circulo(radio: 12, color: const Color(0xFFF2F2F7)),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+                            child: Column(
+                              children: [
+                                QrImageView(
+                                  data: 'reserva:${r.id}',
+                                  version: QrVersions.auto,
+                                  size: 180,
+                                  backgroundColor: Colors.white,
+                                ),
+                                const SizedBox(height: 12),
+                                const Text(
+                                  'Código de verificación de tu ticket de pago',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(color: Color(0xFF6E6E73), fontSize: 12),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ] else if (r.estado == EstadoReserva.confirmed) ...[
                           SizedBox(
                             height: 1,
                             child: Stack(
@@ -357,6 +458,7 @@ class _PaginaDetalleReservaState extends State<PaginaDetalleReserva> {
                 ),
               ],
             ],
+          ),
           ),
         ),
       ),

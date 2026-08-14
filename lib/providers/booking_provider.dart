@@ -193,7 +193,7 @@ class ProveedorReserva extends ChangeNotifier {
         idServicio: b.idServicio, fechaReserva: b.fechaReserva,
         horaInicio: b.horaInicio, horaFin: b.horaFin,
         estado: EstadoReserva.cancelled, precioTotal: b.precioTotal,
-        notas: b.notas, creadoEn: b.creadoEn,
+        notas: b.notas, creadoEn: b.creadoEn, fechaPago: b.fechaPago,
         nombreCliente: b.nombreCliente, nombreEmpleado: b.nombreEmpleado,
         nombreServicio: b.nombreServicio, duracionServicio: b.duracionServicio,
       );
@@ -211,6 +211,9 @@ class ProveedorReserva extends ChangeNotifier {
         horaInicio: b.horaInicio, horaFin: b.horaFin,
         estado: nuevoEstado, precioTotal: b.precioTotal,
         notas: b.notas, creadoEn: b.creadoEn,
+        fechaPago: nuevoEstado == EstadoReserva.completed
+            ? (b.fechaPago ?? DateTime.now())
+            : b.fechaPago,
         nombreCliente: b.nombreCliente, nombreEmpleado: b.nombreEmpleado,
         nombreServicio: b.nombreServicio, duracionServicio: b.duracionServicio,
       );
@@ -230,7 +233,7 @@ class ProveedorReserva extends ChangeNotifier {
         idServicio: b.idServicio, fechaReserva: b.fechaReserva,
         horaInicio: b.horaInicio, horaFin: b.horaFin,
         estado: b.estado, precioTotal: b.precioTotal,
-        notas: b.notas, creadoEn: b.creadoEn,
+        notas: b.notas, creadoEn: b.creadoEn, fechaPago: b.fechaPago,
         cancelacionSolicitada: true,
         nombreCliente: b.nombreCliente, nombreEmpleado: b.nombreEmpleado,
         nombreServicio: b.nombreServicio, duracionServicio: b.duracionServicio,
@@ -248,7 +251,7 @@ class ProveedorReserva extends ChangeNotifier {
         idServicio: b.idServicio, fechaReserva: b.fechaReserva,
         horaInicio: b.horaInicio, horaFin: b.horaFin,
         estado: b.estado, precioTotal: b.precioTotal,
-        notas: b.notas, creadoEn: b.creadoEn,
+        notas: b.notas, creadoEn: b.creadoEn, fechaPago: b.fechaPago,
         cancelacionSolicitada: false,
         nombreCliente: b.nombreCliente, nombreEmpleado: b.nombreEmpleado,
         nombreServicio: b.nombreServicio, duracionServicio: b.duracionServicio,

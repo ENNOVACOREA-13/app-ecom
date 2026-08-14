@@ -177,7 +177,7 @@ class ProveedorAuth extends ChangeNotifier {
     notifyListeners();
     Supabase.instance.client.auth.signInWithOAuth(
       OAuthProvider.google,
-      redirectTo: 'io.supabase.barbershop://login-callback',
+      redirectTo: kIsWeb ? null : 'io.supabase.barbershop://login-callback',
     );
   }
 
@@ -186,7 +186,7 @@ class ProveedorAuth extends ChangeNotifier {
     notifyListeners();
     Supabase.instance.client.auth.signInWithOAuth(
       OAuthProvider.facebook,
-      redirectTo: 'io.supabase.barbershop://login-callback',
+      redirectTo: kIsWeb ? null : 'io.supabase.barbershop://login-callback',
     );
   }
 

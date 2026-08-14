@@ -12,6 +12,7 @@ class Reserva {
   final double precioTotal;
   final String? notas;
   final DateTime creadoEn;
+  final DateTime? fechaPago;
   final bool cancelacionSolicitada;
 
   // Joined fields (nullable – solo cuando se hace JOIN)
@@ -32,6 +33,7 @@ class Reserva {
     required this.precioTotal,
     this.notas,
     required this.creadoEn,
+    this.fechaPago,
     this.cancelacionSolicitada = false,
     this.nombreCliente,
     this.nombreEmpleado,
@@ -52,6 +54,7 @@ class Reserva {
       precioTotal: (map['total_price'] as num).toDouble(),
       notas: map['notes'] as String?,
       creadoEn: DateTime.tryParse(map['created_at'] as String? ?? '') ?? DateTime.now(),
+      fechaPago: map['paid_at'] != null ? DateTime.tryParse(map['paid_at'] as String) : null,
       cancelacionSolicitada: map['cancel_requested'] as bool? ?? false,
       nombreCliente: map['client_name'] as String?,
       nombreEmpleado: map['employee_name'] as String?,

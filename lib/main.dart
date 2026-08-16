@@ -9,6 +9,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/constants.dart';
 import 'core/theme/app_theme.dart';
+import 'data/tenant_resolver.dart';
+import 'ui/tenant_unavailable_page.dart';
 import 'providers/auth_provider.dart';
 import 'providers/booking_provider.dart';
 import 'providers/service_provider.dart';
@@ -27,9 +29,16 @@ Future<void> main() async {
 
   await initializeDateFormatting('es_ES', null);
 
+  final tenant = await resolverTenant();
+
+  if (tenant.status != null && tenant.status != 'active') {
+    runApp(PaginaTenantNoDisponible(businessName: tenant.businessName));
+    return;
+  }
+
   await Supabase.initialize(
-    url: kSupabaseUrl,
-    anonKey: kSupabaseAnonKey,
+    url: tenant.supabaseUrl,
+    anonKey: tenant.supabaseAnonKey,
   );
 
   if (kIsWeb) {

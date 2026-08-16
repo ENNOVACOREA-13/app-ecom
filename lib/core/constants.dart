@@ -15,6 +15,15 @@ const kStripePublishableKey = String.fromEnvironment(
   defaultValue: 'pk_test_XXXXXXXXXXXXXXXXXXXXXXXX',
 );
 
+// Control plane multi-tenant: resuelve a qué proyecto de Supabase pertenece
+// el dominio desde el que se sirve la app. Fijo en cada deploy (no cambia
+// por tenant) — ver tenant_resolver.dart. Reemplaza el defaultValue cuando
+// el servidor del control plane esté desplegado (ver repo control_plane).
+const kControlPlaneUrl = String.fromEnvironment(
+  'CONTROL_PLANE_URL',
+  defaultValue: 'https://control.TUDOMINIO.xyz',
+);
+
 const kAvatarBucket = 'avatars';
 const kServicesBucket = 'services';
 const kProductsBucket = 'products';

@@ -57,6 +57,20 @@ class RepositorioConfig {
     return Color(int.parse('FF$h', radix: 16));
   }
 
+  Future<Color?> obtenerColorSecundario() async {
+    try {
+      final data = await _db
+          .from('app_config')
+          .select('background_color')
+          .single();
+      final hex = data['background_color'] as String?;
+      if (hex == null || hex.isEmpty) return null;
+      return _hexAColor(hex);
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<bool> obtenerTiendaHabilitada() async {
     try {
       final data = await _db
@@ -292,6 +306,7 @@ class RepositorioConfig {
       final res = await _db.from('app_config').upsert({
         'id': true,
         'primary_color': borrador['primary_color'],
+        'background_color': borrador['background_color'],
         'font_family': borrador['font_family'],
         'container_radius': borrador['container_radius'],
         'container_shadow': borrador['container_shadow'],

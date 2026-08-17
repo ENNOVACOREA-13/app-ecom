@@ -163,6 +163,102 @@ class PaginaDisenadorVista extends StatelessWidget {
     );
   }
 
+  void _mostrarSelectorColorSecundario(BuildContext context) {
+    final config = context.read<ProveedorConfig>();
+    const colores = [
+      Color(0xFFFFFFFF), Color(0xFFF2F2F7), Color(0xFFFAFAFA),
+      Color(0xFF1C1C1E), Color(0xFF000000), Color(0xFFF5F5DC),
+      Color(0xFFFFF8E7), Color(0xFFF0F4F8),
+    ];
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) => Padding(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40, height: 4,
+                decoration: BoxDecoration(
+                  color: kTextMuted.withOpacity(0.4),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text('Color secundario (fondo)',
+                style: TextStyle(color: Color(0xFF1C1C1E), fontSize: 17, fontWeight: FontWeight.w700)),
+            const SizedBox(height: 16),
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: colores.map((c) {
+                final seleccionado = config.colorSecundarioBorrador.value == c.value;
+                return GestureDetector(
+                  onTap: () {
+                    config.actualizarBorradorColorSecundario(c);
+                    Navigator.pop(context);
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    width: 44, height: 44,
+                    decoration: BoxDecoration(
+                      color: c,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                          color: seleccionado ? Colors.transparent : const Color(0xFFE5E5EA),
+                          width: seleccionado ? 3 : 1),
+                      boxShadow: seleccionado
+                          ? [BoxShadow(color: c.withOpacity(0.5), blurRadius: 10)]
+                          : null,
+                    ),
+                    child: seleccionado
+                        ? Icon(Icons.check,
+                            color: c.computeLuminance() > 0.5 ? Colors.black : Colors.white,
+                            size: 20)
+                        : null,
+                  ),
+                );
+              }).toList()
+                ..add(
+                  GestureDetector(
+                    onTap: () async {
+                      final elegido = await _elegirColorPersonalizado(
+                          context, config.colorSecundarioBorrador);
+                      if (elegido != null) {
+                        config.actualizarBorradorColorSecundario(elegido);
+                        if (context.mounted) Navigator.pop(context);
+                      }
+                    },
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: const Color(0xFFD1D1D6), width: 1.5),
+                        gradient: const SweepGradient(colors: [
+                          Colors.red, Colors.yellow, Colors.green,
+                          Colors.cyan, Colors.blue, Colors.purple, Colors.red,
+                        ]),
+                      ),
+                      child: const Icon(Icons.add, color: Colors.white, size: 20),
+                    ),
+                  ),
+                ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _editarEstiloApp(BuildContext context) async {
     final cfg = context.read<ProveedorConfig>();
     String fuenteLocal = cfg.fontFamilyBorrador;
@@ -878,6 +974,62 @@ class PaginaDisenadorVista extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text('Color primario',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 14,
+                                    color: Color(0xFF1C1C1E))),
+                            SizedBox(height: 2),
+                            Text('Toca para elegir un color',
+                                style: TextStyle(fontSize: 11, color: Color(0xFF8E8E93))),
+                          ],
+                        ),
+                      ),
+                      const Icon(Icons.arrow_forward_ios_rounded,
+                          size: 14, color: Color(0xFF8E8E93)),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text('Color secundario',
+                style: TextStyle(
+                    fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF1C1C1E))),
+            const SizedBox(height: 4),
+            const Text(
+              'El fondo de toda la app, incluyendo la pantalla de inicio de sesión.',
+              style: TextStyle(fontSize: 12, color: Color(0xFF8E8E93)),
+            ),
+            const SizedBox(height: 16),
+            Material(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(16),
+                onTap: () => _mostrarSelectorColorSecundario(context),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFFE5E5EA)),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: cfg.colorSecundarioBorrador,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: const Color(0xFFE5E5EA)),
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Color secundario (fondo)',
                                 style: TextStyle(
                                     fontWeight: FontWeight.w700,
                                     fontSize: 14,

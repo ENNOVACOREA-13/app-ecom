@@ -65,7 +65,9 @@ class EnvolturaFormularioResponsivo extends StatelessWidget {
 }
 
 // ── Colores fijos (no dinámicos) ─────────────────────────────────────────────
-const kBackground   = Color(0xFFFFFFFF);
+// No es `const`: el sysadmin/admin puede cambiarlo en tiempo de ejecución
+// desde el Diseñador de vista (color secundario) — ver ProveedorConfig.
+Color kBackground   = const Color(0xFFFFFFFF);
 const kSurface      = Color(0xFF1C1C1E);
 const kCard         = Color(0xFF1C1C1E);
 const kCardElevated = Color(0xFF232325);

@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'data/stripe_web_service.dart' if (dart.library.io) 'data/stripe_web_stub.dart';
+import 'data/stripe_web_service.dart'
+    if (dart.library.io) 'data/stripe_web_stub.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -93,7 +94,8 @@ class _BarberAppState extends State<BarberApp> {
         ChangeNotifierProvider(create: (_) => ProveedorReserva()),
         ChangeNotifierProvider(create: (_) => ProveedorServicio()),
         ChangeNotifierProvider(create: (_) => ProveedorProducto()),
-        ChangeNotifierProvider(create: (_) => ProveedorCategoriasProducto()..cargarCategorias()),
+        ChangeNotifierProvider(
+            create: (_) => ProveedorCategoriasProducto()..cargarCategorias()),
         ChangeNotifierProvider(create: (_) => ProveedorCarrito()),
         ChangeNotifierProvider(create: (_) => ProveedorPedido()),
         ChangeNotifierProvider(create: (_) => ProveedorGuardados()),
@@ -102,18 +104,24 @@ class _BarberAppState extends State<BarberApp> {
         ChangeNotifierProvider(create: (_) => ProveedorNotificaciones()),
       ],
       child: Consumer<ProveedorConfig>(
-        builder: (_, config, __) => MaterialApp.router(
-          debugShowCheckedModeBanner: false,
-          title: 'BarberApp',
-          theme: crearTema(
-            config.colorPrimarioEfectivo,
-            fontFamily: config.fontFamilyEfectiva,
-            radioContenedor: config.radioContenedorEfectivo,
-            sombraContenedor: config.sombraContenedorEfectiva,
-          ),
-          routerConfig: construirEnrutador(navigatorKey: rootNavigatorKey),
-          builder: (context, child) => _SesionExpiradaListener(child: child!),
-        ),
+        builder: (_, config, __) {
+          // kBackground es leído directo (sin pasar por Theme) en varias
+          // pantallas — se actualiza aquí para que la vista previa del
+          // sysadmin y el color publicado se reflejen en toda la app.
+          kBackground = config.colorSecundarioEfectivo;
+          return MaterialApp.router(
+            debugShowCheckedModeBanner: false,
+            title: 'BarberApp',
+            theme: crearTema(
+              config.colorPrimarioEfectivo,
+              fontFamily: config.fontFamilyEfectiva,
+              radioContenedor: config.radioContenedorEfectivo,
+              sombraContenedor: config.sombraContenedorEfectiva,
+            ),
+            routerConfig: construirEnrutador(navigatorKey: rootNavigatorKey),
+            builder: (context, child) => _SesionExpiradaListener(child: child!),
+          );
+        },
       ),
     );
   }
@@ -136,8 +144,8 @@ class PaginaSplash extends StatelessWidget {
                 width: 120,
                 height: 120,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => const Icon(
-                    Icons.content_cut, size: 64, color: Color(0xFF1C1C1E)),
+                errorBuilder: (_, __, ___) => const Icon(Icons.content_cut,
+                    size: 64, color: Color(0xFF1C1C1E)),
               ),
             ),
             const SizedBox(height: 24),
@@ -174,7 +182,9 @@ class _SesionExpiradaListenerState extends State<_SesionExpiradaListener> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _mostrarDialogoDesactivada();
       });
-    } else if (auth.sesionExpirada && !auth.inicializando && !_mostrandoDialogo) {
+    } else if (auth.sesionExpirada &&
+        !auth.inicializando &&
+        !_mostrandoDialogo) {
       _mostrandoDialogo = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _mostrarDialogoExpiracion();

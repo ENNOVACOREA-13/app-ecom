@@ -98,9 +98,9 @@ class _CarcasaAppState extends State<CarcasaApp> with SingleTickerProviderStateM
 
     // Esperando restaurar sesión
     if (auth.inicializando) {
-      return const Scaffold(
-        backgroundColor: Color(0xFFF2F2F7),
-        body: Center(child: CircularProgressIndicator()),
+      return Scaffold(
+        backgroundColor: kBackground,
+        body: const Center(child: CircularProgressIndicator()),
       );
     }
 

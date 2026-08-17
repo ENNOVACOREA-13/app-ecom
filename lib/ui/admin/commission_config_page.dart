@@ -39,20 +39,20 @@ class _PaginaConfigComisionesState extends State<PaginaConfigComisiones>
   Widget build(BuildContext context) {
     final color = context.colorPrimario;
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F2F7),
+      backgroundColor: kBackground,
       body: NestedScrollView(
         headerSliverBuilder: (_, __) => [
           SliverAppBar(
             pinned: true,
-            backgroundColor: Colors.white,
-            foregroundColor: const Color(0xFF1C1C1E),
-            iconTheme: const IconThemeData(color: Color(0xFF1C1C1E)),
-            actionsIconTheme: const IconThemeData(color: Color(0xFF1C1C1E)),
+            backgroundColor: kBackground,
+            foregroundColor: kColorSobreFondo,
+            iconTheme: IconThemeData(color: kColorSobreFondo),
+            actionsIconTheme: IconThemeData(color: kColorSobreFondo),
             centerTitle: true,
-            title: const Text(
+            title: Text(
               'Comisiones',
               style: TextStyle(
-                color: Color(0xFF1C1C1E),
+                color: kColorSobreFondo,
                 fontWeight: FontWeight.w700,
                 fontSize: 22,
               ),

@@ -33,7 +33,7 @@ class _PaginaPedidosAdminState extends State<PaginaPedidosAdmin> {
         : todos.where((p) => p.estado == _filtro).toList();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F7),
+      backgroundColor: kBackground,
       appBar: AppBar(
         title: const Text('Pedidos'),
         actions: [

@@ -18,7 +18,7 @@ class PaginaCarrito extends StatelessWidget {
     final carrito = context.watch<ProveedorCarrito>();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F7),
+      backgroundColor: kBackground,
       extendBody: false,
       body: EnvolturaResponsiva(
         child: carrito.vacio ? _carritoVacio(context) : _carritoConItems(context, carrito),

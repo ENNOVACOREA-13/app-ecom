@@ -98,7 +98,7 @@ class _PaginaConfigLealtadState extends State<PaginaConfigLealtad> {
     final canje = double.tryParse(_ctrlPuntosPorPesoCanje.text) ?? 0;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F2F7),
+      backgroundColor: kBackground,
       appBar: AppBar(title: const Text('Programa de lealtad')),
       body: _cargando
           ? const Center(child: CircularProgressIndicator())

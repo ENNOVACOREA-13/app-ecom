@@ -49,7 +49,7 @@ class _PaginaPerfilState extends State<PaginaPerfil> {
     final urls = [
       kUrlLogoBarberia,
       ...List.generate(
-        12,
+        6,
         (_) =>
             'https://api.dicebear.com/10.x/adventurer-neutral/png?seed=$base-${rand.nextInt(999999)}&size=128',
       ),

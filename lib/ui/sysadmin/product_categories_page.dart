@@ -107,6 +107,7 @@ class _PaginaCategoriasProductoState extends State<PaginaCategoriasProducto> {
     String iconoNombre = existente?.icono ?? 'category';
     String? urlImagenLocal = existente?.imagenUrl;
     bool subiendoImagen = false;
+    bool guardandoCategoria = false;
     final claveFormulario = GlobalKey<FormState>();
 
     final exito = await showDialog<bool>(
@@ -223,8 +224,11 @@ class _PaginaCategoriasProductoState extends State<PaginaCategoriasProducto> {
             TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: context.colorPrimario),
-              onPressed: () async {
+              onPressed: guardandoCategoria
+                  ? null
+                  : () async {
                 if (!claveFormulario.currentState!.validate()) return;
+                setLocal(() => guardandoCategoria = true);
                 final prov = context.read<ProveedorCategoriasProducto>();
                 final ok = existente == null
                     ? await prov.crearCategoria(

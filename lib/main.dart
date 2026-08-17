@@ -56,13 +56,20 @@ Future<void> main() async {
     DeviceOrientation.portraitDown,
   ]);
 
-  runApp(const BarberApp());
+  // Se carga (y espera) ANTES de runApp para que el color/tema real ya
+  // esté listo desde el primer frame — evita el "flash" del tema por
+  // defecto mientras la config todavía se está pidiendo a la base.
+  final proveedorConfig = ProveedorConfig();
+  await proveedorConfig.cargar();
+
+  runApp(BarberApp(proveedorConfig: proveedorConfig));
 }
 
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 
 class BarberApp extends StatefulWidget {
-  const BarberApp({super.key});
+  final ProveedorConfig proveedorConfig;
+  const BarberApp({super.key, required this.proveedorConfig});
 
   @override
   State<BarberApp> createState() => _BarberAppState();
@@ -99,7 +106,7 @@ class _BarberAppState extends State<BarberApp> {
         ChangeNotifierProvider(create: (_) => ProveedorCarrito()),
         ChangeNotifierProvider(create: (_) => ProveedorPedido()),
         ChangeNotifierProvider(create: (_) => ProveedorGuardados()),
-        ChangeNotifierProvider(create: (_) => ProveedorConfig()..cargar()),
+        ChangeNotifierProvider.value(value: widget.proveedorConfig),
         ChangeNotifierProvider(create: (_) => ProveedorComision()),
         ChangeNotifierProvider(create: (_) => ProveedorNotificaciones()),
       ],
@@ -133,7 +140,7 @@ class PaginaSplash extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: kBackground,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

@@ -30,4 +30,4 @@ const kServicesBucket = 'services';
 const kProductsBucket = 'products';
 
 const kUrlLogoBarberia =
-    'https://nvqdxrcoobojrfiuamwn.supabase.co/storage/v1/object/public/services/shop-logo.png';
+    'https://mc-barber-api.62-238-60-24.sslip.io/storage/v1/object/public/services/shop-logo.png';

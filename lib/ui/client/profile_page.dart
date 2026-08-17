@@ -22,6 +22,7 @@ class _PaginaPerfilState extends State<PaginaPerfil> {
   final _ctrlBio = TextEditingController();
   bool _editando = false;
   bool _guardando = false;
+  bool _abriendoSelectorAvatar = false;
 
   @override
   void initState() {
@@ -43,6 +44,16 @@ class _PaginaPerfilState extends State<PaginaPerfil> {
   Future<void> _elegirAvatar() => _elegirAvatarGenerado();
 
   Future<void> _elegirAvatarGenerado() async {
+    if (_abriendoSelectorAvatar) return;
+    _abriendoSelectorAvatar = true;
+    try {
+      await _mostrarSelectorAvatar();
+    } finally {
+      if (mounted) _abriendoSelectorAvatar = false;
+    }
+  }
+
+  Future<void> _mostrarSelectorAvatar() async {
     final perfil = context.read<ProveedorAuth>().perfil;
     final base = perfil?.id ?? DateTime.now().millisecondsSinceEpoch.toString();
     final rand = Random();

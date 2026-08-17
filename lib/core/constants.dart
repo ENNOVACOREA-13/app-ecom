@@ -17,11 +17,12 @@ const kStripePublishableKey = String.fromEnvironment(
 
 // Control plane multi-tenant: resuelve a qué proyecto de Supabase pertenece
 // el dominio desde el que se sirve la app. Fijo en cada deploy (no cambia
-// por tenant) — ver tenant_resolver.dart. Reemplaza el defaultValue cuando
-// el servidor del control plane esté desplegado (ver repo control_plane).
+// por tenant) — ver tenant_resolver.dart. Servidor: Hetzner (repo separado
+// control_plane). Usa sslip.io (dominio gratis basado en la IP) mientras no
+// haya un dominio propio — reemplazar cuando se compre uno.
 const kControlPlaneUrl = String.fromEnvironment(
   'CONTROL_PLANE_URL',
-  defaultValue: 'https://control.TUDOMINIO.xyz',
+  defaultValue: 'https://62-238-55-196.sslip.io',
 );
 
 const kAvatarBucket = 'avatars';

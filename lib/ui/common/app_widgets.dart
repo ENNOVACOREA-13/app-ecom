@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/config_provider.dart';
@@ -129,15 +128,7 @@ class AvatarRed extends StatelessWidget {
 
   const AvatarRed({super.key, this.url, this.radio = 24, this.nombre});
 
-  @override
-  Widget build(BuildContext context) {
-    if (url != null && url!.isNotEmpty) {
-      return CircleAvatar(
-        radius: radio,
-        backgroundImage: CachedNetworkImageProvider(url!),
-        backgroundColor: kDivider,
-      );
-    }
+  Widget _inicial(BuildContext context) {
     return CircleAvatar(
       radius: radio,
       backgroundColor: context.colorPrimario.withOpacity(0.2),
@@ -147,6 +138,38 @@ class AvatarRed extends StatelessWidget {
           color: context.colorPrimario,
           fontSize: radio * 0.9,
           fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (url == null || url!.isEmpty) return _inicial(context);
+
+    // Image.network (no CachedNetworkImageProvider) para tener errorBuilder:
+    // si una carga falla una vez (blip de red), muestra la inicial en vez
+    // de quedarse en un círculo negro permanente sin reintentar nunca.
+    return ClipOval(
+      child: SizedBox(
+        width: radio * 2,
+        height: radio * 2,
+        child: Image.network(
+          url!,
+          fit: BoxFit.cover,
+          loadingBuilder: (context, child, progress) {
+            if (progress == null) return child;
+            return Container(
+              color: kDivider,
+              alignment: Alignment.center,
+              child: SizedBox(
+                width: radio * 0.7,
+                height: radio * 0.7,
+                child: const CircularProgressIndicator(strokeWidth: 2),
+              ),
+            );
+          },
+          errorBuilder: (context, error, stackTrace) => _inicial(context),
         ),
       ),
     );

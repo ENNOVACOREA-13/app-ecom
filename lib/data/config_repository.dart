@@ -82,6 +82,31 @@ class RepositorioConfig {
     }
   }
 
+  Future<bool> obtenerEditorVistasAdmin() async {
+    try {
+      final data = await _db
+          .from('app_config')
+          .select('editor_vistas_admin')
+          .single();
+      return data['editor_vistas_admin'] as bool? ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<bool> actualizarEditorVistasAdmin(bool habilitado) async {
+    try {
+      final res = await _db.from('app_config').upsert({
+        'id': true,
+        'editor_vistas_admin': habilitado,
+        'updated_at': DateTime.now().toUtc().toIso8601String(),
+      }).select();
+      return (res).isNotEmpty;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<({List<String> imagenes, String? texto, String alineacion, String? botonTexto, String? botonLink})>
       obtenerBannerConfig() async {
     try {

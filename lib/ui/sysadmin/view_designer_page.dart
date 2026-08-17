@@ -27,6 +27,21 @@ class PaginaDisenadorVista extends StatelessWidget {
     }
   }
 
+  Future<void> _toggleEditorVistasAdmin(BuildContext context, bool valor) async {
+    final cfg = context.read<ProveedorConfig>();
+    final exito = await cfg.actualizarEditorVistasAdmin(valor);
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(exito
+            ? (valor
+                ? 'Admin ahora puede editar la vista'
+                : 'Editor de vistas restringido de nuevo a sysadmin')
+            : 'Error al guardar el cambio'),
+        backgroundColor: exito ? Colors.green : Colors.red,
+      ));
+    }
+  }
+
   Future<Color?> _elegirColorPersonalizado(BuildContext context, Color actual) async {
     Color temporal = actual;
     return showDialog<Color>(
@@ -631,6 +646,7 @@ class PaginaDisenadorVista extends StatelessWidget {
   Widget build(BuildContext context) {
     final cfg = context.watch<ProveedorConfig>();
     final tiendaHabilitada = cfg.tiendaHabilitada;
+    final editorVistasAdmin = cfg.editorVistasAdmin;
 
     return Scaffold(
       backgroundColor: kBackground,
@@ -777,6 +793,46 @@ class PaginaDisenadorVista extends StatelessWidget {
                   ],
                 ),
               ),
+            const SizedBox(height: 12),
+            TarjetaSeccion(
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: context.colorPrimario.withOpacity(0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.dashboard_customize_outlined, color: context.colorPrimario),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Editor de vistas para admin',
+                            style: TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 14,
+                                color: Color(0xFF1C1C1E))),
+                        const SizedBox(height: 2),
+                        Text(
+                          editorVistasAdmin
+                              ? 'El rol admin también ve la pestaña "Vista"'
+                              : 'Solo sysadmin ve la pestaña "Vista" (como hasta ahora)',
+                          style: const TextStyle(fontSize: 11, color: Color(0xFF8E8E93)),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Switch(
+                    value: editorVistasAdmin,
+                    activeColor: context.colorPrimario,
+                    onChanged: (v) => _toggleEditorVistasAdmin(context, v),
+                  ),
+                ],
+              ),
+            ),
             const SizedBox(height: 24),
             const Text('Color de la aplicación',
                 style: TextStyle(

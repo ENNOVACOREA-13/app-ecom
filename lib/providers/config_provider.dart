@@ -14,6 +14,7 @@ class ProveedorConfig extends ChangeNotifier {
   String? _bannerBotonTexto;
   String? _bannerBotonLink;
   bool _tiendaHabilitada = true;
+  bool _editorVistasAdmin = false;
   String _categoriasTitulo = 'Categorías de Servicios';
   String _categoriasForma = 'circulo';
   double _categoriasIconoTamano = 22;
@@ -51,6 +52,7 @@ class ProveedorConfig extends ChangeNotifier {
   String? get bannerBotonTexto => _bannerBotonTexto;
   String? get bannerBotonLink => _bannerBotonLink;
   bool get tiendaHabilitada => _tiendaHabilitada;
+  bool get editorVistasAdmin => _editorVistasAdmin;
   String get categoriasTitulo => _categoriasTitulo;
   String get categoriasForma => _categoriasForma;
   double get categoriasIconoTamano => _categoriasIconoTamano;
@@ -119,6 +121,7 @@ class ProveedorConfig extends ChangeNotifier {
     final color = await _repo.obtenerColorPrimario();
     final banner = await _repo.obtenerBannerConfig();
     final tienda = await _repo.obtenerTiendaHabilitada();
+    final editorVistasAdmin = await _repo.obtenerEditorVistasAdmin();
     final categorias = await _repo.obtenerSeccionCategorias();
     final estilo = await _repo.obtenerEstiloApp();
     final productosTitulo = await _repo.obtenerTituloProductos();
@@ -132,6 +135,7 @@ class ProveedorConfig extends ChangeNotifier {
     _bannerBotonTexto = banner.botonTexto;
     _bannerBotonLink = banner.botonLink;
     _tiendaHabilitada = tienda;
+    _editorVistasAdmin = editorVistasAdmin;
     _categoriasTitulo = categorias.titulo;
     _categoriasForma = categorias.forma;
     _categoriasIconoTamano = categorias.tamanoIcono;
@@ -299,6 +303,15 @@ class ProveedorConfig extends ChangeNotifier {
     final exito = await _repo.actualizarTiendaHabilitada(habilitada);
     if (exito) {
       _tiendaHabilitada = habilitada;
+      notifyListeners();
+    }
+    return exito;
+  }
+
+  Future<bool> actualizarEditorVistasAdmin(bool habilitado) async {
+    final exito = await _repo.actualizarEditorVistasAdmin(habilitado);
+    if (exito) {
+      _editorVistasAdmin = habilitado;
       notifyListeners();
     }
     return exito;

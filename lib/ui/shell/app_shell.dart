@@ -94,6 +94,7 @@ class _CarcasaAppState extends State<CarcasaApp> with SingleTickerProviderStateM
   Widget build(BuildContext context) {
     final auth = context.watch<ProveedorAuth>();
     final tiendaHabilitada = context.watch<ProveedorConfig>().tiendaHabilitada;
+    final editorVistasAdmin = context.watch<ProveedorConfig>().editorVistasAdmin;
 
     // Esperando restaurar sesión
     if (auth.inicializando) {
@@ -115,7 +116,7 @@ class _CarcasaAppState extends State<CarcasaApp> with SingleTickerProviderStateM
       );
     }
 
-    final pestanas = _pestanasPorRol(perfil.rol, tiendaHabilitada);
+    final pestanas = _pestanasPorRol(perfil.rol, tiendaHabilitada, editorVistasAdmin);
     final indiceSafe = _indiceActual.clamp(0, pestanas.length - 1);
     final esAdmin =
         perfil.rol == RolUsuario.admin || perfil.rol == RolUsuario.superAdmin;
@@ -162,8 +163,8 @@ class _CarcasaAppState extends State<CarcasaApp> with SingleTickerProviderStateM
     final perfil = context.read<ProveedorAuth>().perfil;
     if (perfil == null) return;
     final reserva = context.read<ProveedorReserva>();
-    final tiendaHabilitada = context.read<ProveedorConfig>().tiendaHabilitada;
-    final tabs = _pestanasPorRol(rol, tiendaHabilitada);
+    final cfg = context.read<ProveedorConfig>();
+    final tabs = _pestanasPorRol(rol, cfg.tiendaHabilitada, cfg.editorVistasAdmin);
     if (indice >= tabs.length) return;
     final id = tabs[indice].id;
     ServicioActividad.instancia.registrarPantalla(tabs[indice].etiqueta);
@@ -190,7 +191,8 @@ class _CarcasaAppState extends State<CarcasaApp> with SingleTickerProviderStateM
     }
   }
 
-  List<_Pestana> _pestanasPorRol(RolUsuario role, bool tiendaHabilitada) {
+  List<_Pestana> _pestanasPorRol(
+      RolUsuario role, bool tiendaHabilitada, bool editorVistasAdmin) {
     switch (role) {
       case RolUsuario.sysadmin:
         return [
@@ -221,6 +223,10 @@ class _CarcasaAppState extends State<CarcasaApp> with SingleTickerProviderStateM
                 imagen: 'IMG/PEDIDOS.png', id: 'admin_pedidos'),
           _Pestana(Icons.inventory_2_outlined, 'Insumos', const PaginaInsumos(),
               imagen: 'IMG/INSUMOS.png', id: 'admin_insumos'),
+          if (editorVistasAdmin)
+            _Pestana(Icons.dashboard_customize_outlined, 'Vista',
+                const PaginaDisenadorVista(),
+                imagen: 'IMG/CONFIGURACION.png', id: 'admin_vista'),
           _Pestana(Icons.settings_outlined, 'Config', const PaginaConfigAdmin(),
               imagen: 'IMG/CONFIGURACION.png', id: 'admin_config'),
         ];

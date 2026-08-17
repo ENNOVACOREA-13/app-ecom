@@ -496,18 +496,18 @@ class _PaginaInicioState extends State<PaginaInicio> {
                       children: [
                         Text(
                           'Hola, $nombre 👋',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 26,
                             fontWeight: FontWeight.w800,
-                            color: Color(0xFF1C1C1E),
+                            color: kColorSobreFondo,
                             letterSpacing: -0.5,
                           ),
                         ),
                         const SizedBox(height: 2),
-                        const Text(
+                        Text(
                           'Encuentra tu próximo servicio',
                           style: TextStyle(
-                              color: Color(0xFF6E6E73), fontSize: 14),
+                              color: kColorSobreFondo.withOpacity(0.7), fontSize: 14),
                         ),
                       ],
                     ),

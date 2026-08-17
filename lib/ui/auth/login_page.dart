@@ -180,15 +180,14 @@ class _PaginaLoginState extends State<PaginaLogin> {
                 etiqueta: 'Continuar con Google',
                 colorBorde: const Color(0xFFD1D1D6),
               ),
-              const SizedBox(height: 12),
-
-              // ── Botón Facebook ──────────────────────────────
-              _BotonSocial(
-                onPressed: () => context.read<ProveedorAuth>().iniciarSesionConFacebook(),
-                logo: _LogoFacebook(),
-                etiqueta: 'Continuar con Facebook',
-                colorBorde: const Color(0xFF1877F2),
-              ),
+              // ── Botón Facebook (deshabilitado temporalmente: OAuth de
+              // Facebook aún no está configurado en el backend) ─────────
+              // _BotonSocial(
+              //   onPressed: () => context.read<ProveedorAuth>().iniciarSesionConFacebook(),
+              //   logo: _LogoFacebook(),
+              //   etiqueta: 'Continuar con Facebook',
+              //   colorBorde: const Color(0xFF1877F2),
+              // ),
 
               const SizedBox(height: 24),
               Row(

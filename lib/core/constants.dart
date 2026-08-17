@@ -2,11 +2,12 @@
 // (Vercel los inyecta desde las Environment Variables del proyecto).
 const kSupabaseUrl = String.fromEnvironment(
   'SUPABASE_URL',
-  defaultValue: 'https://nvqdxrcoobojrfiuamwn.supabase.co',
+  defaultValue: 'https://mc-barber-api.62-238-60-24.sslip.io',
 );
 const kSupabaseAnonKey = String.fromEnvironment(
   'SUPABASE_ANON_KEY',
-  defaultValue: 'sb_publishable_WNKT_g8mC8Lnj5dsQlKaeg_AluHO4EM',
+  defaultValue:
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzg2OTM5ODQ0LCJleHAiOjE5NDQ2MTk4NDR9.gOi4Bo-JscXeQNUBAVOLZOa7umrNilrkXbqL_RWdsvw',
 );
 
 // Stripe — reemplaza con tu clave publicable de https://dashboard.stripe.com/apikeys

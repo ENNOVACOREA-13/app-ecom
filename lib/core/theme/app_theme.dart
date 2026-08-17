@@ -96,13 +96,22 @@ const kNeumorphicShadowsInset = [
   BoxShadow(color: Color(0x40000000), blurRadius: 4, offset: Offset(2, 2), spreadRadius: -1),
 ];
 
+/// Color de texto/íconos legible sobre [kBackground] — negro si el fondo es
+/// claro, blanco si es oscuro. Se recalcula cada vez que `kBackground`
+/// cambia (ver main.dart), así que el AppBar (título, flecha de regreso)
+/// siempre contrasta con el color secundario que haya elegido el sysadmin.
+Color get kColorSobreFondo =>
+    kBackground.computeLuminance() > 0.5 ? const Color(0xFF1C1C1E) : Colors.white;
+
 // ── Tema dinámico — recibe el color primario y el estilo como parámetros ─────
 ThemeData crearTema(
   Color primario, {
   String fontFamily = 'Poppins',
   double radioContenedor = 16,
   double sombraContenedor = 1,
-}) => ThemeData(
+}) {
+  final colorSobreFondo = kColorSobreFondo;
+  return ThemeData(
   useMaterial3: true,
   brightness: Brightness.dark,
   scaffoldBackgroundColor: kBackground,
@@ -116,20 +125,22 @@ ThemeData crearTema(
   ),
   appBarTheme: AppBarTheme(
     backgroundColor: kBackground,
-    foregroundColor: const Color(0xFF1C1C1E),
+    foregroundColor: colorSobreFondo,
     elevation: 0,
     centerTitle: true,
-    systemOverlayStyle: SystemUiOverlayStyle.dark,
+    systemOverlayStyle: colorSobreFondo == Colors.white
+        ? SystemUiOverlayStyle.light
+        : SystemUiOverlayStyle.dark,
     titleTextStyle: GoogleFonts.getFont(
       fontFamily,
-      textStyle: const TextStyle(
-        color: Color(0xFF1C1C1E),
+      textStyle: TextStyle(
+        color: colorSobreFondo,
         fontSize: 22,
         fontWeight: FontWeight.w700,
         letterSpacing: -0.3,
       ),
     ),
-    iconTheme: const IconThemeData(color: Color(0xFF1C1C1E)),
+    iconTheme: IconThemeData(color: colorSobreFondo),
   ),
   navigationBarTheme: NavigationBarThemeData(
     backgroundColor: kCard,
@@ -242,7 +253,8 @@ ThemeData crearTema(
     foregroundColor: Colors.white,
     elevation: 6,
   ),
-);
+  );
+}
 
 // ── Tema por defecto (con kPrimary) ──────────────────────────────────────────
 final temaApp = crearTema(kPrimary);

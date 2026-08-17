@@ -8,6 +8,7 @@ import '../../core/constants.dart';
 import '../../core/theme/app_theme.dart';
 import '../common/app_widgets.dart';
 import 'tickets_page.dart';
+import 'loyalty_page.dart';
 
 class PaginaPerfil extends StatefulWidget {
   const PaginaPerfil({super.key});
@@ -266,6 +267,15 @@ class _PaginaPerfilState extends State<PaginaPerfil> {
                 subtitulo: 'Historial de tus citas pagadas',
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const PaginaTickets()),
+                ),
+              ),
+              const SizedBox(height: 12),
+              FilaOpcion(
+                icono: Icons.card_giftcard_outlined,
+                titulo: 'Programa de lealtad',
+                subtitulo: 'Acumula y consulta tus puntos',
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const PaginaLealtad()),
                 ),
               ),
               const SizedBox(height: 16),

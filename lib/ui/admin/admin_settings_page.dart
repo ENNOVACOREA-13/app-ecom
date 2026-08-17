@@ -9,6 +9,7 @@ import 'manage_services_page.dart';
 import 'manage_employees_page.dart';
 import 'manage_products_page.dart';
 import 'commission_config_page.dart';
+import 'loyalty_config_page.dart';
 import '../products/products_page.dart';
 
 class PaginaConfigAdmin extends StatelessWidget {
@@ -91,6 +92,15 @@ class PaginaConfigAdmin extends StatelessWidget {
             subtitulo: 'Configurar comisiones por servicio',
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const PaginaConfigComisiones()),
+            ),
+          ),
+          const SizedBox(height: 12),
+          FilaOpcion(
+            icono: Icons.card_giftcard_outlined,
+            titulo: 'Programa de lealtad',
+            subtitulo: 'Configurar cómo se ganan y valen los puntos',
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const PaginaConfigLealtad()),
             ),
           ),
           const SizedBox(height: 24),

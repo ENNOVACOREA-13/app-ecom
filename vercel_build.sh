@@ -16,4 +16,10 @@ DEFINES=()
 [ -n "$SUPABASE_ANON_KEY" ] && DEFINES+=(--dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY")
 [ -n "$STRIPE_PUBLISHABLE_KEY" ] && DEFINES+=(--dart-define=STRIPE_PUBLISHABLE_KEY="$STRIPE_PUBLISHABLE_KEY")
 
-flutter build web --release "${DEFINES[@]}"
+
+# --pwa-strategy=none: sin service worker cacheando el shell de la app.
+# Esta app siempre necesita red (reservas, pagos, etc.), así que no hay
+# beneficio real de soporte offline, y sí el costo de que los usuarios se
+# queden atorados en una versión vieja hasta que el service worker decida
+# actualizarse solo. Con esto, cada carga trae siempre el build más reciente.
+flutter build web --release --pwa-strategy=none "${DEFINES[@]}"

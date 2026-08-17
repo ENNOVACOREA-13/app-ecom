@@ -62,7 +62,7 @@ class _PaginaPerfilState extends State<PaginaPerfil> {
       ...List.generate(
         6,
         (_) =>
-            'https://api.dicebear.com/10.x/adventurer-neutral/png?seed=$base-${rand.nextInt(999999)}&size=128',
+            '$kSupabaseUrlActivo/functions/v1/avatar-proxy?seed=$base-${rand.nextInt(999999)}&size=128',
       ),
     ];
 

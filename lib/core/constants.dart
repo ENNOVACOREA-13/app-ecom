@@ -26,6 +26,12 @@ const kControlPlaneUrl = String.fromEnvironment(
   defaultValue: 'https://62-238-55-196.sslip.io',
 );
 
+/// URL real del backend en uso (puede ser distinta a [kSupabaseUrl] si el
+/// control plane resolvió otro tenant). La fija `main.dart` justo antes de
+/// `Supabase.initialize` — úsala para armar URLs de Edge Functions en vez
+/// de asumir que siempre es el proyecto plantilla.
+String kSupabaseUrlActivo = kSupabaseUrl;
+
 const kAvatarBucket = 'avatars';
 const kServicesBucket = 'services';
 const kProductsBucket = 'products';

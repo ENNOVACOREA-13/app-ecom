@@ -36,6 +36,8 @@ Future<void> main() async {
     return;
   }
 
+  kSupabaseUrlActivo = tenant.supabaseUrl;
+
   await Supabase.initialize(
     url: tenant.supabaseUrl,
     anonKey: tenant.supabaseAnonKey,

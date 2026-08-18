@@ -28,7 +28,9 @@ String parsearErrorAuth(String e) {
 }
 
 class ProveedorAuth extends ChangeNotifier {
-  final _repo = RepositorioAuth();
+  ProveedorAuth({RepositorioAuth? repo}) : _repo = repo ?? RepositorioAuth();
+
+  final RepositorioAuth _repo;
   StreamSubscription<AuthState>? _authSub;
 
   Perfil? _perfil;

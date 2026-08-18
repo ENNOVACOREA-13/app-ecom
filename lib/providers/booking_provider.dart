@@ -19,9 +19,11 @@ String mapearErrorReserva(String e) {
 }
 
 class ProveedorReserva extends ChangeNotifier {
+  ProveedorReserva({RepositorioReserva? repo}) : _repo = repo ?? RepositorioReserva();
+
   static const _tamanoPaginaAdmin = 100;
 
-  final _repo = RepositorioReserva();
+  final RepositorioReserva _repo;
 
   // Flujo de creación de reserva
   List<ModeloServicio> _serviciosSeleccionados = [];

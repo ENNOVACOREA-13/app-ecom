@@ -18,9 +18,11 @@ String mapearErrorPedido(String e) {
 }
 
 class ProveedorPedido extends ChangeNotifier {
+  ProveedorPedido({RepositorioPedido? repo}) : _repo = repo ?? RepositorioPedido();
+
   static const _tamanoPagina = 100;
 
-  final _repo = RepositorioPedido();
+  final RepositorioPedido _repo;
   List<Pedido> _pedidos = [];
   bool _cargando = false;
   bool _cargandoMas = false;

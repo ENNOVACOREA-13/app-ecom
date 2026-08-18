@@ -12,11 +12,6 @@ import '../../providers/config_provider.dart';
 import '../../core/constants.dart';
 import '../../core/theme/app_theme.dart';
 import '../common/app_widgets.dart';
-import '../admin/manage_services_page.dart';
-import '../admin/manage_employees_page.dart';
-import '../admin/manage_products_page.dart';
-import '../admin/commission_config_page.dart';
-import '../products/products_page.dart';
 import '../client/profile_page.dart';
 
 class PaginaTableroAdmin extends StatefulWidget {
@@ -75,97 +70,6 @@ class PaginaTableroAdminState extends State<PaginaTableroAdmin> {
     } catch (_) {
       setState(() => _cargando = false);
     }
-  }
-
-  void _mostrarConfiguracion(BuildContext context) {
-    final tiendaHabilitada = context.read<ProveedorConfig>().tiendaHabilitada;
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40, height: 4,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF8E8E93).withOpacity(0.4),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Text('Configuración',
-                  style: TextStyle(color: Color(0xFF1C1C1E), fontSize: 17, fontWeight: FontWeight.w700)),
-              const SizedBox(height: 16),
-              _OpcionConfig(
-                icono: Icons.design_services_outlined,
-                titulo: 'Servicios',
-                subtitulo: 'Gestionar servicios del negocio',
-                onTap: () {
-                  Navigator.pop(ctx);
-                  Navigator.of(context).push(MaterialPageRoute(
-                      builder: (_) => const PaginaGestionServicios()));
-                },
-              ),
-              const SizedBox(height: 10),
-              _OpcionConfig(
-                icono: Icons.people_outline,
-                titulo: 'Perfiles',
-                subtitulo: 'Empleados y clientes registrados',
-                onTap: () {
-                  Navigator.pop(ctx);
-                  Navigator.of(context).push(MaterialPageRoute(
-                      builder: (_) => const PaginaGestionEmpleados()));
-                },
-              ),
-              if (tiendaHabilitada) ...[
-                const SizedBox(height: 10),
-                _OpcionConfig(
-                  icono: Icons.inventory_2_outlined,
-                  titulo: 'Inventario',
-                  subtitulo: 'Agregar, editar y eliminar productos',
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    Navigator.of(context).push(MaterialPageRoute(
-                        builder: (_) => const PaginaInventario()));
-                  },
-                ),
-                const SizedBox(height: 10),
-                _OpcionConfig(
-                  icono: Icons.storefront_outlined,
-                  titulo: 'Inspeccionar Tienda',
-                  subtitulo: 'Ver la tienda como la ven los clientes',
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    Navigator.of(context).push(MaterialPageRoute(
-                        builder: (_) => const PaginaProductos()));
-                  },
-                ),
-              ],
-              const SizedBox(height: 10),
-              _OpcionConfig(
-                icono: Icons.percent_rounded,
-                titulo: 'Comisiones',
-                subtitulo: 'Configurar comisiones por servicio',
-                onTap: () {
-                  Navigator.pop(ctx);
-                  Navigator.of(context).push(MaterialPageRoute(
-                      builder: (_) => const PaginaConfigComisiones()));
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 
   @override
@@ -847,62 +751,6 @@ class _FilaServicio extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-// ── Opción dentro del bottom sheet de configuración ─────────────
-class _OpcionConfig extends StatelessWidget {
-  final IconData icono;
-  final String titulo;
-  final String subtitulo;
-  final VoidCallback onTap;
-
-  const _OpcionConfig({
-    required this.icono,
-    required this.titulo,
-    required this.subtitulo,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF2F2F7),
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: context.colorPrimario.withOpacity(0.12),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icono, color: context.colorPrimario, size: 18),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(titulo,
-                      style: const TextStyle(
-                          color: Color(0xFF1C1C1E), fontWeight: FontWeight.w600, fontSize: 13)),
-                  Text(subtitulo,
-                      style: const TextStyle(color: Color(0xFF8E8E93), fontSize: 11)),
-                ],
-              ),
-            ),
-            const Icon(Icons.arrow_forward_ios_rounded, size: 13, color: Color(0xFF8E8E93)),
-          ],
-        ),
       ),
     );
   }

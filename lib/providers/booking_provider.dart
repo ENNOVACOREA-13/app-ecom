@@ -207,11 +207,6 @@ class ProveedorReserva extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Guarda el último idCliente/idEmpleado para recargar tras cambios
-  String? _ultimoIdCliente;
-  String? _ultimoIdEmpleado;
-  bool _esVistaAdmin = false;
-
   Future<void> cancelarReserva(String idReserva, String canceladoPor, {String? motivo}) async {
     await _repo.cancelarReserva(idReserva, canceladoPor, motivo);
     // Actualización local optimista

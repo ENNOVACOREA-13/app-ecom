@@ -24,11 +24,7 @@ Future<List<Map<String, dynamic>>> sbSelect(
 
   final res = await sb.from(table).select(sel).match(filtros);
   // Supabase 2.x devuelve List<Map<String, dynamic>>
-  if (res is List) {
-    return res.map((e) => Map<String, dynamic>.from(e as Map)).toList();
-  }
-  // Fallback defensivo
-  return const <Map<String, dynamic>>[];
+  return res.map((e) => Map<String, dynamic>.from(e as Map)).toList();
 }
 
 /// SELECT único

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/booking_provider.dart';
-import '../../providers/cart_provider.dart';
 import '../../providers/saved_provider.dart';
 import '../../providers/config_provider.dart';
 import '../../providers/notification_provider.dart';
@@ -21,7 +20,6 @@ import '../employee/employee_bookings_page.dart';
 // Admin
 import '../admin/admin_dashboard_page.dart';
 import '../admin/all_bookings_page.dart';
-import '../admin/manage_employees_page.dart';
 import '../admin/admin_orders_page.dart';
 import '../admin/admin_settings_page.dart';
 import '../admin/insumos_page.dart';
@@ -129,8 +127,6 @@ class _CarcasaAppState extends State<CarcasaApp> with SingleTickerProviderStateM
 
     final pestanas = _pestanasPorRol(perfil.rol, tiendaHabilitada, editorVistasAdmin);
     final indiceSafe = _indiceActual.clamp(0, pestanas.length - 1);
-    final esAdmin =
-        perfil.rol == RolUsuario.admin || perfil.rol == RolUsuario.superAdmin;
     final esEscritorio = MediaQuery.of(context).size.width >= kAnchoEscritorio;
 
     void alSeleccionar(int i) {

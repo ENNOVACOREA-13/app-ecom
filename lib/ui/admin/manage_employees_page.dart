@@ -16,14 +16,13 @@ class _DiaHorario {
   final String etiqueta; // 'Lunes', 'Martes', etc.
   TimeOfDay inicio;
   TimeOfDay fin;
-  bool activo;
+  bool activo = true;
 
   _DiaHorario({
     required this.clave,
     required this.etiqueta,
     required this.inicio,
     required this.fin,
-    this.activo = true,
   });
 }
 

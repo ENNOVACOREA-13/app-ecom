@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import '../../domain/enums/user_role.dart';
 import '../../domain/models/service_model.dart' show ModeloServicio;
 import '../../providers/auth_provider.dart';
 import '../../providers/product_provider.dart';
@@ -17,7 +16,6 @@ import '../../data/ftp_upload_service.dart';
 import '../auth/guest_wall_page.dart';
 import '../common/app_widgets.dart';
 import '../cart/cart_page.dart';
-import '../saved/saved_page.dart';
 import 'product_detail_page.dart';
 
 class PaginaProductos extends StatefulWidget {
@@ -973,37 +971,6 @@ class _ChipServicio extends StatelessWidget {
   }
 }
 
-// ── Chip de categoría ────────────────────────────────────────
-class _ChipCategoria extends StatelessWidget {
-  final IconData icono;
-  final String etiqueta;
-  const _ChipCategoria({required this.icono, required this.etiqueta});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            color: context.colorPrimario.withOpacity(0.12),
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: Icon(icono, color: context.colorPrimario, size: 22),
-        ),
-        const SizedBox(height: 6),
-        Text(etiqueta,
-            style: const TextStyle(
-                fontSize: 11,
-                color: Color(0xFF6E6E73),
-                fontWeight: FontWeight.w500)),
-      ],
-    );
-  }
-}
-
 // ── Campo de diálogo ─────────────────────────────────────────
 class _CampoDialogo extends StatelessWidget {
   final TextEditingController controlador;
@@ -1271,57 +1238,6 @@ class _TarjetaProducto extends StatelessWidget {
           child: Icon(Icons.inventory_2_outlined, size: 28, color: kTextMuted),
         ),
       );
-}
-
-// ── Ícono guardados ───────────────────────────────────────────
-class _IconoGuardados extends StatelessWidget {
-  const _IconoGuardados();
-
-  @override
-  Widget build(BuildContext context) {
-    final guardados = context.watch<ProveedorGuardados>();
-    return GestureDetector(
-      onTap: () => Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => const PaginaGuardados()),
-      ),
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-              boxShadow: kNeumorphicShadowsSmall,
-            ),
-            child: const Icon(Icons.favorite_border_rounded, size: 20, color: Color(0xFF6E6E73)),
-          ),
-          if (guardados.guardados.isNotEmpty)
-            Positioned(
-              top: -2,
-              right: -2,
-              child: Container(
-                width: 16,
-                height: 16,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFFF3B30),
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: Text(
-                    '${guardados.guardados.length}',
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 9,
-                        fontWeight: FontWeight.w800),
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
 }
 
 // ── Botón de tarjeta producto ─────────────────────────────────

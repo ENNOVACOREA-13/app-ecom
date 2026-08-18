@@ -104,10 +104,14 @@ class _FilaNotificacion extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: notificacion.leida ? Colors.white : context.colorPrimario.withOpacity(0.06),
+          color: notificacion.leida
+              ? kColorSobreFondo.withOpacity(0.05)
+              : context.colorPrimario.withOpacity(0.1),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: notificacion.leida ? const Color(0xFFE5E5EA) : context.colorPrimario.withOpacity(0.3),
+            color: notificacion.leida
+                ? kColorSobreFondo.withOpacity(0.12)
+                : context.colorPrimario.withOpacity(0.35),
           ),
         ),
         child: Row(
@@ -127,16 +131,16 @@ class _FilaNotificacion extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(notificacion.titulo,
-                      style: const TextStyle(
-                          color: Color(0xFF1C1C1E),
+                      style: TextStyle(
+                          color: kColorSobreFondo,
                           fontWeight: FontWeight.w700,
                           fontSize: 13)),
                   const SizedBox(height: 2),
                   Text(notificacion.cuerpo,
-                      style: const TextStyle(color: Color(0xFF6E6E73), fontSize: 12)),
+                      style: TextStyle(color: kColorSobreFondo.withOpacity(0.7), fontSize: 12)),
                   const SizedBox(height: 4),
                   Text(fmt.format(notificacion.creadaEn),
-                      style: const TextStyle(color: Color(0xFFAEAEB2), fontSize: 10)),
+                      style: TextStyle(color: kColorSobreFondo.withOpacity(0.5), fontSize: 10)),
                 ],
               ),
             ),

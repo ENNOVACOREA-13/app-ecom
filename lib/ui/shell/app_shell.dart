@@ -62,6 +62,7 @@ class _CarcasaAppState extends State<CarcasaApp> with SingleTickerProviderStateM
   final _keyDashboardEmpleado = GlobalKey<PaginaTableroEmpleadoState>();
   final _keyConfigSysadmin = GlobalKey<PaginaConfigSysadminState>();
   late final AnimationController _fadeController;
+  String? _perfilIniciadoId;
 
   @override
   void initState() {
@@ -70,12 +71,21 @@ class _CarcasaAppState extends State<CarcasaApp> with SingleTickerProviderStateM
       vsync: this,
       duration: const Duration(milliseconds: 220),
     )..forward();
+  }
+
+  // Se llama desde build() en cada rebuild (no solo initState): el perfil
+  // suele seguir cargando (async) en el primer frame, así que un solo intento
+  // en initState se lo perdía casi siempre — favoritos y notificaciones
+  // nunca se inicializaban en una sesión ya iniciada al abrir la app.
+  // iniciar()/cargar() ya son idempotentes por id, así que es seguro llamarlos
+  // de más; solo hace falta disparar el efecto una vez que el perfil cambia.
+  void _iniciarProveedoresDependientesDePerfil(String? perfilId) {
+    if (perfilId == null || perfilId == _perfilIniciadoId) return;
+    _perfilIniciadoId = perfilId;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final perfil = context.read<ProveedorAuth>().perfil;
-      if (perfil != null) {
-        context.read<ProveedorGuardados>().cargar(perfil.id);
-        context.read<ProveedorNotificaciones>().iniciar(perfil.id);
-      }
+      if (!mounted) return;
+      context.read<ProveedorGuardados>().cargar(perfilId);
+      context.read<ProveedorNotificaciones>().iniciar(perfilId);
     });
   }
 
@@ -105,6 +115,7 @@ class _CarcasaAppState extends State<CarcasaApp> with SingleTickerProviderStateM
     }
 
     final perfil = auth.perfil;
+    _iniciarProveedoresDependientesDePerfil(perfil?.id);
 
     // Modo invitado: mostrar tienda sin login
     if (perfil == null) {

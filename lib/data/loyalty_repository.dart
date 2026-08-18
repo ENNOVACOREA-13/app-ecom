@@ -1,6 +1,12 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../domain/models/loyalty.dart';
 
+/// Suma los puntos de una lista de movimientos. Cada movimiento cuenta una
+/// sola vez — el saldo nunca debe depender de que la lista venga sin
+/// duplicados ni de un orden particular.
+double sumaSaldo(List<MovimientoLealtad> movimientos) =>
+    movimientos.fold<double>(0.0, (total, m) => total + m.puntos);
+
 class RepositorioLealtad {
   final _client = Supabase.instance.client;
 
@@ -24,7 +30,7 @@ class RepositorioLealtad {
 
   Future<double> obtenerSaldo(String idPerfil) async {
     final movimientos = await obtenerMovimientos(idPerfil);
-    return movimientos.fold<double>(0.0, (total, m) => total + m.puntos);
+    return sumaSaldo(movimientos);
   }
 
   Future<void> ajustarPuntos({

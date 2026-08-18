@@ -2,9 +2,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../domain/models/booking.dart';
 import '../domain/models/slot.dart';
 import '../domain/enums/booking_status.dart';
+import '../utils/date_utils.dart';
 
 class RepositorioReserva {
-  final _client = Supabase.instance.client;
+  SupabaseClient get _client => Supabase.instance.client;
 
   /// Obtener slots disponibles llamando a la función RPC de Supabase
   Future<List<Turno>> obtenerTurnosDisponibles({
@@ -12,14 +13,10 @@ class RepositorioReserva {
     required DateTime fecha,
     required int duracionMin,
   }) async {
-    final hoy = DateTime.now();
-    final soloHoy = DateTime(hoy.year, hoy.month, hoy.day);
-    final soloFecha = DateTime(fecha.year, fecha.month, fecha.day);
-    if (soloFecha.isBefore(soloHoy)) {
+    if (esFechaPasada(fecha)) {
       throw Exception('DATE_IN_PAST');
     }
-    final fechaTexto =
-        '${fecha.year}-${fecha.month.toString().padLeft(2, '0')}-${fecha.day.toString().padLeft(2, '0')}';
+    final fechaTexto = formatearFechaISO(fecha);
     final resultado = await _client.rpc('get_available_slots', params: {
       'p_employee_id': idEmpleado,
       'p_date': fechaTexto,
@@ -40,14 +37,10 @@ class RepositorioReserva {
     String? notas,
     List<String> idsExtras = const [],
   }) async {
-    final hoy = DateTime.now();
-    final soloHoy = DateTime(hoy.year, hoy.month, hoy.day);
-    final soloFecha = DateTime(fecha.year, fecha.month, fecha.day);
-    if (soloFecha.isBefore(soloHoy)) {
+    if (esFechaPasada(fecha)) {
       throw Exception('DATE_IN_PAST');
     }
-    final fechaTexto =
-        '${fecha.year}-${fecha.month.toString().padLeft(2, '0')}-${fecha.day.toString().padLeft(2, '0')}';
+    final fechaTexto = formatearFechaISO(fecha);
     final resultado = await _client.rpc('crear_reserva', params: {
       'p_employee_id': idEmpleado,
       'p_service_id': idServicio,
@@ -179,9 +172,7 @@ class RepositorioReserva {
 
   /// Reservas de hoy (realtime para admins)
   Future<List<Reserva>> obtenerReservasDeHoy() async {
-    final hoy = DateTime.now();
-    final fechaTexto =
-        '${hoy.year}-${hoy.month.toString().padLeft(2, '0')}-${hoy.day.toString().padLeft(2, '0')}';
+    final fechaTexto = formatearFechaISO(DateTime.now());
     final datos = await _client
         .from('bookings_detailed')
         .select()

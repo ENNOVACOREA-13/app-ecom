@@ -15,7 +15,7 @@ typedef ConfigTenant = ({
   String? status,
 });
 
-const _fallback = (
+const fallbackTenant = (
   supabaseUrl: kSupabaseUrl,
   supabaseAnonKey: kSupabaseAnonKey,
   slug: null,
@@ -23,16 +23,44 @@ const _fallback = (
   status: null,
 );
 
+/// true si [host] no sirve para buscar un tenant (vacío o localhost) — en
+/// ese caso hay que usar el proyecto plantilla sin llamar al control plane.
+bool esHostLocalOVacio(String host) =>
+    host.isEmpty || host == 'localhost' || host == '127.0.0.1';
+
+/// Interpreta las filas ya decodificadas de `resolve_tenant_by_domain`.
+/// Cae al fallback si no hay match o si la fila no trae credenciales
+/// completas de Supabase — nunca deja a la app apuntando a un proyecto a
+/// medio configurar.
+ConfigTenant parsearFilasTenant(List<dynamic> filas) {
+  if (filas.isEmpty) return fallbackTenant;
+
+  final fila = filas.first as Map<String, dynamic>;
+  final url = fila['supabase_url'] as String?;
+  final anonKey = fila['supabase_anon_key'] as String?;
+  if (url == null || url.isEmpty || anonKey == null || anonKey.isEmpty) {
+    return fallbackTenant;
+  }
+
+  return (
+    supabaseUrl: url,
+    supabaseAnonKey: anonKey,
+    slug: fila['slug'] as String?,
+    businessName: fila['business_name'] as String?,
+    status: fila['status'] as String?,
+  );
+}
+
 /// Resuelve a qué proyecto de Supabase pertenece el dominio actual,
 /// consultando el control plane. Nunca bloquea el arranque: ante localhost,
 /// falta de match, timeout o cualquier error, regresa el fallback (el
 /// proyecto plantilla actual) en vez de lanzar una excepción.
 Future<ConfigTenant> resolverTenant() async {
-  if (!kIsWeb) return _fallback;
+  if (!kIsWeb) return fallbackTenant;
 
   final host = Uri.base.host;
-  if (host.isEmpty || host == 'localhost' || host == '127.0.0.1') {
-    return _fallback;
+  if (esHostLocalOVacio(host)) {
+    return fallbackTenant;
   }
 
   try {
@@ -48,31 +76,16 @@ Future<ConfigTenant> resolverTenant() async {
       if (kDebugMode) {
         debugPrint('[tenant_resolver] status ${respuesta.statusCode} para "$host", uso fallback');
       }
-      return _fallback;
+      return fallbackTenant;
     }
 
     final filas = jsonDecode(respuesta.body) as List;
-    if (filas.isEmpty) {
-      if (kDebugMode) debugPrint('[tenant_resolver] sin match para "$host", uso fallback');
-      return _fallback;
+    if (filas.isEmpty && kDebugMode) {
+      debugPrint('[tenant_resolver] sin match para "$host", uso fallback');
     }
-
-    final fila = filas.first as Map<String, dynamic>;
-    final url = fila['supabase_url'] as String?;
-    final anonKey = fila['supabase_anon_key'] as String?;
-    if (url == null || url.isEmpty || anonKey == null || anonKey.isEmpty) {
-      return _fallback;
-    }
-
-    return (
-      supabaseUrl: url,
-      supabaseAnonKey: anonKey,
-      slug: fila['slug'] as String?,
-      businessName: fila['business_name'] as String?,
-      status: fila['status'] as String?,
-    );
+    return parsearFilasTenant(filas);
   } catch (e) {
     if (kDebugMode) debugPrint('[tenant_resolver] error al resolver "$host": $e — uso fallback');
-    return _fallback;
+    return fallbackTenant;
   }
 }

@@ -1,5 +1,32 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../domain/models/commission_model.dart';
+import '../utils/date_utils.dart';
+
+/// Agrupa filas crudas de `commission_entries` por empleado, sumando monto y
+/// conteo, y ordena de mayor a menor total. Filas sin `employee_id` o
+/// `commission_amount` válidos se ignoran en vez de reventar el resumen.
+List<Map<String, dynamic>> agruparComisionesPorEmpleado(
+    List<dynamic> filas) {
+  final mapa = <String, Map<String, dynamic>>{};
+  for (final e in filas) {
+    final empId = e['employee_id'] as String?;
+    final monto = (e['commission_amount'] as num?)?.toDouble();
+    if (empId == null || monto == null) continue;
+    final nombre = (e['profiles'] as Map?)?['full_name'] as String?;
+    final entrada = mapa.putIfAbsent(
+        empId,
+        () => {
+              'employee_id': empId,
+              'full_name': nombre,
+              'total': 0.0,
+              'count': 0,
+            });
+    entrada['total'] = (entrada['total'] as double) + monto;
+    entrada['count'] = (entrada['count'] as int) + 1;
+  }
+  return mapa.values.toList()
+    ..sort((a, b) => (b['total'] as double).compareTo(a['total'] as double));
+}
 
 class RepositorioComision {
   final _client = Supabase.instance.client;
@@ -29,10 +56,8 @@ class RepositorioComision {
   // ── Ajustes de cierre semanal ─────────────────────────────────
 
   Future<AjustesComision?> obtenerAjustes() async {
-    final dato = await _client
-        .from('commission_settings')
-        .select()
-        .maybeSingle();
+    final dato =
+        await _client.from('commission_settings').select().maybeSingle();
     if (dato == null) return null;
     return AjustesComision.fromMap(dato);
   }
@@ -53,8 +78,8 @@ class RepositorioComision {
 
   // ── Entradas de comisión (empleado) ──────────────────────────
 
-  Future<List<EntradaComision>> obtenerEntradasEmpleado(
-      String empleadoId, {DateTime? desde, DateTime? hasta}) async {
+  Future<List<EntradaComision>> obtenerEntradasEmpleado(String empleadoId,
+      {DateTime? desde, DateTime? hasta}) async {
     var query = _client
         .from('commission_entries')
         .select()
@@ -70,10 +95,9 @@ class RepositorioComision {
   }
 
   /// Entradas de la semana actual (sin corte asignado) para un empleado
-  Future<List<EntradaComision>> obtenerEntradaSemanaActual(String empleadoId) async {
-    final ahora = DateTime.now();
-    final diasDesdeLunes = ahora.weekday - 1; // Monday=0
-    final inicioSemana = DateTime(ahora.year, ahora.month, ahora.day - diasDesdeLunes);
+  Future<List<EntradaComision>> obtenerEntradaSemanaActual(
+      String empleadoId) async {
+    final inicioSemana = inicioDeSemana(DateTime.now());
     final datos = await _client
         .from('commission_entries')
         .select()
@@ -119,8 +143,10 @@ class RepositorioComision {
 
   /// Procesa el corte semanal para el rango dado
   Future<void> procesarCorte(DateTime inicioSemana, DateTime finSemana) async {
-    final ini = '${inicioSemana.year}-${inicioSemana.month.toString().padLeft(2, '0')}-${inicioSemana.day.toString().padLeft(2, '0')}';
-    final fin = '${finSemana.year}-${finSemana.month.toString().padLeft(2, '0')}-${finSemana.day.toString().padLeft(2, '0')}';
+    final ini =
+        '${inicioSemana.year}-${inicioSemana.month.toString().padLeft(2, '0')}-${inicioSemana.day.toString().padLeft(2, '0')}';
+    final fin =
+        '${finSemana.year}-${finSemana.month.toString().padLeft(2, '0')}-${finSemana.day.toString().padLeft(2, '0')}';
     await _client.rpc('process_commission_cut', params: {
       'p_week_start': ini,
       'p_week_end': fin,
@@ -129,27 +155,12 @@ class RepositorioComision {
 
   /// Resumen de comisiones de la semana actual por empleado (para admin)
   Future<List<Map<String, dynamic>>> obtenerResumenSemanaActual() async {
-    final ahora = DateTime.now();
-    final diasDesdeLunes = ahora.weekday - 1;
-    final inicioSemana = DateTime(ahora.year, ahora.month, ahora.day - diasDesdeLunes);
+    final inicioSemana = inicioDeSemana(DateTime.now());
     final datos = await _client
         .from('commission_entries')
         .select('employee_id, commission_amount, profiles(full_name)')
         .gte('earned_at', inicioSemana.toUtc().toIso8601String())
         .isFilter('cut_id', null);
-    // Agrupar por empleado
-    final mapa = <String, Map<String, dynamic>>{};
-    for (final e in datos as List) {
-      final empId = e['employee_id'] as String;
-      final nombre = (e['profiles'] as Map?)?['full_name'] as String?;
-      final monto = (e['commission_amount'] as num).toDouble();
-      if (!mapa.containsKey(empId)) {
-        mapa[empId] = {'employee_id': empId, 'full_name': nombre, 'total': 0.0, 'count': 0};
-      }
-      mapa[empId]!['total'] = (mapa[empId]!['total'] as double) + monto;
-      mapa[empId]!['count'] = (mapa[empId]!['count'] as int) + 1;
-    }
-    return mapa.values.toList()
-      ..sort((a, b) => (b['total'] as double).compareTo(a['total'] as double));
+    return agruparComisionesPorEmpleado(datos as List);
   }
 }

@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../domain/models/profile.dart';
 import '../domain/enums/user_role.dart';
+import '../utils/date_utils.dart';
 
 class RepositorioEmpleado {
   final _client = Supabase.instance.client;
@@ -92,7 +93,7 @@ class RepositorioEmpleado {
         .from('employee_time_off')
         .select()
         .eq('employee_id', idEmpleado)
-        .gte('date', DateTime.now().toIso8601String().substring(0, 10))
+        .gte('date', formatearFechaISO(DateTime.now()))
         .order('date');
     return (datos as List).cast<Map<String, dynamic>>();
   }
@@ -102,8 +103,7 @@ class RepositorioEmpleado {
     required DateTime fecha,
     String? motivo,
   }) async {
-    final fechaTexto =
-        '${fecha.year}-${fecha.month.toString().padLeft(2, '0')}-${fecha.day.toString().padLeft(2, '0')}';
+    final fechaTexto = formatearFechaISO(fecha);
     await _client.from('employee_time_off').upsert({
       'employee_id': idEmpleado,
       'date': fechaTexto,

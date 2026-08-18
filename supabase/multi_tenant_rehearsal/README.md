@@ -1,4 +1,4 @@
-# Ensayo local de la migración multi-tenant (Fases 3 y 4)
+# Ensayo local de la migración multi-tenant (Fases 3, 4 y 5)
 
 Scripts para probar, contra un Postgres local desechable (no Docker — este
 entorno no lo tiene; usa el `postgres.exe`/`psql` nativo de Windows), que el
@@ -98,3 +98,15 @@ Suite de pruebas negativas cruzadas: **14/14 chequeos en OK, 0 fugas de
 datos entre Tenant A y Tenant B**, incluyendo los 3 caminos que existían
 para saltarse RLS (RPC con IDs cruzados, UPDATE directo bypaseando la RPC,
 agregación sin filtrar en `process_commission_cut`).
+
+Fase 5 (ver `05_fase5_real_migration_procedure.md` para el procedimiento
+completo, sin datos reales): ensayo con un dump real de solo lectura del
+Hetzner de MC-BARBER, restaurado y backfilleado en local (nunca en el
+Cloud real). **27/27 tablas con conteos idénticos al origen, 4/4 sumas de
+dinero idénticas, 0 nulls tras backfill, 0 filas malas en la auditoría
+cruzada**, y prueba de humo con el admin real viendo exactamente sus 8
+reservas y 1 pedido reales. Encontrado en el camino: `commission_settings`
+tenía 2 filas duplicadas en el origen (nunca tuvo PK-singleton real, solo
+convención de la app) con valores idénticos — se descartó la más antigua
+en el backfill. El dump real (con PII de clientes) se usó solo en memoria/
+disco local temporal y se borró al terminar — nunca se commiteó al repo.

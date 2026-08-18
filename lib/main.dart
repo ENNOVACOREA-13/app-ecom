@@ -37,11 +37,12 @@ Future<void> main() async {
     return;
   }
 
-  kSupabaseUrlActivo = tenant.supabaseUrl;
+  kTenantIdActivo = tenant.tenantId;
 
   await Supabase.initialize(
-    url: tenant.supabaseUrl,
-    anonKey: tenant.supabaseAnonKey,
+    url: kSupabaseUrl,
+    anonKey: kSupabaseAnonKey,
+    headers: tenant.tenantId != null ? {'x-tenant-id': tenant.tenantId!} : null,
   );
 
   if (kIsWeb) {

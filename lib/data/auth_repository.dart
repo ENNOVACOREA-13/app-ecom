@@ -33,7 +33,7 @@ class RepositorioAuth {
     final resultado = await _client.auth.signUp(
       email: correo,
       password: contrasena,
-      data: {'full_name': nombreCompleto, 'role': 'client'},
+      data: {'full_name': nombreCompleto, 'role': 'client', 'tenant_id': kTenantIdActivo},
     );
     if (resultado.user == null) throw Exception('Error al crear la cuenta');
 
@@ -53,6 +53,7 @@ class RepositorioAuth {
         'full_name': nombreCompleto,
         'role': 'client',
         'is_active': true,
+        'tenant_id': kTenantIdActivo,
       });
     }
 

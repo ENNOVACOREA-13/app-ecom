@@ -11,6 +11,7 @@ import '../domain/models/profile.dart';
 /// usuario entienda, sin exponer detalles internos del servidor.
 String parsearErrorAuth(String e) {
   if (e.contains('account_deactivated')) return 'Tu cuenta ha sido desactivada. Contacta al administrador';
+  if (e.contains('INVALID_TENANT')) return 'No se pudo identificar el negocio desde este dominio. Intenta de nuevo o contacta soporte';
   if (e.contains('Invalid login')) return 'Email o contraseña incorrectos';
   if (e.contains('already registered') || e.contains('User already registered')) return 'Este email ya está registrado';
   if (e.contains('Password should')) return 'La contraseña debe tener al menos 6 caracteres';

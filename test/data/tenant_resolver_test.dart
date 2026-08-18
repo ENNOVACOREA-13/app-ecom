@@ -24,44 +24,28 @@ void main() {
     test('una fila completa resuelve al tenant correcto', () {
       final resultado = parsearFilasTenant([
         {
-          'supabase_url': 'https://tenant1.example.com',
-          'supabase_anon_key': 'clave-anonima',
+          'tenant_id': 'a0000000-0000-0000-0000-000000000001',
           'slug': 'tenant1',
           'business_name': 'Barbería Uno',
           'status': 'active',
         }
       ]);
-      expect(resultado.supabaseUrl, 'https://tenant1.example.com');
-      expect(resultado.supabaseAnonKey, 'clave-anonima');
+      expect(resultado.tenantId, 'a0000000-0000-0000-0000-000000000001');
       expect(resultado.slug, 'tenant1');
+      expect(resultado.businessName, 'Barbería Uno');
       expect(resultado.status, 'active');
     });
 
-    test('fila con supabase_url vacío o nulo cae al fallback en vez de dejar la app rota', () {
+    test('fila con tenant_id vacío o nulo cae al fallback en vez de dejar la app rota', () {
       expect(
         parsearFilasTenant([
-          {'supabase_url': '', 'supabase_anon_key': 'clave'}
+          {'tenant_id': ''}
         ]),
         fallbackTenant,
       );
       expect(
         parsearFilasTenant([
-          {'supabase_url': null, 'supabase_anon_key': 'clave'}
-        ]),
-        fallbackTenant,
-      );
-    });
-
-    test('fila con supabase_anon_key vacío o nulo cae al fallback', () {
-      expect(
-        parsearFilasTenant([
-          {'supabase_url': 'https://tenant1.example.com', 'supabase_anon_key': ''}
-        ]),
-        fallbackTenant,
-      );
-      expect(
-        parsearFilasTenant([
-          {'supabase_url': 'https://tenant1.example.com', 'supabase_anon_key': null}
+          {'tenant_id': null}
         ]),
         fallbackTenant,
       );
@@ -69,10 +53,11 @@ void main() {
 
     test('solo usa la primera fila si hay más de un match', () {
       final resultado = parsearFilasTenant([
-        {'supabase_url': 'https://primero.example.com', 'supabase_anon_key': 'k1'},
-        {'supabase_url': 'https://segundo.example.com', 'supabase_anon_key': 'k2'},
+        {'tenant_id': 'a0000000-0000-0000-0000-000000000001', 'slug': 'primero'},
+        {'tenant_id': 'b0000000-0000-0000-0000-000000000001', 'slug': 'segundo'},
       ]);
-      expect(resultado.supabaseUrl, 'https://primero.example.com');
+      expect(resultado.tenantId, 'a0000000-0000-0000-0000-000000000001');
+      expect(resultado.slug, 'primero');
     });
   });
 }

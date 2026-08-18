@@ -63,7 +63,7 @@ class _PaginaPerfilState extends State<PaginaPerfil> {
       ...List.generate(
         6,
         (_) =>
-            '$kSupabaseUrlActivo/functions/v1/avatar-proxy?seed=$base-${rand.nextInt(999999)}&size=128',
+            '$kSupabaseUrl/functions/v1/avatar-proxy?seed=$base-${rand.nextInt(999999)}&size=128',
       ),
     ];
 

@@ -13,7 +13,9 @@ String mapearErrorProducto(String e) {
 }
 
 class ProveedorProducto extends ChangeNotifier {
-  final _repo = RepositorioProducto();
+  ProveedorProducto({RepositorioProducto? repo}) : _repo = repo ?? RepositorioProducto();
+
+  final RepositorioProducto _repo;
 
   List<Producto> _productos = [];
   bool _cargando = false;

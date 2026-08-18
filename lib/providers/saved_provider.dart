@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import '../data/saved_repository.dart';
 
 class ProveedorGuardados extends ChangeNotifier {
-  final _repo = RepositorioGuardados();
+  ProveedorGuardados({RepositorioGuardados? repo}) : _repo = repo ?? RepositorioGuardados();
+
+  final RepositorioGuardados _repo;
 
   String? _userId;
   final Set<String> _guardados = {};

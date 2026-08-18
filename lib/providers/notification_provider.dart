@@ -3,7 +3,9 @@ import '../data/notification_repository.dart';
 import '../domain/models/app_notification.dart';
 
 class ProveedorNotificaciones extends ChangeNotifier {
-  final _repo = RepositorioNotificaciones();
+  ProveedorNotificaciones({RepositorioNotificaciones? repo}) : _repo = repo ?? RepositorioNotificaciones();
+
+  final RepositorioNotificaciones _repo;
   String? _userId;
   List<NotificacionApp> _notificaciones = [];
   bool _cargando = false;

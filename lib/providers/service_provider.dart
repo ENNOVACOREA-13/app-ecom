@@ -25,7 +25,9 @@ ModeloServicio aplicarActualizacionServicio(
 }
 
 class ProveedorServicio extends ChangeNotifier {
-  final _repo = RepositorioServicio();
+  ProveedorServicio({RepositorioServicio? repo}) : _repo = repo ?? RepositorioServicio();
+
+  final RepositorioServicio _repo;
 
   List<ModeloServicio> _servicios = [];
   bool _cargando = false;

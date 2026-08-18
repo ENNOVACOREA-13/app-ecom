@@ -3,6 +3,13 @@ import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/constants.dart';
 
+/// Convierte un monto en pesos/dólares a centavos (lo que espera Stripe).
+/// Usa round() en vez de toInt(): por imprecisión de punto flotante,
+/// 19.99 * 100 da 1998.9999999999998, y toInt() lo truncaría a 1998
+/// centavos ($19.98) en vez de los 1999 ($19.99) correctos — un cobro de
+/// menos silencioso en cualquier precio terminado en .99.
+int centavosDesdeMonto(double monto) => (monto * 100).round();
+
 class ServicioStripe {
   static const _funcionUrl = '$kSupabaseUrl/functions/v1/create-payment-intent';
 
@@ -20,7 +27,7 @@ class ServicioStripe {
         'Authorization': 'Bearer ${session?.accessToken ?? ''}',
       },
       body: jsonEncode({
-        'amount': (monto * 100).toInt(), // Stripe usa centavos
+        'amount': centavosDesdeMonto(monto),
         'currency': moneda,
       }),
     );

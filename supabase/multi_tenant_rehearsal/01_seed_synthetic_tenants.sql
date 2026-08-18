@@ -12,13 +12,15 @@ insert into public.tenant_domains (tenant_id, domain) values
   ('b0000000-0000-0000-0000-000000000001', 'tenant-b.test');
 
 -- ── auth.users + profiles (client/employee/admin por tenant) ─────────────
-insert into auth.users (id, email) values
-  ('a0000000-0000-0000-0000-0000000000c1', 'cliente@tenant-a.test'),
-  ('a0000000-0000-0000-0000-0000000000e1', 'empleado@tenant-a.test'),
-  ('a0000000-0000-0000-0000-0000000000ad', 'admin@tenant-a.test'),
-  ('b0000000-0000-0000-0000-0000000000c1', 'cliente@tenant-b.test'),
-  ('b0000000-0000-0000-0000-0000000000e1', 'empleado@tenant-b.test'),
-  ('b0000000-0000-0000-0000-0000000000ad', 'admin@tenant-b.test');
+-- raw_user_meta_data.tenant_id es obligatorio desde la Fase 4
+-- (handle_new_user() rechaza el signup si falta o no es un tenant activo).
+insert into auth.users (id, email, raw_user_meta_data) values
+  ('a0000000-0000-0000-0000-0000000000c1', 'cliente@tenant-a.test', '{"tenant_id":"a0000000-0000-0000-0000-000000000001"}'),
+  ('a0000000-0000-0000-0000-0000000000e1', 'empleado@tenant-a.test', '{"tenant_id":"a0000000-0000-0000-0000-000000000001"}'),
+  ('a0000000-0000-0000-0000-0000000000ad', 'admin@tenant-a.test', '{"tenant_id":"a0000000-0000-0000-0000-000000000001"}'),
+  ('b0000000-0000-0000-0000-0000000000c1', 'cliente@tenant-b.test', '{"tenant_id":"b0000000-0000-0000-0000-000000000001"}'),
+  ('b0000000-0000-0000-0000-0000000000e1', 'empleado@tenant-b.test', '{"tenant_id":"b0000000-0000-0000-0000-000000000001"}'),
+  ('b0000000-0000-0000-0000-0000000000ad', 'admin@tenant-b.test', '{"tenant_id":"b0000000-0000-0000-0000-000000000001"}');
 
 -- handle_new_user() ya creó estas 6 filas al insertar en auth.users (con
 -- role='client' y tenant_id null por defecto) — ON CONFLICT DO UPDATE para

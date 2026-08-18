@@ -4,10 +4,18 @@
 insert into public.tenants (id, slug, business_name) values
   ('c0000000-0000-0000-0000-000000000001', 'legacy', 'Negocio Legacy (MC-BARBER simulado)');
 
--- handle_new_user() crea automáticamente la fila en public.profiles (sin
--- tenant_id, que es justo el estado "legacy" que queremos simular).
+-- La Fase 5 real restaura auth.users/profiles con
+-- `session_replication_role = replica` (ver runbook_new_tenant_server.md),
+-- lo que DESACTIVA on_auth_user_created — se reproduce aquí igual, porque
+-- desde la Fase 4 ese trigger exige tenant_id en raw_user_meta_data y
+-- fallaría con INVALID_TENANT si corriera (esto es un restore, no un
+-- signup real).
+set session_replication_role = replica;
 insert into auth.users (id, email) values
   ('c0000000-0000-0000-0000-0000000000c1', 'cliente@legacy.test');
+insert into public.profiles (id, email, role, full_name) values
+  ('c0000000-0000-0000-0000-0000000000c1', 'cliente@legacy.test', 'client', 'Cliente Legacy');
+set session_replication_role = origin;
 
 insert into public.services (id, name, duration_min, price) values
   ('c1000000-0000-0000-0000-000000000001', 'Corte Legacy', 30, 90);

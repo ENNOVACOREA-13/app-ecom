@@ -1,4 +1,4 @@
-# Ensayo local de la migración multi-tenant (Fase 3)
+# Ensayo local de la migración multi-tenant (Fases 3 y 4)
 
 Scripts para probar, contra un Postgres local desechable (no Docker — este
 entorno no lo tiene; usa el `postgres.exe`/`psql` nativo de Windows), que el
@@ -45,6 +45,13 @@ psql -h 127.0.0.1 -p 54329 -U postgres -d barber_test -v ON_ERROR_STOP=1 -f "$SC
 psql -h 127.0.0.1 -p 54329 -U postgres -d barber_test -f "$SCRIPTS\02_cross_tenant_audit.sql"   # todas las filas en 0 = bien
 psql -h 127.0.0.1 -p 54329 -U postgres -d barber_test -v ON_ERROR_STOP=1 -f "$SCRIPTS\03_backfill_rehearsal.sql"
 
+# 4b. El gate de Fase 4: pruebas negativas cruzadas (simula sesiones reales
+#     con SET ROLE + request.jwt.claims/request.headers — ver 00_local_supabase_stub.sql,
+#     auth.uid() ahora lee esa GUC igual que Supabase real lee el JWT de PostgREST)
+psql -h 127.0.0.1 -p 54329 -U postgres -d barber_test -f "$SCRIPTS\04_cross_tenant_negative_tests.sql"
+# Cada línea "NOTICE: N. OK: ..." o la columna `ok` de cada SELECT debe ser
+# true — cualquier "FALLO"/false es una fuga real de datos entre negocios.
+
 # 5. Limpiar al terminar
 pg_ctl -D $PGDATA stop -m fast
 Remove-Item -Recurse -Force $PGDATA
@@ -68,7 +75,26 @@ Remove-Item -Recurse -Force $PGDATA
   `alter column tenant_id set not null` posterior + intento de insert sin
   tenant_id confirmó que la restricción rechaza correctamente la fila.
 
+- **`04_cross_tenant_negative_tests.sql`** — el gate real de Fase 4. Logueado
+  como Cliente A/Admin A (`SET ROLE authenticated` + `request.jwt.claims`
+  simulando el JWT que pondría PostgREST), confirma que NADA de Tenant B es
+  visible ni editable: lectura directa de tablas (bookings, profiles,
+  commission_entries), las RPC de dinero (`crear_reserva`,
+  `actualizar_estado_pedido`, `ajustar_puntos_lealtad`) rechazan IDs
+  cruzados, un UPDATE directo (bypass RPC) sobre una fila de otro tenant
+  afecta 0 filas, y `process_commission_cut` nunca mezcla comisiones entre
+  negocios. También prueba el catálogo público como `anon` con el header
+  `x-tenant-id`. Cada chequeo tiene su contraparte positiva (que Tenant A
+  siga viendo/pudiendo hacer lo suyo con normalidad) — un RLS que bloquea
+  todo "pasaría" un chequeo de fugas sin servir para nada.
+
 ## Resultado de la última corrida (2026-08-18)
-45/45 migraciones (42 reales + 3 de Fase 2) aplicaron limpio desde cero.
-Seed de 2 tenants: OK. Auditoría cruzada: 0 filas malas en las 8
+Fase 3: 45/45 migraciones (42 reales + 3 de Fase 2) aplicaron limpio desde
+cero. Seed de 2 tenants: OK. Auditoría cruzada: 0 filas malas en las 8
 verificaciones. Backfill + NOT NULL: 0 nulls, constraint verificado real.
+
+Fase 4: 47/47 migraciones (+ RLS y RPC tenant-aware) aplicaron limpio.
+Suite de pruebas negativas cruzadas: **14/14 chequeos en OK, 0 fugas de
+datos entre Tenant A y Tenant B**, incluyendo los 3 caminos que existían
+para saltarse RLS (RPC con IDs cruzados, UPDATE directo bypaseando la RPC,
+agregación sin filtrar en `process_commission_cut`).

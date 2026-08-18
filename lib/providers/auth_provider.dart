@@ -7,6 +7,26 @@ import '../data/auth_repository.dart';
 import '../data/activity_service.dart';
 import '../domain/models/profile.dart';
 
+/// Traduce un error crudo de auth (Supabase/GoTrue) a un mensaje que el
+/// usuario entienda, sin exponer detalles internos del servidor.
+String parsearErrorAuth(String e) {
+  if (e.contains('account_deactivated')) return 'Tu cuenta ha sido desactivada. Contacta al administrador';
+  if (e.contains('Invalid login')) return 'Email o contraseña incorrectos';
+  if (e.contains('already registered') || e.contains('User already registered')) return 'Este email ya está registrado';
+  if (e.contains('Password should')) return 'La contraseña debe tener al menos 6 caracteres';
+  if (e.contains('valid email')) return 'Ingresa un email válido';
+  if (e.contains('email_confirmation_required')) return 'Revisa tu correo para confirmar tu cuenta antes de entrar';
+  if (e.contains('email_not_verified')) return 'Confirma tu correo antes de iniciar sesión. Revisa tu bandeja de entrada (y spam)';
+  if (e.contains('row-level security') || e.contains('violates') || e.contains('42501')) return 'Error de permisos en la base de datos. Contacta al administrador';
+  if (e.contains('does not exist') || e.contains('relation')) return 'Error de configuración en la base de datos';
+  if (e.contains('Email rate limit') || e.contains('rate limit')) return 'Demasiados intentos. Espera unos minutos';
+  final eMin = e.toLowerCase();
+  if (eMin.contains('network') || eMin.contains('socket')) return 'Sin conexión a internet';
+  if (eMin.contains('timeout')) return 'La solicitud tardó demasiado. Intenta de nuevo';
+  debugPrint('[AuthError] $e');
+  return 'Ocurrió un error inesperado. Intenta de nuevo';
+}
+
 class ProveedorAuth extends ChangeNotifier {
   final _repo = RepositorioAuth();
   StreamSubscription<AuthState>? _authSub;
@@ -130,7 +150,7 @@ class ProveedorAuth extends ChangeNotifier {
       await ServicioActividad.instancia.iniciarSesion(_perfil!.id);
       return true;
     } catch (e) {
-      _error = _parsearError(e.toString());
+      _error = parsearErrorAuth(e.toString());
       return false;
     } finally {
       _cargando = false;
@@ -158,7 +178,7 @@ class ProveedorAuth extends ChangeNotifier {
       await ServicioActividad.instancia.iniciarSesion(_perfil!.id);
       return true;
     } catch (e) {
-      _error = _parsearError(e.toString());
+      _error = parsearErrorAuth(e.toString());
       return false;
     } finally {
       _cargando = false;
@@ -208,23 +228,6 @@ class ProveedorAuth extends ChangeNotifier {
     if (_perfil == null) return;
     final url = await _repo.subirAvatar(_perfil!.id, bytes, formato);
     await actualizarPerfil({'avatar_url': url});
-  }
-
-  String _parsearError(String e) {
-    if (e.contains('account_deactivated')) return 'Tu cuenta ha sido desactivada. Contacta al administrador';
-    if (e.contains('Invalid login')) return 'Email o contraseña incorrectos';
-    if (e.contains('already registered') || e.contains('User already registered')) return 'Este email ya está registrado';
-    if (e.contains('Password should')) return 'La contraseña debe tener al menos 6 caracteres';
-    if (e.contains('valid email')) return 'Ingresa un email válido';
-    if (e.contains('network') || e.contains('socket')) return 'Sin conexión a internet';
-    if (e.contains('timeout')) return 'La solicitud tardó demasiado. Intenta de nuevo';
-    if (e.contains('email_confirmation_required')) return 'Revisa tu correo para confirmar tu cuenta antes de entrar';
-    if (e.contains('email_not_verified')) return 'Confirma tu correo antes de iniciar sesión. Revisa tu bandeja de entrada (y spam)';
-    if (e.contains('row-level security') || e.contains('violates') || e.contains('42501')) return 'Error de permisos en la base de datos. Contacta al administrador';
-    if (e.contains('does not exist') || e.contains('relation')) return 'Error de configuración en la base de datos';
-    if (e.contains('Email rate limit') || e.contains('rate limit')) return 'Demasiados intentos. Espera unos minutos';
-    debugPrint('[AuthError] $e');
-    return 'Ocurrió un error inesperado. Intenta de nuevo';
   }
 
   void limpiarError() {

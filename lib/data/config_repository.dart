@@ -21,7 +21,7 @@ List<Map<String, dynamic>> completarSeccionesHome(List<Map<String, dynamic>> sec
 }
 
 class RepositorioConfig {
-  final _db = Supabase.instance.client;
+  SupabaseClient get _db => Supabase.instance.client;
 
   Future<Color?> obtenerColorPrimario() async {
     try {

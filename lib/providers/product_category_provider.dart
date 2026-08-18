@@ -3,7 +3,10 @@ import '../data/product_category_repository.dart';
 import '../domain/models/product_category.dart';
 
 class ProveedorCategoriasProducto extends ChangeNotifier {
-  final _repo = RepositorioCategoriasProducto();
+  ProveedorCategoriasProducto({RepositorioCategoriasProducto? repo})
+      : _repo = repo ?? RepositorioCategoriasProducto();
+
+  final RepositorioCategoriasProducto _repo;
 
   List<CategoriaProducto> _categorias = [];
   bool _cargando = false;

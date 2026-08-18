@@ -4,7 +4,9 @@ import '../core/theme/app_theme.dart';
 import '../core/service_icons.dart';
 
 class ProveedorConfig extends ChangeNotifier {
-  final _repo = RepositorioConfig();
+  ProveedorConfig({RepositorioConfig? repo}) : _repo = repo ?? RepositorioConfig();
+
+  final RepositorioConfig _repo;
 
   // ── Valores publicados (en vivo) ──────────────────────────────
   Color _colorPrimario = kPrimary;

@@ -3,7 +3,9 @@ import '../data/commission_repository.dart';
 import '../domain/models/commission_model.dart';
 
 class ProveedorComision extends ChangeNotifier {
-  final _repo = RepositorioComision();
+  ProveedorComision({RepositorioComision? repo}) : _repo = repo ?? RepositorioComision();
+
+  final RepositorioComision _repo;
 
   List<ConfigComision> configuraciones = [];
   AjustesComision? ajustes;

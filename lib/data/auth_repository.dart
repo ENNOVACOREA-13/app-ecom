@@ -6,7 +6,7 @@ import '../core/constants.dart';
 import '../domain/models/profile.dart';
 
 class RepositorioAuth {
-  final _client = Supabase.instance.client;
+  SupabaseClient get _client => Supabase.instance.client;
 
   Future<Perfil> iniciarSesion({required String correo, required String contrasena}) async {
     final resultado = await _client.auth.signInWithPassword(email: correo, password: contrasena);

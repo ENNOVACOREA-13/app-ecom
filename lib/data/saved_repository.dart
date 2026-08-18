@@ -1,7 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class RepositorioGuardados {
-  final _client = Supabase.instance.client;
+  SupabaseClient get _client => Supabase.instance.client;
 
   Future<List<String>> obtenerGuardados(String userId) async {
     final data = await _client

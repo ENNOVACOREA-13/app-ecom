@@ -2,7 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../domain/models/app_notification.dart';
 
 class RepositorioNotificaciones {
-  final _client = Supabase.instance.client;
+  SupabaseClient get _client => Supabase.instance.client;
   RealtimeChannel? _canal;
 
   Future<List<NotificacionApp>> obtenerNotificaciones(String userId) async {

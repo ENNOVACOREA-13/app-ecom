@@ -2,7 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../domain/models/product_category.dart';
 
 class RepositorioCategoriasProducto {
-  final _client = Supabase.instance.client;
+  SupabaseClient get _client => Supabase.instance.client;
 
   Future<List<CategoriaProducto>> obtenerCategorias() async {
     final datos = await _client

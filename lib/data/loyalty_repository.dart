@@ -8,7 +8,7 @@ double sumaSaldo(List<MovimientoLealtad> movimientos) =>
     movimientos.fold<double>(0.0, (total, m) => total + m.puntos);
 
 class RepositorioLealtad {
-  final _client = Supabase.instance.client;
+  SupabaseClient get _client => Supabase.instance.client;
 
   Future<ConfigLealtad> obtenerConfig() async {
     final datos = await _client.from('loyalty_config').select().single();

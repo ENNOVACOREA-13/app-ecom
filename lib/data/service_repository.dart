@@ -3,7 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../domain/models/service_model.dart';
 
 class RepositorioServicio {
-  final _client = Supabase.instance.client;
+  SupabaseClient get _client => Supabase.instance.client;
 
   Future<List<ModeloServicio>> obtenerServiciosActivos() async {
     final datos = await _client

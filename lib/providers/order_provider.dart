@@ -3,6 +3,20 @@ import '../data/order_repository.dart';
 import '../domain/models/order.dart';
 import 'cart_provider.dart';
 
+/// Traduce un error crudo (excepción de Supabase/RPC) a un mensaje que el
+/// usuario entienda, sin exponer detalles internos del servidor.
+String mapearErrorPedido(String e) {
+  if (e.contains('INSUFFICIENT_STOCK')) {
+    return 'Uno de los productos ya no tiene stock suficiente. Revisa tu carrito.';
+  }
+  if (e.contains('EMPTY_CART')) return 'Tu carrito está vacío.';
+  if (e.contains('PRODUCT_NOT_FOUND')) return 'Uno de los productos ya no está disponible.';
+  final eMin = e.toLowerCase();
+  if (eMin.contains('network') || eMin.contains('socket')) return 'Sin conexión a internet.';
+  if (eMin.contains('timeout')) return 'La solicitud tardó demasiado. Intenta de nuevo.';
+  return 'Ocurrió un error al procesar tu pedido. Intenta de nuevo.';
+}
+
 class ProveedorPedido extends ChangeNotifier {
   static const _tamanoPagina = 100;
 
@@ -43,22 +57,11 @@ class ProveedorPedido extends ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
-      _error = _mapearErrorPedido(e.toString());
+      _error = mapearErrorPedido(e.toString());
       _cargando = false;
       notifyListeners();
       return false;
     }
-  }
-
-  String _mapearErrorPedido(String e) {
-    if (e.contains('INSUFFICIENT_STOCK')) {
-      return 'Uno de los productos ya no tiene stock suficiente. Revisa tu carrito.';
-    }
-    if (e.contains('EMPTY_CART')) return 'Tu carrito está vacío.';
-    if (e.contains('PRODUCT_NOT_FOUND')) return 'Uno de los productos ya no está disponible.';
-    if (e.contains('network') || e.contains('socket')) return 'Sin conexión a internet.';
-    if (e.contains('timeout')) return 'La solicitud tardó demasiado. Intenta de nuevo.';
-    return 'Ocurrió un error al procesar tu pedido. Intenta de nuevo.';
   }
 
   Future<void> cargarPedidosCliente(String clienteId) async {

@@ -2,6 +2,28 @@ import 'package:flutter/material.dart';
 import '../data/service_repository.dart';
 import '../domain/models/service_model.dart';
 
+/// Aplica un mapa parcial de [cambios] sobre [original] para actualizar la
+/// lista local de forma optimista, sin esperar a recargar del servidor.
+/// Los campos ausentes en [cambios] conservan su valor original.
+ModeloServicio aplicarActualizacionServicio(
+    ModeloServicio original, Map<String, dynamic> cambios) {
+  return ModeloServicio.fromMap({
+    'id': original.id,
+    'name': cambios['name'] ?? original.nombre,
+    'description': cambios['description'] ?? original.descripcion,
+    'duration_min': cambios['duration_min'] ?? original.duracionMin,
+    'price': cambios['price'] ?? original.precio,
+    'image_url': cambios['image_url'] ?? original.urlImagen,
+    'is_active': cambios['is_active'] ?? original.estaActivo,
+    'icon_name': cambios.containsKey('icon_name')
+        ? cambios['icon_name']
+        : original.iconoNombre,
+    'icon_color': cambios.containsKey('icon_color')
+        ? cambios['icon_color']
+        : original.iconoColor,
+  });
+}
+
 class ProveedorServicio extends ChangeNotifier {
   final _repo = RepositorioServicio();
 
@@ -42,24 +64,9 @@ class ProveedorServicio extends ChangeNotifier {
 
   Future<void> actualizarServicio(String id, Map<String, dynamic> actualizaciones) async {
     await _repo.actualizarServicio(id, actualizaciones);
-    _servicios = _servicios.map((s) {
-      if (s.id != id) return s;
-      return ModeloServicio.fromMap({
-        'id': s.id,
-        'name': actualizaciones['name'] ?? s.nombre,
-        'description': actualizaciones['description'] ?? s.descripcion,
-        'duration_min': actualizaciones['duration_min'] ?? s.duracionMin,
-        'price': actualizaciones['price'] ?? s.precio,
-        'image_url': actualizaciones['image_url'] ?? s.urlImagen,
-        'is_active': actualizaciones['is_active'] ?? s.estaActivo,
-        'icon_name': actualizaciones.containsKey('icon_name')
-            ? actualizaciones['icon_name']
-            : s.iconoNombre,
-        'icon_color': actualizaciones.containsKey('icon_color')
-            ? actualizaciones['icon_color']
-            : s.iconoColor,
-      });
-    }).toList();
+    _servicios = _servicios
+        .map((s) => s.id == id ? aplicarActualizacionServicio(s, actualizaciones) : s)
+        .toList();
     notifyListeners();
   }
 

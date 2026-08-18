@@ -7,7 +7,7 @@ class ServicioActividad {
   static final ServicioActividad instancia = ServicioActividad._();
   ServicioActividad._();
 
-  final _client = Supabase.instance.client;
+  SupabaseClient get _client => Supabase.instance.client;
   String? _sessionId;
   String? _profileId;
   DateTime? _ultimaActualizacion;

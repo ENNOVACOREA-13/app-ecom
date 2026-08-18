@@ -29,7 +29,7 @@ List<Map<String, dynamic>> agruparComisionesPorEmpleado(
 }
 
 class RepositorioComision {
-  final _client = Supabase.instance.client;
+  SupabaseClient get _client => Supabase.instance.client;
 
   // ── Configuraciones por servicio ──────────────────────────────
 

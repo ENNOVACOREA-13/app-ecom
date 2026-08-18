@@ -3,7 +3,7 @@ import '../domain/models/order.dart';
 import '../providers/cart_provider.dart';
 
 class RepositorioPedido {
-  final _client = Supabase.instance.client;
+  SupabaseClient get _client => Supabase.instance.client;
 
   Future<String> crearPedido({
     required String clienteId,

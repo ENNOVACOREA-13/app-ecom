@@ -6,6 +6,18 @@ import '../domain/models/profile.dart';
 import '../domain/models/slot.dart';
 import '../domain/enums/booking_status.dart';
 
+/// Traduce un error crudo (excepción de Supabase/RPC) a un mensaje que el
+/// usuario entienda, sin exponer detalles internos del servidor.
+String mapearErrorReserva(String e) {
+  if (e.contains('BOOKING_CONFLICT')) return 'Ese horario ya no está disponible. Elige otro.';
+  if (e.contains('DATE_IN_PAST')) return 'No puedes reservar en una fecha pasada.';
+  final eMin = e.toLowerCase();
+  if (eMin.contains('permission') || eMin.contains('policy')) return 'No tienes permiso para realizar esta acción.';
+  if (eMin.contains('network') || eMin.contains('socket')) return 'Sin conexión a internet.';
+  if (eMin.contains('timeout')) return 'La solicitud tardó demasiado. Intenta de nuevo.';
+  return 'Ocurrió un error inesperado. Intenta de nuevo.';
+}
+
 class ProveedorReserva extends ChangeNotifier {
   static const _tamanoPaginaAdmin = 100;
 
@@ -109,7 +121,7 @@ class ProveedorReserva extends ChangeNotifier {
       _cargandoTurnos = false;
       notifyListeners();
     } catch (e) {
-      _error = _mapearErrorReserva(e.toString());
+      _error = mapearErrorReserva(e.toString());
       _cargandoTurnos = false;
       notifyListeners();
     }
@@ -139,7 +151,7 @@ class ProveedorReserva extends ChangeNotifier {
       reiniciarFlujo(); // ya llama notifyListeners
       return true;
     } catch (e) {
-      _error = _mapearErrorReserva(e.toString());
+      _error = mapearErrorReserva(e.toString());
       _creando = false;
       notifyListeners();
       return false;
@@ -154,7 +166,7 @@ class ProveedorReserva extends ChangeNotifier {
     try {
       _reservas = await _repo.obtenerReservasCliente(idCliente);
     } catch (e) {
-      _error = _mapearErrorReserva(e.toString());
+      _error = mapearErrorReserva(e.toString());
     }
     _cargandoReservas = false;
     notifyListeners();
@@ -166,7 +178,7 @@ class ProveedorReserva extends ChangeNotifier {
     try {
       _reservas = await _repo.obtenerReservasEmpleado(idEmpleado);
     } catch (e) {
-      _error = _mapearErrorReserva(e.toString());
+      _error = mapearErrorReserva(e.toString());
     }
     _cargandoReservas = false;
     notifyListeners();
@@ -182,7 +194,7 @@ class ProveedorReserva extends ChangeNotifier {
       _reservas = pagina;
       _hayMasReservasAdmin = pagina.length == _tamanoPaginaAdmin;
     } catch (e) {
-      _error = _mapearErrorReserva(e.toString());
+      _error = mapearErrorReserva(e.toString());
     }
     _cargandoReservas = false;
     notifyListeners();
@@ -201,7 +213,7 @@ class ProveedorReserva extends ChangeNotifier {
       _reservas = [..._reservas, ...pagina];
       _hayMasReservasAdmin = pagina.length == _tamanoPaginaAdmin;
     } catch (e) {
-      _error = _mapearErrorReserva(e.toString());
+      _error = mapearErrorReserva(e.toString());
     }
     _cargandoMasReservas = false;
     notifyListeners();
@@ -255,12 +267,4 @@ class ProveedorReserva extends ChangeNotifier {
     notifyListeners();
   }
 
-  String _mapearErrorReserva(String e) {
-    if (e.contains('BOOKING_CONFLICT')) return 'Ese horario ya no está disponible. Elige otro.';
-    if (e.contains('DATE_IN_PAST')) return 'No puedes reservar en una fecha pasada.';
-    if (e.contains('permission') || e.contains('policy')) return 'No tienes permiso para realizar esta acción.';
-    if (e.contains('network') || e.contains('socket')) return 'Sin conexión a internet.';
-    if (e.contains('timeout')) return 'La solicitud tardó demasiado. Intenta de nuevo.';
-    return 'Ocurrió un error inesperado. Intenta de nuevo.';
-  }
 }

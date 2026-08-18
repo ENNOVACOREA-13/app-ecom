@@ -2,6 +2,16 @@ import 'package:flutter/material.dart';
 import '../data/product_repository.dart';
 import '../domain/models/product.dart';
 
+/// Traduce un error crudo (excepción de Supabase/RPC) a un mensaje que el
+/// usuario entienda, sin exponer detalles internos del servidor.
+String mapearErrorProducto(String e) {
+  final eMin = e.toLowerCase();
+  if (eMin.contains('permission') || eMin.contains('policy')) return 'No tienes permiso para realizar esta acción.';
+  if (eMin.contains('network') || eMin.contains('socket')) return 'Sin conexión a internet.';
+  if (eMin.contains('timeout')) return 'La solicitud tardó demasiado. Intenta de nuevo.';
+  return 'Ocurrió un error inesperado. Intenta de nuevo.';
+}
+
 class ProveedorProducto extends ChangeNotifier {
   final _repo = RepositorioProducto();
 
@@ -20,7 +30,7 @@ class ProveedorProducto extends ChangeNotifier {
     try {
       _productos = esVistaAdmin ? await _repo.obtenerTodosLosProductos() : await _repo.obtenerProductosActivos();
     } catch (e) {
-      _error = _mapearError(e.toString());
+      _error = mapearErrorProducto(e.toString());
     }
     _cargando = false;
     notifyListeners();
@@ -49,7 +59,7 @@ class ProveedorProducto extends ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
-      _error = _mapearError(e.toString());
+      _error = mapearErrorProducto(e.toString());
       notifyListeners();
       return false;
     }
@@ -66,10 +76,4 @@ class ProveedorProducto extends ChangeNotifier {
     notifyListeners();
   }
 
-  String _mapearError(String e) {
-    if (e.contains('permission') || e.contains('policy')) return 'No tienes permiso para realizar esta acción.';
-    if (e.contains('network') || e.contains('socket')) return 'Sin conexión a internet.';
-    if (e.contains('timeout')) return 'La solicitud tardó demasiado. Intenta de nuevo.';
-    return 'Ocurrió un error inesperado. Intenta de nuevo.';
-  }
 }

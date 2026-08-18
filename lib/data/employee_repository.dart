@@ -4,7 +4,7 @@ import '../domain/enums/user_role.dart';
 import '../utils/date_utils.dart';
 
 class RepositorioEmpleado {
-  final _client = Supabase.instance.client;
+  SupabaseClient get _client => Supabase.instance.client;
 
   Future<List<Perfil>> obtenerEmpleados() async {
     final datos = await _client

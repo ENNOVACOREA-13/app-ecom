@@ -4,8 +4,15 @@ import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/entrada_animada.dart';
 import '../../domain/models/app_notification.dart';
+import '../../domain/enums/user_role.dart';
+import '../../data/booking_repository.dart';
 import '../../providers/notification_provider.dart';
+import '../../providers/auth_provider.dart';
 import '../common/app_widgets.dart';
+import '../client/booking_detail_page.dart';
+import '../admin/all_bookings_page.dart';
+import '../admin/admin_orders_page.dart';
+import '../employee/employee_bookings_page.dart';
 
 const Map<String, IconData> _kIconosPorTipo = {
   'booking_new': Icons.calendar_today_outlined,
@@ -91,15 +98,47 @@ class _FilaNotificacion extends StatelessWidget {
   final NotificacionApp notificacion;
   const _FilaNotificacion({required this.notificacion});
 
+  Future<void> _manejarTap(BuildContext context) async {
+    if (!notificacion.leida) {
+      context.read<ProveedorNotificaciones>().marcarLeida(notificacion.id);
+    }
+
+    final relatedId = notificacion.relatedId;
+    final rol = context.read<ProveedorAuth>().perfil?.rol;
+    if (relatedId == null || rol == null) return;
+
+    if (notificacion.tipo.startsWith('booking_')) {
+      if (rol == RolUsuario.client) {
+        final reserva = await RepositorioReserva().obtenerReservaPorId(relatedId);
+        if (reserva != null && context.mounted) {
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => PaginaDetalleReserva(reserva: reserva)),
+          );
+        }
+      } else if (rol == RolUsuario.employee) {
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const PaginaReservasEmpleado()),
+        );
+      } else {
+        // admin, super_admin, sysadmin
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const PaginaTodasReservas()),
+        );
+      }
+    } else if (notificacion.tipo == 'order_new') {
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => const PaginaPedidosAdmin()),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final icono = _kIconosPorTipo[notificacion.tipo] ?? Icons.notifications_outlined;
     final fmt = DateFormat('dd MMM, HH:mm', 'es_ES');
 
     return GestureDetector(
-      onTap: notificacion.leida
-          ? null
-          : () => context.read<ProveedorNotificaciones>().marcarLeida(notificacion.id),
+      onTap: () => _manejarTap(context),
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),

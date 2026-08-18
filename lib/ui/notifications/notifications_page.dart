@@ -12,11 +12,30 @@ const Map<String, IconData> _kIconosPorTipo = {
   'booking_confirmed': Icons.check_circle_outline,
   'booking_cancelled': Icons.cancel_outlined,
   'booking_completed': Icons.content_cut,
+  'booking_cancel_requested': Icons.hourglass_top_rounded,
+  'booking_cancel_rejected': Icons.block_outlined,
   'order_new': Icons.shopping_bag_outlined,
 };
 
-class PaginaNotificaciones extends StatelessWidget {
+class PaginaNotificaciones extends StatefulWidget {
   const PaginaNotificaciones({super.key});
+
+  @override
+  State<PaginaNotificaciones> createState() => _PaginaNotificacionesState();
+}
+
+class _PaginaNotificacionesState extends State<PaginaNotificaciones> {
+  @override
+  void initState() {
+    super.initState();
+    // La lista en el provider puede estar obsoleta (se llenó una sola vez al
+    // iniciar sesión, y de ahí depende de tiempo real) — al abrir la pantalla
+    // siempre se refresca, para no depender de que ningún evento se haya
+    // perdido mientras el usuario no tenía la app abierta o conectada.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ProveedorNotificaciones>().cargar();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

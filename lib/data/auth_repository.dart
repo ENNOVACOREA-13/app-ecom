@@ -13,6 +13,14 @@ class RepositorioAuth {
     if (resultado.user == null) throw Exception('Credenciales incorrectas');
 
     final perfil = await _obtenerPerfilConReintento(resultado.user!.id);
+    // Cuenta real, contraseña real, pero de OTRO negocio: se rechaza con el
+    // mismo mensaje/estado que unas credenciales inválidas — nunca debe
+    // distinguirse de un login fallido, o se estaría confirmando que ese
+    // correo/contraseña sí existen en algún otro negocio.
+    if (!perfil.perteneceATenant(kTenantIdActivo)) {
+      await _client.auth.signOut();
+      throw Exception('Invalid login credentials');
+    }
     if (!perfil.estaActivo) {
       await _client.auth.signOut();
       throw Exception('account_deactivated');

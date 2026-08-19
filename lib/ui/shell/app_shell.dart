@@ -118,22 +118,18 @@ class _CarcasaAppState extends State<CarcasaApp> with SingleTickerProviderStateM
     final perfil = auth.perfil;
     _iniciarProveedoresDependientesDePerfil(perfil?.id);
 
-    // El tenant que "current_tenant_id()" le resolvió a esta cuenta (su
-    // negocio de casa, o el de una membresía — ver obtener_mi_perfil_efectivo
-    // en la migración 20260819130000) no es el del dominio que se está
-    // visitando. Sin este check, cualquier cuenta (admin/sysadmin/employee/
-    // client) que entra al dominio de OTRO negocio ve silenciosamente el
-    // dashboard/tienda de SU propio negocio, porque para un usuario ya
-    // logueado current_tenant_id() no usa el dominio si no hay una
-    // membresía que calce con él — confirmado en vivo: admin@gmail.com
-    // (admin de MC-BARBER, sin membresía en PRETTYCORE) entrando a
-    // pretty.prettycore.xyz veía el dashboard de MC-BARBER ahí mismo.
-    // platform_admin es la única cuenta sin tenant propio, así que no
-    // aplica este check.
-    if (perfil?.rol != RolUsuario.platformAdmin &&
-        (perfil == null ? kTenantIdActivo == null : perfil.tenantId != kTenantIdActivo)) {
-      if (perfil == null) return const PaginaLogin();
-      return _ShellSinAcceso(nombre: perfil.nombreCompleto);
+    // ProveedorAuth ya garantiza que un perfil no-nulo es válido para ESTE
+    // dominio (o platform_admin) — ver _validarTenant() en auth_provider.dart
+    // y el guard equivalente en RepositorioAuth.iniciarSesion(). Una cuenta
+    // real de otro negocio nunca llega a construirse como perfil aquí; se
+    // cierra su sesión en silencio antes, sin ningún mensaje distinto a "no
+    // hay sesión" — mostrar algo como "esta cuenta no tiene acceso aquí"
+    // confirmaría que el correo/contraseña sí son válidos en otro negocio.
+    if (perfil == null && kTenantIdActivo == null) {
+      // Dominio sin tenant (ej. el control plane, app-mc.vercel.app): solo
+      // platform_admin tiene algo que hacer aquí, así que un invitado ve
+      // nada más que el login, nunca una tienda de invitado.
+      return const PaginaLogin();
     }
 
     // Modo invitado: mostrar tienda sin login
@@ -390,43 +386,6 @@ class _Pestana {
   final String id;
   const _Pestana(this.icono, this.etiqueta, this.pagina,
       {this.imagen, this.id = ''});
-}
-
-// ── Dominio sin tenant asignado: la cuenta logueada no tiene nada que
-// hacer aquí (no es platform_admin) — mostrar solo un mensaje + cerrar sesión,
-// nunca la tienda/dashboard de su negocio de casa.
-class _ShellSinAcceso extends StatelessWidget {
-  final String nombre;
-  const _ShellSinAcceso({required this.nombre});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: kBackground,
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.lock_outline, size: 48, color: Colors.grey),
-              const SizedBox(height: 16),
-              Text(
-                'Hola, $nombre. Esta cuenta no tiene acceso aquí.',
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 24),
-              OutlinedButton(
-                onPressed: () => context.read<ProveedorAuth>().cerrarSesion(),
-                child: const Text('Cerrar sesión'),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 // ── Shell para invitados (sin login) ─────────────────────────

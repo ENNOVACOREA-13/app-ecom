@@ -74,4 +74,14 @@ class Perfil {
       tenantId: tenantId,
     );
   }
+
+  /// true si esta cuenta pertenece al dominio que se está visitando ahora
+  /// (o es platform_admin, que no pertenece a ningún tenant en particular).
+  /// Usado tanto en RepositorioAuth.iniciarSesion() (rechaza el login, mismo
+  /// mensaje que credenciales inválidas) como en ProveedorAuth._validarTenant
+  /// (sesión restaurada/OAuth de otro negocio, cierre de sesión silencioso)
+  /// — nunca debe verse distinto de "no hay sesión", o se estaría
+  /// confirmando que el correo/contraseña sí existen en otro negocio.
+  bool perteneceATenant(String? tenantIdActivo) =>
+      rol == RolUsuario.platformAdmin || tenantId == tenantIdActivo;
 }

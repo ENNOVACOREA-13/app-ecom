@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../core/constants.dart';
 import '../data/auth_repository.dart';
 import '../data/activity_service.dart';
 import '../domain/models/profile.dart';
@@ -59,9 +60,21 @@ class ProveedorAuth extends ChangeNotifier {
   String? get error => _error;
   bool get estaConectado => _perfil != null;
 
+  // Cuenta real de OTRO negocio (sesión restaurada de otro dominio, o
+  // llegó por un evento de auth como OAuth) — se cierra la sesión en
+  // silencio, sin ningún mensaje ni pantalla distinta a "no hay sesión".
+  // Nunca debe verse diferente de simplemente no estar logueado: mostrar
+  // "esta cuenta no tiene acceso aquí" confirmaría que el correo/contraseña
+  // son válidos en algún otro negocio.
+  Future<Perfil?> _validarTenant(Perfil? perfil) async {
+    if (perfil == null || perfil.perteneceATenant(kTenantIdActivo)) return perfil;
+    await _repo.cerrarSesion();
+    return null;
+  }
+
   Future<void> inicializar() async {
     try {
-      _perfil = await _repo.obtenerPerfilActual();
+      _perfil = await _validarTenant(await _repo.obtenerPerfilActual());
       if (_perfil != null && !_perfil!.estaActivo) {
         debugPrint('[Auth] Cuenta desactivada, forzando logout');
         _cuentaDesactivada = true;
@@ -121,7 +134,9 @@ class ProveedorAuth extends ChangeNotifier {
       if (estado.event == AuthChangeEvent.signedIn) {
         try {
           _sesionExpirada = false;
-          _perfil = await _repo.obtenerPerfilActual();
+          // Único lugar donde se valida el tenant para OAuth (Google/
+          // Facebook no pasan por RepositorioAuth.iniciarSesion()).
+          _perfil = await _validarTenant(await _repo.obtenerPerfilActual());
           if (_perfil != null && !ServicioActividad.instancia.activo) {
             await ServicioActividad.instancia.iniciarSesion(_perfil!.id);
           }

@@ -48,3 +48,14 @@ create policy "media_delete_admin" on storage.objects
   );
 
 alter table public.app_config add column if not exists logo_url text;
+
+-- app_config nunca tuvo primary key ni unique constraint propio (el `id`
+-- boolean es un resabio de la era single-tenant, repetido `true` en TODAS
+-- las filas de TODOS los tenants). Sin esto, cualquier .upsert() desde el
+-- cliente (colores, banner, tienda habilitada, logo, etc.) no tiene contra
+-- qué resolver el conflicto: si no manda tenant_id explícito, RLS rechaza
+-- el insert resultante (tenant_id null); si lo manda pero no hay unique
+-- constraint, Postgres no sabe qué fila actualizar. Confirmado roto en vivo
+-- al probar la subida de logo — nunca se había ejercitado un guardado real
+-- de configuración desde la app después del corte multi-tenant.
+alter table public.app_config add constraint app_config_tenant_unique unique (tenant_id);

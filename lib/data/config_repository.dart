@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../core/constants.dart';
 
 const List<Map<String, dynamic>> kSeccionesHomePorDefecto = [
   {'key': 'chips_categorias', 'visible': true},
@@ -23,6 +24,25 @@ List<Map<String, dynamic>> completarSeccionesHome(List<Map<String, dynamic>> sec
 class RepositorioConfig {
   SupabaseClient get _db => Supabase.instance.client;
 
+  /// `app_config` es una fila por tenant (no tiene primary key propio, solo
+  /// una restricción unique en tenant_id) — todo upsert debe mandar
+  /// tenant_id explícito y resolver el conflicto contra esa columna, si no
+  /// RLS rechaza el insert (tenant_id quedaría null) en vez de actualizar
+  /// la fila existente. Ver migración 20260819110000.
+  Future<bool> _upsert(Map<String, dynamic> valores) async {
+    try {
+      final res = await _db.from('app_config').upsert({
+        'id': true,
+        'tenant_id': kTenantIdActivo,
+        ...valores,
+        'updated_at': DateTime.now().toUtc().toIso8601String(),
+      }, onConflict: 'tenant_id').select();
+      return res.isNotEmpty;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<Color?> obtenerColorPrimario() async {
     try {
       final data = await _db
@@ -38,18 +58,8 @@ class RepositorioConfig {
   }
 
   Future<bool> actualizarColorPrimario(Color color) async {
-    try {
-      final hex =
-          '#${color.value.toRadixString(16).substring(2).toUpperCase()}';
-      final res = await _db.from('app_config').upsert({
-        'id': true,
-        'primary_color': hex,
-        'updated_at': DateTime.now().toUtc().toIso8601String(),
-      }).select();
-      return (res).isNotEmpty;
-    } catch (_) {
-      return false;
-    }
+    final hex = '#${color.value.toRadixString(16).substring(2).toUpperCase()}';
+    return _upsert({'primary_color': hex});
   }
 
   Color _hexAColor(String hex) {
@@ -83,18 +93,8 @@ class RepositorioConfig {
     }
   }
 
-  Future<bool> actualizarTiendaHabilitada(bool habilitada) async {
-    try {
-      final res = await _db.from('app_config').upsert({
-        'id': true,
-        'store_enabled': habilitada,
-        'updated_at': DateTime.now().toUtc().toIso8601String(),
-      }).select();
-      return (res).isNotEmpty;
-    } catch (_) {
-      return false;
-    }
-  }
+  Future<bool> actualizarTiendaHabilitada(bool habilitada) =>
+      _upsert({'store_enabled': habilitada});
 
   Future<String?> obtenerLogoUrl() async {
     try {
@@ -108,18 +108,7 @@ class RepositorioConfig {
     }
   }
 
-  Future<bool> actualizarLogoUrl(String url) async {
-    try {
-      final res = await _db.from('app_config').upsert({
-        'id': true,
-        'logo_url': url,
-        'updated_at': DateTime.now().toUtc().toIso8601String(),
-      }).select();
-      return (res).isNotEmpty;
-    } catch (_) {
-      return false;
-    }
-  }
+  Future<bool> actualizarLogoUrl(String url) => _upsert({'logo_url': url});
 
   Future<bool> obtenerEditorVistasAdmin() async {
     try {
@@ -133,18 +122,8 @@ class RepositorioConfig {
     }
   }
 
-  Future<bool> actualizarEditorVistasAdmin(bool habilitado) async {
-    try {
-      final res = await _db.from('app_config').upsert({
-        'id': true,
-        'editor_vistas_admin': habilitado,
-        'updated_at': DateTime.now().toUtc().toIso8601String(),
-      }).select();
-      return (res).isNotEmpty;
-    } catch (_) {
-      return false;
-    }
-  }
+  Future<bool> actualizarEditorVistasAdmin(bool habilitado) =>
+      _upsert({'editor_vistas_admin': habilitado});
 
   Future<({List<String> imagenes, String? texto, String alineacion, String? botonTexto, String? botonLink})>
       obtenerBannerConfig() async {
@@ -185,20 +164,12 @@ class RepositorioConfig {
     required String titulo,
     required String forma,
     required double tamanoIcono,
-  }) async {
-    try {
-      final res = await _db.from('app_config').upsert({
-        'id': true,
+  }) =>
+      _upsert({
         'home_categorias_titulo': titulo,
         'home_categorias_forma': forma,
         'categorias_icono_tamano': tamanoIcono,
-        'updated_at': DateTime.now().toUtc().toIso8601String(),
-      }).select();
-      return (res).isNotEmpty;
-    } catch (_) {
-      return false;
-    }
-  }
+      });
 
   Future<({String fontFamily, double radioContenedor, double sombraContenedor})>
       obtenerEstiloApp() async {
@@ -221,20 +192,12 @@ class RepositorioConfig {
     required String fontFamily,
     required double radioContenedor,
     required double sombraContenedor,
-  }) async {
-    try {
-      final res = await _db.from('app_config').upsert({
-        'id': true,
+  }) =>
+      _upsert({
         'font_family': fontFamily,
         'container_radius': radioContenedor,
         'container_shadow': sombraContenedor,
-        'updated_at': DateTime.now().toUtc().toIso8601String(),
-      }).select();
-      return (res).isNotEmpty;
-    } catch (_) {
-      return false;
-    }
-  }
+      });
 
   Future<String> obtenerTituloProductos() async {
     try {
@@ -248,18 +211,8 @@ class RepositorioConfig {
     }
   }
 
-  Future<bool> actualizarTituloProductos(String titulo) async {
-    try {
-      final res = await _db.from('app_config').upsert({
-        'id': true,
-        'home_productos_titulo': titulo,
-        'updated_at': DateTime.now().toUtc().toIso8601String(),
-      }).select();
-      return (res).isNotEmpty;
-    } catch (_) {
-      return false;
-    }
-  }
+  Future<bool> actualizarTituloProductos(String titulo) =>
+      _upsert({'home_productos_titulo': titulo});
 
   Future<List<Map<String, dynamic>>> obtenerSeccionesHome() async {
     try {
@@ -275,18 +228,8 @@ class RepositorioConfig {
     }
   }
 
-  Future<bool> actualizarSeccionesHome(List<Map<String, dynamic>> secciones) async {
-    try {
-      final res = await _db.from('app_config').upsert({
-        'id': true,
-        'home_sections': secciones,
-        'updated_at': DateTime.now().toUtc().toIso8601String(),
-      }).select();
-      return (res).isNotEmpty;
-    } catch (_) {
-      return false;
-    }
-  }
+  Future<bool> actualizarSeccionesHome(List<Map<String, dynamic>> secciones) =>
+      _upsert({'home_sections': secciones});
 
   Future<Map<String, dynamic>?> obtenerBorrador() async {
     try {
@@ -300,36 +243,12 @@ class RepositorioConfig {
     }
   }
 
-  Future<bool> guardarBorrador(Map<String, dynamic> borrador) async {
-    try {
-      final res = await _db.from('app_config').upsert({
-        'id': true,
-        'draft_config': borrador,
-        'updated_at': DateTime.now().toUtc().toIso8601String(),
-      }).select();
-      return (res).isNotEmpty;
-    } catch (_) {
-      return false;
-    }
-  }
+  Future<bool> guardarBorrador(Map<String, dynamic> borrador) =>
+      _upsert({'draft_config': borrador});
 
-  Future<bool> descartarBorrador() async {
-    try {
-      final res = await _db.from('app_config').upsert({
-        'id': true,
-        'draft_config': null,
-        'updated_at': DateTime.now().toUtc().toIso8601String(),
-      }).select();
-      return (res).isNotEmpty;
-    } catch (_) {
-      return false;
-    }
-  }
+  Future<bool> descartarBorrador() => _upsert({'draft_config': null});
 
-  Future<bool> publicarBorrador(Map<String, dynamic> borrador) async {
-    try {
-      final res = await _db.from('app_config').upsert({
-        'id': true,
+  Future<bool> publicarBorrador(Map<String, dynamic> borrador) => _upsert({
         'primary_color': borrador['primary_color'],
         'background_color': borrador['background_color'],
         'font_family': borrador['font_family'],
@@ -346,11 +265,5 @@ class RepositorioConfig {
         'home_productos_titulo': borrador['home_productos_titulo'],
         'home_sections': borrador['home_sections'],
         'draft_config': null,
-        'updated_at': DateTime.now().toUtc().toIso8601String(),
-      }).select();
-      return (res).isNotEmpty;
-    } catch (_) {
-      return false;
-    }
-  }
+      });
 }

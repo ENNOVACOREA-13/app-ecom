@@ -714,8 +714,10 @@ class _BannerReferencia extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ancho = MediaQuery.of(context).size.width;
+    final margen = ancho >= kAnchoEscritorio ? margenLateralEscritorio(ancho) : 20.0;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+      padding: EdgeInsets.fromLTRB(margen, 20, margen, 0),
       child: GestureDetector(
         onTap: () {
           if (context.read<ProveedorAuth>().perfil == null) {
@@ -867,8 +869,10 @@ class _BannerPromoState extends State<_BannerPromo> {
       _ => (CrossAxisAlignment.start, Alignment.centerLeft),
     };
 
+    final ancho = MediaQuery.of(context).size.width;
+    final margen = ancho >= kAnchoEscritorio ? margenLateralEscritorio(ancho) : 20.0;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+      padding: EdgeInsets.fromLTRB(margen, 20, margen, 0),
       child: GestureDetector(
         onTap: !tieneTexto
             ? null

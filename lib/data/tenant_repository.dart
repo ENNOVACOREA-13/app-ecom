@@ -7,7 +7,7 @@ class RepositorioTenants {
   Future<List<Tenant>> obtenerTenants() async {
     final datos = await _client
         .from('tenants')
-        .select('*, tenant_domains(*)')
+        .select('*, tenant_domains(*), profiles(id, full_name, email, role)')
         .order('created_at');
     return (datos as List)
         .map((e) => Tenant.fromMap(e as Map<String, dynamic>))

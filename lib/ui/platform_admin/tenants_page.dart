@@ -450,6 +450,51 @@ class _PaginaNegociosState extends State<PaginaNegocios> {
                                         .toList(),
                                   ),
                                 ],
+                                if (t.admins.isNotEmpty) ...[
+                                  const SizedBox(height: 10),
+                                  const Divider(height: 1, color: Color(0xFFE5E5EA)),
+                                  const SizedBox(height: 10),
+                                  const Text('Cuentas administrativas',
+                                      style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
+                                          color: kTextSub)),
+                                  const SizedBox(height: 6),
+                                  ...t.admins.map((a) => Padding(
+                                        padding: const EdgeInsets.symmetric(vertical: 3),
+                                        child: Row(
+                                          children: [
+                                            Icon(
+                                                a.rol == 'sysadmin'
+                                                    ? Icons.shield_outlined
+                                                    : Icons.admin_panel_settings_outlined,
+                                                size: 14,
+                                                color: kTextSub),
+                                            const SizedBox(width: 6),
+                                            Expanded(
+                                              child: Text(
+                                                a.nombreCompleto?.isNotEmpty == true
+                                                    ? '${a.nombreCompleto} · ${a.email ?? ''}'
+                                                    : (a.email ?? a.id),
+                                                style: const TextStyle(fontSize: 12, color: Color(0xFF1C1C1E)),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                              decoration: BoxDecoration(
+                                                color: const Color(0xFFF2F2F7),
+                                                borderRadius: BorderRadius.circular(20),
+                                              ),
+                                              child: Text(
+                                                a.rol == 'sysadmin' ? 'sysadmin' : 'admin',
+                                                style: const TextStyle(fontSize: 10, color: kTextSub),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      )),
+                                ],
                               ],
                             ),
                           );

@@ -6,7 +6,9 @@ import '../../providers/saved_provider.dart';
 import '../../providers/config_provider.dart';
 import '../../providers/notification_provider.dart';
 import '../../domain/enums/user_role.dart';
+import '../../core/constants.dart';
 import '../../core/theme/app_theme.dart';
+import '../auth/login_page.dart';
 
 // Cliente
 import '../client/home_page.dart';
@@ -115,6 +117,17 @@ class _CarcasaAppState extends State<CarcasaApp> with SingleTickerProviderStateM
 
     final perfil = auth.perfil;
     _iniciarProveedoresDependientesDePerfil(perfil?.id);
+
+    // Dominio sin tenant asignado (ej. app-mc.vercel.app, el "control
+    // plane"): current_tenant_id() para un usuario YA logueado ignora el
+    // dominio y cae al tenant_id fijo de su perfil, así que sin este check
+    // cualquier cuenta vería la tienda/dashboard de su negocio de casa aquí.
+    // Solo platform_admin (que no pertenece a ningún tenant) tiene algo que
+    // hacer en este dominio — todo lo demás ve nada más que el login.
+    if (kTenantIdActivo == null && perfil?.rol != RolUsuario.platformAdmin) {
+      if (perfil == null) return const PaginaLogin();
+      return _ShellSinAcceso(nombre: perfil.nombreCompleto);
+    }
 
     // Modo invitado: mostrar tienda sin login
     if (perfil == null) {
@@ -370,6 +383,43 @@ class _Pestana {
   final String id;
   const _Pestana(this.icono, this.etiqueta, this.pagina,
       {this.imagen, this.id = ''});
+}
+
+// ── Dominio sin tenant asignado: la cuenta logueada no tiene nada que
+// hacer aquí (no es platform_admin) — mostrar solo un mensaje + cerrar sesión,
+// nunca la tienda/dashboard de su negocio de casa.
+class _ShellSinAcceso extends StatelessWidget {
+  final String nombre;
+  const _ShellSinAcceso({required this.nombre});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: kBackground,
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.lock_outline, size: 48, color: Colors.grey),
+              const SizedBox(height: 16),
+              Text(
+                'Hola, $nombre. Esta cuenta no tiene acceso aquí.',
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 24),
+              OutlinedButton(
+                onPressed: () => context.read<ProveedorAuth>().cerrarSesion(),
+                child: const Text('Cerrar sesión'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 // ── Shell para invitados (sin login) ─────────────────────────

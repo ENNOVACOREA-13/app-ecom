@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../data/config_repository.dart';
+import '../core/constants.dart';
 import '../core/theme/app_theme.dart';
 import '../core/service_icons.dart';
 
@@ -128,6 +129,20 @@ class ProveedorConfig extends ChangeNotifier {
   }
 
   Future<void> cargar() async {
+    // Dominio sin tenant asignado (ej. el control plane, app-mc.vercel.app):
+    // no hay ningún negocio cuya config cargar. No solo por evitar trabajo
+    // de más — si el navegador tiene una sesión vieja restaurada en este
+    // origen (posible aquí porque este dominio fue la URL real de MC-BARBER
+    // antes de la migración a Supabase compartido), current_tenant_id()
+    // resolvería por esa sesión ANTES de que ProveedorAuth alcance a
+    // invalidarla, filtrando (y mostrando) el logo/banner de ese negocio
+    // por un instante. Al no pedir nada, todo se queda en los valores por
+    // defecto (sin logo/banner de nadie), sin importar qué sesión ande
+    // restaurada.
+    if (kTenantIdActivo == null) {
+      notifyListeners();
+      return;
+    }
     _logoUrl = await _repo.obtenerLogoUrl();
     final color = await _repo.obtenerColorPrimario();
     final colorSecundario = await _repo.obtenerColorSecundario();

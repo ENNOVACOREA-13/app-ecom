@@ -285,6 +285,32 @@ class _PaginaNegociosState extends State<PaginaNegocios> {
     }
   }
 
+  Future<void> _confirmarQuitarAcceso(Tenant tenant, CuentaAdminTenant cuenta) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        title: const Text('Quitar acceso', style: TextStyle(color: Color(0xFF1C1C1E))),
+        content: Text(
+            '¿Quitarle a "${cuenta.email ?? cuenta.id}" el acceso a ${tenant.businessName}? '
+            'Sigue pudiendo entrar a su negocio de casa, solo pierde este.',
+            style: const TextStyle(color: Color(0xFF6E6E73))),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Quitar', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+    if (ok == true && mounted) {
+      await context
+          .read<ProveedorTenants>()
+          .eliminarMembresia(userId: cuenta.id, tenantId: tenant.id);
+    }
+  }
+
   Future<void> _alternarStatus(Tenant tenant) async {
     final nuevoStatus = tenant.estaActivo ? 'suspended' : 'active';
     await context.read<ProveedorTenants>().actualizarStatus(tenant.id, nuevoStatus);
@@ -491,6 +517,16 @@ class _PaginaNegociosState extends State<PaginaNegocios> {
                                                 style: const TextStyle(fontSize: 10, color: kTextSub),
                                               ),
                                             ),
+                                            if (a.esMembresiaExtra) ...[
+                                              const SizedBox(width: 4),
+                                              IconButton(
+                                                icon: const Icon(Icons.close, size: 16, color: kTextSub),
+                                                tooltip: 'Quitar acceso a este negocio',
+                                                padding: EdgeInsets.zero,
+                                                constraints: const BoxConstraints(),
+                                                onPressed: () => _confirmarQuitarAcceso(t, a),
+                                              ),
+                                            ],
                                           ],
                                         ),
                                       )),

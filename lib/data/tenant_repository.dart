@@ -22,7 +22,7 @@ class RepositorioTenants {
         ? const <Map<String, dynamic>>[]
         : await _client
             .from('profiles')
-            .select('id, full_name, email')
+            .select('id, full_name, email, role, tenant_id')
             .inFilter('id', idsUsuarios) as List;
     final perfilesPorId = {
       for (final p in perfiles) (p as Map<String, dynamic>)['id'] as String: p
@@ -59,5 +59,15 @@ class RepositorioTenants {
 
   Future<void> eliminarDominio(String domainId) async {
     await _client.from('tenant_domains').delete().eq('id', domainId);
+  }
+
+  /// Quita el acceso de una cuenta a ESTE tenant vía membresía (no borra la
+  /// cuenta ni su acceso a su tenant "de casa" — solo esta fila extra).
+  Future<void> eliminarMembresia({required String userId, required String tenantId}) async {
+    await _client
+        .from('user_tenant_memberships')
+        .delete()
+        .eq('user_id', userId)
+        .eq('tenant_id', tenantId);
   }
 }

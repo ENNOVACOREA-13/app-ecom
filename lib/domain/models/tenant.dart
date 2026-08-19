@@ -49,6 +49,7 @@ class Tenant {
           .map((d) => TenantDomain.fromMap(d as Map<String, dynamic>))
           .toList(),
       admins: combinarCuentasAdmin(
+        idTenant: id,
         deProfiles: deProfiles,
         membresias: membresiasDeEsteTenant,
         perfilesPorId: perfilesPorId,
@@ -69,6 +70,7 @@ class Tenant {
 /// también tiene una fila de membresía por el backfill), la membresía gana
 /// — refleja el mismo criterio que mi_rol_en_tenant_actual() en SQL.
 List<CuentaAdminTenant> combinarCuentasAdmin({
+  required String idTenant,
   required List<CuentaAdminTenant> deProfiles,
   required List<Map<String, dynamic>> membresias,
   required Map<String, Map<String, dynamic>> perfilesPorId,
@@ -77,11 +79,19 @@ List<CuentaAdminTenant> combinarCuentasAdmin({
   for (final m in membresias) {
     final idUsuario = m['user_id'] as String;
     final perfil = perfilesPorId[idUsuario];
+    // platform_admin no "pertenece" a ningún tenant (ver is_platform_admin()
+    // en la migración de membresías) — si aparece aquí es una fila de
+    // membresía sobrante de pruebas, nunca un admin real de este negocio.
+    if (perfil?['role'] == 'platform_admin') continue;
     porId[idUsuario] = CuentaAdminTenant(
       id: idUsuario,
       rol: m['role'] as String? ?? 'admin',
       nombreCompleto: perfil?['full_name'] as String?,
       email: perfil?['email'] as String?,
+      // Solo se puede "quitar" una membresía que sea EXTRA a su tenant de
+      // casa — borrar la fila de un admin en su propio negocio de casa no
+      // le quita el acceso (profiles.tenant_id lo sigue apuntando ahí).
+      esMembresiaExtra: perfil?['tenant_id'] != idTenant,
     );
   }
   return porId.values.toList();
@@ -92,12 +102,14 @@ class CuentaAdminTenant {
   final String? nombreCompleto;
   final String? email;
   final String rol;
+  final bool esMembresiaExtra;
 
   const CuentaAdminTenant({
     required this.id,
     required this.rol,
     this.nombreCompleto,
     this.email,
+    this.esMembresiaExtra = false,
   });
 
   factory CuentaAdminTenant.fromMap(Map<String, dynamic> map) {

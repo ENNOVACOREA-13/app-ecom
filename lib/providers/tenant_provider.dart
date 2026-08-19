@@ -82,4 +82,16 @@ class ProveedorTenants extends ChangeNotifier {
       return false;
     }
   }
+
+  Future<bool> eliminarMembresia({required String userId, required String tenantId}) async {
+    try {
+      await _repo.eliminarMembresia(userId: userId, tenantId: tenantId);
+      await cargarTenants();
+      return true;
+    } catch (e) {
+      _error = 'No se pudo quitar el acceso de esa cuenta.';
+      notifyListeners();
+      return false;
+    }
+  }
 }

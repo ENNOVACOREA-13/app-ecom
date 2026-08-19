@@ -281,17 +281,17 @@ class _PaginaProductosState extends State<PaginaProductos> {
                         if (Navigator.of(context).canPop())
                           GestureDetector(
                             onTap: () => Navigator.of(context).pop(),
-                            child: const Padding(
-                              padding: EdgeInsets.only(right: 8),
+                            child: Padding(
+                              padding: const EdgeInsets.only(right: 8),
                               child: Icon(Icons.arrow_back_ios_new_rounded,
-                                  size: 20, color: Color(0xFF1C1C1E)),
+                                  size: 20, color: kColorSobreFondo),
                             ),
                           ),
-                        const Text('Tienda',
+                        Text('Tienda',
                             style: TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.w700,
-                              color: Color(0xFF1C1C1E),
+                              color: kColorSobreFondo,
                               letterSpacing: -0.3,
                             )),
                       ],

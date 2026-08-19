@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../core/constants.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/user_provisioning_service.dart';
 import '../../domain/models/tenant.dart';
@@ -517,7 +518,8 @@ class _PaginaNegociosState extends State<PaginaNegocios> {
                                                 style: const TextStyle(fontSize: 10, color: kTextSub),
                                               ),
                                             ),
-                                            if (a.esMembresiaExtra) ...[
+                                            if (a.esMembresiaExtra &&
+                                                a.email != kEmailSysadminPrincipal) ...[
                                               const SizedBox(width: 4),
                                               IconButton(
                                                 icon: const Icon(Icons.close, size: 16, color: kTextSub),

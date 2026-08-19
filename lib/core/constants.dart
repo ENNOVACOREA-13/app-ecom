@@ -30,6 +30,14 @@ const kStripePublishableKey = String.fromEnvironment(
 /// profile.
 String? kTenantIdActivo;
 
+// Sysadmin "de fábrica" de la plataforma: se siembra automáticamente en
+// TODO negocio nuevo (trigger sembrar_sysadmin_principal(), migración
+// 20260819150000) y la base rechaza cualquier intento de quitarle el
+// acceso (trigger proteger_sysadmin_principal()) — este valor solo se usa
+// para no mostrarle el botón de "quitar acceso" en el panel, que de
+// cualquier forma fallaría contra la base.
+const kEmailSysadminPrincipal = 'sysadmin@prettycore.xyz';
+
 const kAvatarBucket = 'avatars';
 const kServicesBucket = 'services';
 const kProductsBucket = 'products';

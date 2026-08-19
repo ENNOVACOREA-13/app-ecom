@@ -118,13 +118,20 @@ class _CarcasaAppState extends State<CarcasaApp> with SingleTickerProviderStateM
     final perfil = auth.perfil;
     _iniciarProveedoresDependientesDePerfil(perfil?.id);
 
-    // Dominio sin tenant asignado (ej. app-mc.vercel.app, el "control
-    // plane"): current_tenant_id() para un usuario YA logueado ignora el
-    // dominio y cae al tenant_id fijo de su perfil, así que sin este check
-    // cualquier cuenta vería la tienda/dashboard de su negocio de casa aquí.
-    // Solo platform_admin (que no pertenece a ningún tenant) tiene algo que
-    // hacer en este dominio — todo lo demás ve nada más que el login.
-    if (kTenantIdActivo == null && perfil?.rol != RolUsuario.platformAdmin) {
+    // El tenant que "current_tenant_id()" le resolvió a esta cuenta (su
+    // negocio de casa, o el de una membresía — ver obtener_mi_perfil_efectivo
+    // en la migración 20260819130000) no es el del dominio que se está
+    // visitando. Sin este check, cualquier cuenta (admin/sysadmin/employee/
+    // client) que entra al dominio de OTRO negocio ve silenciosamente el
+    // dashboard/tienda de SU propio negocio, porque para un usuario ya
+    // logueado current_tenant_id() no usa el dominio si no hay una
+    // membresía que calce con él — confirmado en vivo: admin@gmail.com
+    // (admin de MC-BARBER, sin membresía en PRETTYCORE) entrando a
+    // pretty.prettycore.xyz veía el dashboard de MC-BARBER ahí mismo.
+    // platform_admin es la única cuenta sin tenant propio, así que no
+    // aplica este check.
+    if (perfil?.rol != RolUsuario.platformAdmin &&
+        (perfil == null ? kTenantIdActivo == null : perfil.tenantId != kTenantIdActivo)) {
       if (perfil == null) return const PaginaLogin();
       return _ShellSinAcceso(nombre: perfil.nombreCompleto);
     }

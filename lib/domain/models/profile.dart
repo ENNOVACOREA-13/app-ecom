@@ -10,6 +10,12 @@ class Perfil {
   final bool estaActivo;
   final bool emailVerificado;
   final DateTime creadoEn;
+  // Tenant efectivo resuelto por obtener_mi_perfil_efectivo() (dominio +
+  // membresía si aplica — ver migración 20260819130000). app_shell.dart lo
+  // compara contra kTenantIdActivo (el tenant del dominio visitado) para
+  // detectar cuando una cuenta ve "su" tenant de casa en el dominio de OTRO
+  // negocio, en vez de confiar en que basta con estar autenticado.
+  final String? tenantId;
 
   const Perfil({
     required this.id,
@@ -21,6 +27,7 @@ class Perfil {
     required this.estaActivo,
     this.emailVerificado = true,
     required this.creadoEn,
+    this.tenantId,
   });
 
   factory Perfil.fromMap(Map<String, dynamic> map) {
@@ -34,6 +41,7 @@ class Perfil {
       estaActivo: map['is_active'] as bool? ?? true,
       emailVerificado: map['email_verificado'] as bool? ?? true,
       creadoEn: DateTime.tryParse(map['created_at'] as String? ?? '') ?? DateTime.now(),
+      tenantId: map['tenant_id'] as String?,
     );
   }
 
@@ -63,6 +71,7 @@ class Perfil {
       estaActivo: estaActivo ?? this.estaActivo,
       emailVerificado: emailVerificado ?? this.emailVerificado,
       creadoEn: creadoEn,
+      tenantId: tenantId,
     );
   }
 }

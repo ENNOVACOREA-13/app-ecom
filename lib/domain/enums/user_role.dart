@@ -3,7 +3,8 @@ enum RolUsuario {
   employee,
   admin,
   superAdmin,
-  sysadmin;
+  sysadmin,
+  platformAdmin;
 
   static RolUsuario fromString(String value) {
     switch (value) {
@@ -15,6 +16,8 @@ enum RolUsuario {
         return RolUsuario.superAdmin;
       case 'sysadmin':
         return RolUsuario.sysadmin;
+      case 'platform_admin':
+        return RolUsuario.platformAdmin;
       default:
         return RolUsuario.client;
     }
@@ -30,6 +33,8 @@ enum RolUsuario {
         return 'super_admin';
       case RolUsuario.sysadmin:
         return 'sysadmin';
+      case RolUsuario.platformAdmin:
+        return 'platform_admin';
       default:
         return 'client';
     }
@@ -37,6 +42,7 @@ enum RolUsuario {
 
   bool get isAdmin => this == RolUsuario.admin || this == RolUsuario.superAdmin;
   bool get isSysadmin => this == RolUsuario.sysadmin;
+  bool get isPlatformAdmin => this == RolUsuario.platformAdmin;
   bool get isEmployeeOrAbove =>
       this == RolUsuario.employee || this == RolUsuario.admin ||
       this == RolUsuario.superAdmin || this == RolUsuario.sysadmin;

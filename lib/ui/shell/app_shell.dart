@@ -29,6 +29,7 @@ import '../sysadmin/sysadmin_dashboard_page.dart';
 import '../sysadmin/sysadmin_logs_page.dart';
 import '../sysadmin/sysadmin_config_page.dart';
 import '../sysadmin/view_designer_page.dart';
+import '../platform_admin/tenants_page.dart';
 import '../../data/activity_service.dart';
 
 // Guardados
@@ -155,7 +156,7 @@ class _CarcasaAppState extends State<CarcasaApp> with SingleTickerProviderStateM
               child: contenido,
             )
           : contenido,
-      bottomNavigationBar: esEscritorio
+      bottomNavigationBar: esEscritorio || pestanas.length <= 1
           ? null
           : _BarraNavegacion(
               pestanas: pestanas,
@@ -201,6 +202,12 @@ class _CarcasaAppState extends State<CarcasaApp> with SingleTickerProviderStateM
   List<_Pestana> _pestanasPorRol(
       RolUsuario role, bool tiendaHabilitada, bool editorVistasAdmin) {
     switch (role) {
+      case RolUsuario.platformAdmin:
+        return [
+          _Pestana(Icons.apartment_outlined, 'Negocios',
+              const PaginaNegocios(),
+              imagen: 'IMG/ADMIN.png', id: 'platform_admin_negocios'),
+        ];
       case RolUsuario.sysadmin:
         return [
           _Pestana(Icons.shield_outlined, 'Dashboard',

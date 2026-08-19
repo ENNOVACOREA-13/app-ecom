@@ -23,6 +23,7 @@ import 'providers/saved_provider.dart';
 import 'providers/config_provider.dart';
 import 'providers/commission_provider.dart';
 import 'providers/notification_provider.dart';
+import 'providers/tenant_provider.dart';
 import 'routing/app_router.dart';
 
 Future<void> main() async {
@@ -110,6 +111,7 @@ class _BarberAppState extends State<BarberApp> {
         ChangeNotifierProvider.value(value: widget.proveedorConfig),
         ChangeNotifierProvider(create: (_) => ProveedorComision()),
         ChangeNotifierProvider(create: (_) => ProveedorNotificaciones()),
+        ChangeNotifierProvider(create: (_) => ProveedorTenants()),
       ],
       child: Consumer<ProveedorConfig>(
         builder: (_, config, __) {

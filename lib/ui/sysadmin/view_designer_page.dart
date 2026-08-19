@@ -5,6 +5,8 @@ import 'package:provider/provider.dart';
 import '../../core/app_fonts.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/ftp_upload_service.dart';
+import '../../domain/enums/user_role.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/config_provider.dart';
 import '../client/home_page.dart';
 import '../common/app_widgets.dart';
@@ -763,6 +765,7 @@ class PaginaDisenadorVista extends StatelessWidget {
     final cfg = context.watch<ProveedorConfig>();
     final tiendaHabilitada = cfg.tiendaHabilitada;
     final editorVistasAdmin = cfg.editorVistasAdmin;
+    final esSysadmin = context.watch<ProveedorAuth>().perfil?.rol == RolUsuario.sysadmin;
 
     return Scaffold(
       backgroundColor: kBackground,
@@ -947,46 +950,48 @@ class PaginaDisenadorVista extends StatelessWidget {
                   ],
                 ),
               ),
-            const SizedBox(height: 12),
-            TarjetaSeccion(
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: context.colorPrimario.withOpacity(0.12),
-                      shape: BoxShape.circle,
+            if (esSysadmin) ...[
+              const SizedBox(height: 12),
+              TarjetaSeccion(
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: context.colorPrimario.withOpacity(0.12),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(Icons.dashboard_customize_outlined, color: context.colorPrimario),
                     ),
-                    child: Icon(Icons.dashboard_customize_outlined, color: context.colorPrimario),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Editor de vistas para admin',
-                            style: TextStyle(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 14,
-                                color: Color(0xFF1C1C1E))),
-                        const SizedBox(height: 2),
-                        Text(
-                          editorVistasAdmin
-                              ? 'El rol admin también ve la pestaña "Vista"'
-                              : 'Solo sysadmin ve la pestaña "Vista" (como hasta ahora)',
-                          style: const TextStyle(fontSize: 11, color: Color(0xFF8E8E93)),
-                        ),
-                      ],
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Editor de vistas para admin',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 14,
+                                  color: Color(0xFF1C1C1E))),
+                          const SizedBox(height: 2),
+                          Text(
+                            editorVistasAdmin
+                                ? 'El rol admin también ve la pestaña "Vista"'
+                                : 'Solo sysadmin ve la pestaña "Vista" (como hasta ahora)',
+                            style: const TextStyle(fontSize: 11, color: Color(0xFF8E8E93)),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  Switch(
-                    value: editorVistasAdmin,
-                    activeColor: context.colorPrimario,
-                    onChanged: (v) => _toggleEditorVistasAdmin(context, v),
-                  ),
-                ],
+                    Switch(
+                      value: editorVistasAdmin,
+                      activeColor: context.colorPrimario,
+                      onChanged: (v) => _toggleEditorVistasAdmin(context, v),
+                    ),
+                  ],
+                ),
               ),
-            ),
+            ],
             const SizedBox(height: 24),
             const Text('Color de la aplicación',
                 style: TextStyle(

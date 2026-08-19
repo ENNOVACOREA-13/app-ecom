@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../providers/auth_provider.dart';
 import '../providers/booking_provider.dart';
 import '../ui/auth/login_page.dart';
 import '../ui/auth/register_page.dart';
@@ -35,7 +36,12 @@ GoRouter construirEnrutador({GlobalKey<NavigatorState>? navigatorKey}) {
       Supabase.instance.client.auth.onAuthStateChange,
     ),
     redirect: (context, state) {
-      final estaConectado = Supabase.instance.client.auth.currentUser != null;
+      // ProveedorAuth.perfil (no la sesión cruda de Supabase): una cuenta
+      // real de OTRO negocio queda con sesión de Supabase viva por un
+      // instante hasta que _validarTenant() la cierra — si esta guarda
+      // usara auth.currentUser directo, esa ventana dejaría pasar a
+      // /booking/* con una identidad que no pertenece a este dominio.
+      final estaConectado = context.read<ProveedorAuth>().perfil != null;
       final enPaginaAuth = state.matchedLocation == '/login' ||
           state.matchedLocation == '/register' ||
           state.matchedLocation == '/forgot-password';

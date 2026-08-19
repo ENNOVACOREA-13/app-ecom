@@ -75,13 +75,22 @@ class Perfil {
     );
   }
 
-  /// true si esta cuenta pertenece al dominio que se está visitando ahora
-  /// (o es platform_admin, que no pertenece a ningún tenant en particular).
+  /// true si esta cuenta pertenece al dominio que se está visitando ahora.
+  /// platform_admin es un caso especial, pero NO un comodín: solo
+  /// "pertenece" al dominio SIN tenant (el control plane) — su
+  /// profiles.tenant_id es un relleno técnico sin significado (ver
+  /// Tenant.fromMap), así que jamás se compara contra un tenant real. Sin
+  /// este límite, una sesión de platform_admin restaurada en el navegador
+  /// hacía que CUALQUIER dominio de un tenant real (ej. pretty.prettycore.xyz,
+  /// el sitio público de ese negocio) mostrara el panel de control en vez
+  /// de la interfaz normal de ese negocio — confirmado en vivo 2026-08-19.
   /// Usado tanto en RepositorioAuth.iniciarSesion() (rechaza el login, mismo
   /// mensaje que credenciales inválidas) como en ProveedorAuth._validarTenant
-  /// (sesión restaurada/OAuth de otro negocio, cierre de sesión silencioso)
+  /// (sesión restaurada/OAuth de otro dominio, cierre de sesión silencioso)
   /// — nunca debe verse distinto de "no hay sesión", o se estaría
   /// confirmando que el correo/contraseña sí existen en otro negocio.
-  bool perteneceATenant(String? tenantIdActivo) =>
-      rol == RolUsuario.platformAdmin || tenantId == tenantIdActivo;
+  bool perteneceATenant(String? tenantIdActivo) {
+    if (rol == RolUsuario.platformAdmin) return tenantIdActivo == null;
+    return tenantId == tenantIdActivo;
+  }
 }

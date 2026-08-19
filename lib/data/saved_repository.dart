@@ -1,6 +1,15 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/constants.dart';
 
+/// Ver construirPayloadProducto() en product_repository.dart — mismo motivo.
+Map<String, dynamic> construirPayloadGuardado({
+  required String? tenantId,
+  required String userId,
+  required String productId,
+}) {
+  return {'tenant_id': tenantId, 'user_id': userId, 'product_id': productId};
+}
+
 class RepositorioGuardados {
   SupabaseClient get _client => Supabase.instance.client;
 
@@ -13,11 +22,8 @@ class RepositorioGuardados {
   }
 
   Future<void> guardar(String userId, String productId) async {
-    await _client.from('saved_products').insert({
-      'tenant_id': kTenantIdActivo,
-      'user_id': userId,
-      'product_id': productId,
-    });
+    await _client.from('saved_products').insert(
+        construirPayloadGuardado(tenantId: kTenantIdActivo, userId: userId, productId: productId));
   }
 
   Future<void> quitar(String userId, String productId) async {

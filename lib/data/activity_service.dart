@@ -3,6 +3,41 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/constants.dart';
 
+/// Ver construirPayloadProducto() en product_repository.dart — mismo motivo.
+Map<String, dynamic> construirPayloadSesion({
+  required String? tenantId,
+  required String profileId,
+  required String platform,
+  required String device,
+}) {
+  return {
+    'profile_id': profileId,
+    'tenant_id': tenantId,
+    'platform': platform,
+    'device': device,
+    'is_active': true,
+  };
+}
+
+/// Ver construirPayloadProducto() en product_repository.dart — mismo motivo.
+Map<String, dynamic> construirPayloadActividad({
+  required String? tenantId,
+  required String profileId,
+  String? sessionId,
+  required String eventType,
+  required String eventName,
+  Map<String, dynamic>? extra,
+}) {
+  return {
+    'profile_id': profileId,
+    'tenant_id': tenantId,
+    'session_id': sessionId,
+    'event_type': eventType,
+    'event_name': eventName,
+    if (extra != null) 'extra': extra,
+  };
+}
+
 /// Singleton que registra sesiones y actividad del usuario en Supabase.
 class ServicioActividad {
   static final ServicioActividad instancia = ServicioActividad._();
@@ -116,13 +151,12 @@ class ServicioActividad {
       }).eq('profile_id', profileId).eq('is_active', true);
 
       // Crear nueva sesión
-      await _client.from('session_logs').insert({
-        'profile_id': profileId,
-        'tenant_id': kTenantIdActivo,
-        'platform': plataforma,
-        'device': dispositivo,
-        'is_active': true,
-      });
+      await _client.from('session_logs').insert(construirPayloadSesion(
+        tenantId: kTenantIdActivo,
+        profileId: profileId,
+        platform: plataforma,
+        device: dispositivo,
+      ));
 
       // Leer el ID de la sesión recién creada
       final res = await _client
@@ -204,13 +238,13 @@ class ServicioActividad {
     if (_profileId == null) return;
     try {
       await _actualizarUltimaActividad();
-      await _client.from('activity_logs').insert({
-        'profile_id': _profileId,
-        'tenant_id': kTenantIdActivo,
-        'session_id': _sessionId,
-        'event_type': 'screen_view',
-        'event_name': pantalla,
-      });
+      await _client.from('activity_logs').insert(construirPayloadActividad(
+        tenantId: kTenantIdActivo,
+        profileId: _profileId!,
+        sessionId: _sessionId,
+        eventType: 'screen_view',
+        eventName: pantalla,
+      ));
     } catch (_) {}
   }
 
@@ -219,14 +253,14 @@ class ServicioActividad {
     if (_profileId == null) return;
     try {
       await _actualizarUltimaActividad();
-      await _client.from('activity_logs').insert({
-        'profile_id': _profileId,
-        'tenant_id': kTenantIdActivo,
-        'session_id': _sessionId,
-        'event_type': 'tap',
-        'event_name': elemento,
-        if (extra != null) 'extra': extra,
-      });
+      await _client.from('activity_logs').insert(construirPayloadActividad(
+        tenantId: kTenantIdActivo,
+        profileId: _profileId!,
+        sessionId: _sessionId,
+        eventType: 'tap',
+        eventName: elemento,
+        extra: extra,
+      ));
     } catch (_) {}
   }
 
@@ -235,13 +269,13 @@ class ServicioActividad {
     if (_profileId == null) return;
     try {
       await _actualizarUltimaActividad();
-      await _client.from('activity_logs').insert({
-        'profile_id': _profileId,
-        'tenant_id': kTenantIdActivo,
-        'session_id': _sessionId,
-        'event_type': 'feature',
-        'event_name': feature,
-      });
+      await _client.from('activity_logs').insert(construirPayloadActividad(
+        tenantId: kTenantIdActivo,
+        profileId: _profileId!,
+        sessionId: _sessionId,
+        eventType: 'feature',
+        eventName: feature,
+      ));
     } catch (_) {}
   }
 

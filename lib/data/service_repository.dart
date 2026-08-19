@@ -3,6 +3,14 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/constants.dart';
 import '../domain/models/service_model.dart';
 
+/// Ver construirPayloadProducto() en product_repository.dart — mismo motivo.
+Map<String, dynamic> construirPayloadServicio({
+  required String? tenantId,
+  required ModeloServicio servicio,
+}) {
+  return {...servicio.toMap(), 'tenant_id': tenantId};
+}
+
 class RepositorioServicio {
   SupabaseClient get _client => Supabase.instance.client;
 
@@ -23,7 +31,7 @@ class RepositorioServicio {
   Future<ModeloServicio> crearServicio(ModeloServicio servicio) async {
     final datos = await _client
         .from('services')
-        .insert({...servicio.toMap(), 'tenant_id': kTenantIdActivo})
+        .insert(construirPayloadServicio(tenantId: kTenantIdActivo, servicio: servicio))
         .select()
         .single();
     return ModeloServicio.fromMap(datos);

@@ -6,6 +6,28 @@ import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../data/activity_service.dart';
 
+/// Ver construirPayloadProducto() en product_repository.dart — mismo motivo.
+Map<String, dynamic> construirPayloadCrearInsumo({
+  required String? tenantId,
+  required String creadoPor,
+  required String nombre,
+  String? descripcion,
+  required int cantidad,
+  required double precio,
+  required String unidad,
+}) {
+  return {
+    'name': nombre,
+    'description': descripcion,
+    'stock': cantidad,
+    'price': precio,
+    'unit': unidad,
+    'status': 'active',
+    'created_by': creadoPor,
+    'tenant_id': tenantId,
+  };
+}
+
 class PaginaInsumos extends StatefulWidget {
   const PaginaInsumos({super.key});
 
@@ -116,22 +138,28 @@ class _PaginaInsumosState extends State<PaginaInsumos> {
                         borderRadius: BorderRadius.circular(12))),
                 onPressed: () async {
                   Navigator.pop(ctx);
-                  final datos = {
-                    'name': nombreCtrl.text.trim(),
-                    'description': descCtrl.text.trim().isEmpty
-                        ? null
-                        : descCtrl.text.trim(),
-                    'stock': int.tryParse(cantidadCtrl.text) ?? 0,
-                    'price': double.tryParse(precioCtrl.text) ?? 0,
-                    'unit': unidadCtrl.text.trim(),
-                    'status': 'active',
-                  };
+                  final descripcion = descCtrl.text.trim().isEmpty ? null : descCtrl.text.trim();
                   if (insumo == null) {
-                    datos['created_by'] = perfil!.id;
-                    datos['tenant_id'] = kTenantIdActivo;
+                    final datos = construirPayloadCrearInsumo(
+                      tenantId: kTenantIdActivo,
+                      creadoPor: perfil!.id,
+                      nombre: nombreCtrl.text.trim(),
+                      descripcion: descripcion,
+                      cantidad: int.tryParse(cantidadCtrl.text) ?? 0,
+                      precio: double.tryParse(precioCtrl.text) ?? 0,
+                      unidad: unidadCtrl.text.trim(),
+                    );
                     await _client.from('supplies').insert(datos);
                     ServicioActividad.instancia.registrarFeature('crear_insumo');
                   } else {
+                    final datos = {
+                      'name': nombreCtrl.text.trim(),
+                      'description': descripcion,
+                      'stock': int.tryParse(cantidadCtrl.text) ?? 0,
+                      'price': double.tryParse(precioCtrl.text) ?? 0,
+                      'unit': unidadCtrl.text.trim(),
+                      'status': 'active',
+                    };
                     await _client.from('supplies')
                         .update(datos).eq('id', insumo['id']);
                     ServicioActividad.instancia.registrarFeature('editar_insumo');

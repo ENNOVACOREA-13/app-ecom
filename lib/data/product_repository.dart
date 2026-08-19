@@ -3,6 +3,33 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/constants.dart';
 import '../domain/models/product.dart';
 
+/// Separado de crearProducto() para poder probar en un test puro (sin
+/// mockear Supabase) que el payload siempre incluye tenant_id — el tipo
+/// de bug que rompió la creación de productos en silencio (RLS lo
+/// rechazaba con "violates row-level security policy").
+Map<String, dynamic> construirPayloadProducto({
+  required String? tenantId,
+  required String nombre,
+  String? descripcion,
+  required double precio,
+  double? precioOferta,
+  required int existencias,
+  required String creadoPor,
+  String? urlImagen,
+}) {
+  return {
+    'tenant_id': tenantId,
+    'name': nombre,
+    'description': descripcion,
+    'price': precio,
+    'sale_price': precioOferta,
+    'stock': existencias,
+    'created_by': creadoPor,
+    'image_url': urlImagen,
+    'status': 'active',
+  };
+}
+
 class RepositorioProducto {
   SupabaseClient get _client => Supabase.instance.client;
 
@@ -33,17 +60,20 @@ class RepositorioProducto {
     required String creadoPor,
     String? urlImagen,
   }) async {
-    final datos = await _client.from('products').insert({
-      'tenant_id': kTenantIdActivo,
-      'name': nombre,
-      'description': descripcion,
-      'price': precio,
-      'sale_price': precioOferta,
-      'stock': existencias,
-      'created_by': creadoPor,
-      'image_url': urlImagen,
-      'status': 'active',
-    }).select().single();
+    final datos = await _client
+        .from('products')
+        .insert(construirPayloadProducto(
+          tenantId: kTenantIdActivo,
+          nombre: nombre,
+          descripcion: descripcion,
+          precio: precio,
+          precioOferta: precioOferta,
+          existencias: existencias,
+          creadoPor: creadoPor,
+          urlImagen: urlImagen,
+        ))
+        .select()
+        .single();
     return Producto.fromMap(datos);
   }
 

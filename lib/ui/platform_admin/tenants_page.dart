@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
+import '../../data/user_provisioning_service.dart';
 import '../../domain/models/tenant.dart';
 import '../../providers/tenant_provider.dart';
 
@@ -12,6 +13,8 @@ class PaginaNegocios extends StatefulWidget {
 }
 
 class _PaginaNegociosState extends State<PaginaNegocios> {
+  final _servicioAlta = ServicioAltaUsuarios();
+
   @override
   void initState() {
     super.initState();
@@ -163,6 +166,103 @@ class _PaginaNegociosState extends State<PaginaNegocios> {
     );
   }
 
+  Future<void> _mostrarDialogoInvitarAdmin(Tenant tenant, String role) async {
+    final ctrlNombre = TextEditingController();
+    final ctrlEmail = TextEditingController();
+    bool guardando = false;
+    String? errorInvitacion;
+    final claveFormulario = GlobalKey<FormState>();
+    final etiquetaRol = role == 'sysadmin' ? 'sysadmin' : 'administrador';
+
+    final exito = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setLocal) => AlertDialog(
+          backgroundColor: Colors.white,
+          title: Text('Invitar $etiquetaRol a ${tenant.businessName}',
+              style: const TextStyle(color: Color(0xFF1C1C1E))),
+          content: Form(
+            key: claveFormulario,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: ctrlNombre,
+                  autofocus: true,
+                  style: const TextStyle(color: Color(0xFF1C1C1E)),
+                  decoration: InputDecoration(
+                    labelText: 'Nombre completo',
+                    filled: true,
+                    fillColor: const Color(0xFFF2F2F7),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                  ),
+                  validator: (v) => (v == null || v.trim().isEmpty) ? 'Ingresa un nombre' : null,
+                ),
+                const SizedBox(height: 14),
+                TextFormField(
+                  controller: ctrlEmail,
+                  keyboardType: TextInputType.emailAddress,
+                  style: const TextStyle(color: Color(0xFF1C1C1E)),
+                  decoration: InputDecoration(
+                    labelText: 'Email',
+                    filled: true,
+                    fillColor: const Color(0xFFF2F2F7),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                  ),
+                  validator: (v) =>
+                      (v == null || !v.contains('@')) ? 'Email inválido' : null,
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Se le manda un correo de invitación para que configure su propia contraseña.',
+                  style: TextStyle(fontSize: 12, color: kTextSub),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: context.colorPrimario),
+              onPressed: guardando
+                  ? null
+                  : () async {
+                      if (!claveFormulario.currentState!.validate()) return;
+                      setLocal(() => guardando = true);
+                      var ok = true;
+                      try {
+                        await _servicioAlta.invitarUsuario(
+                          email: ctrlEmail.text.trim(),
+                          fullName: ctrlNombre.text.trim(),
+                          role: role,
+                          tenantId: tenant.id,
+                        );
+                      } catch (e) {
+                        ok = false;
+                        errorInvitacion = e.toString();
+                      }
+                      if (ctx.mounted) Navigator.pop(ctx, ok);
+                    },
+              child: const Text('Invitar', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(exito == true
+            ? 'Invitación enviada'
+            : (errorInvitacion ?? 'No se pudo enviar la invitación')),
+        backgroundColor: exito == true ? Colors.green : Colors.red,
+      ),
+    );
+  }
+
   Future<void> _confirmarQuitarDominio(TenantDomain dominio) async {
     final ok = await showDialog<bool>(
       context: context,
@@ -292,6 +392,12 @@ class _PaginaNegociosState extends State<PaginaNegocios> {
                                       onSelected: (accion) {
                                         if (accion == 'dominio') _mostrarDialogoDominio(t);
                                         if (accion == 'status') _alternarStatus(t);
+                                        if (accion == 'admin') {
+                                          _mostrarDialogoInvitarAdmin(t, 'admin');
+                                        }
+                                        if (accion == 'sysadmin') {
+                                          _mostrarDialogoInvitarAdmin(t, 'sysadmin');
+                                        }
                                       },
                                       itemBuilder: (_) => [
                                         const PopupMenuItem(
@@ -300,6 +406,20 @@ class _PaginaNegociosState extends State<PaginaNegocios> {
                                               Icon(Icons.language, size: 18),
                                               SizedBox(width: 8),
                                               Text('Agregar dominio'),
+                                            ])),
+                                        const PopupMenuItem(
+                                            value: 'admin',
+                                            child: Row(children: [
+                                              Icon(Icons.admin_panel_settings_outlined, size: 18),
+                                              SizedBox(width: 8),
+                                              Text('Invitar administrador'),
+                                            ])),
+                                        const PopupMenuItem(
+                                            value: 'sysadmin',
+                                            child: Row(children: [
+                                              Icon(Icons.shield_outlined, size: 18),
+                                              SizedBox(width: 8),
+                                              Text('Invitar sysadmin'),
                                             ])),
                                         PopupMenuItem(
                                             value: 'status',

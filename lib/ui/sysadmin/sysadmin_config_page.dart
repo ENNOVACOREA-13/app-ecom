@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -6,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../data/activity_service.dart';
+import '../../data/user_provisioning_service.dart';
 
 class PaginaConfigSysadmin extends StatefulWidget {
   const PaginaConfigSysadmin({super.key});
@@ -17,6 +17,7 @@ class PaginaConfigSysadmin extends StatefulWidget {
 class PaginaConfigSysadminState extends State<PaginaConfigSysadmin> {
   void recargar() => _cargar();
   final _client = Supabase.instance.client;
+  final _servicioAlta = ServicioAltaUsuarios();
   List<Map<String, dynamic>> _usuarios = [];
   bool _cargando = true;
   String _busqueda = '';
@@ -67,9 +68,7 @@ class PaginaConfigSysadminState extends State<PaginaConfigSysadmin> {
     final nombreCtrl = TextEditingController();
     final emailCtrl = TextEditingController();
     final telCtrl = TextEditingController();
-    final passCtrl = TextEditingController();
     String rolSel = 'client';
-    bool ocultarPass = true;
 
     await showModalBottomSheet(
       context: context,
@@ -105,23 +104,10 @@ class PaginaConfigSysadminState extends State<PaginaConfigSysadmin> {
                 _Campo(ctrl: telCtrl, etiqueta: 'Teléfono (opcional)',
                     icono: Icons.phone_outlined,
                     tipo: TextInputType.phone),
-                const SizedBox(height: 12),
-                StatefulBuilder(
-                  builder: (_, setPass) => _Campo(
-                    ctrl: passCtrl,
-                    etiqueta: 'Contraseña',
-                    icono: Icons.lock_outline,
-                    ocultar: ocultarPass,
-                    sufijo: IconButton(
-                      icon: Icon(ocultarPass
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined,
-                          color: kTextSub),
-                      onPressed: () {
-                        setS(() => ocultarPass = !ocultarPass);
-                      },
-                    ),
-                  ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Se le manda un correo de invitación para que configure su propia contraseña.',
+                  style: TextStyle(fontSize: 12, color: kTextSub),
                 ),
                 const SizedBox(height: 12),
                 const Text('Rol', style: TextStyle(
@@ -148,13 +134,12 @@ class PaginaConfigSysadminState extends State<PaginaConfigSysadmin> {
                     onPressed: () async {
                       final nombre = nombreCtrl.text.trim();
                       final email = emailCtrl.text.trim();
-                      final pass = passCtrl.text;
                       final tel = telCtrl.text.trim();
 
-                      if (nombre.isEmpty || email.isEmpty || pass.length < 6) {
+                      if (nombre.isEmpty || email.isEmpty || !email.contains('@')) {
                         ScaffoldMessenger.of(ctx).showSnackBar(
                           const SnackBar(content: Text(
-                              'Nombre, email y contraseña (mín 6) son requeridos')),
+                              'Nombre y email son requeridos')),
                         );
                         return;
                       }
@@ -162,7 +147,7 @@ class PaginaConfigSysadminState extends State<PaginaConfigSysadmin> {
                       Navigator.pop(ctx);
                       await _ejecutarCrearUsuario(
                           nombre: nombre, email: email,
-                          pass: pass, telefono: tel, rol: rolSel);
+                          telefono: tel, rol: rolSel);
                     },
                     child: const Text('Crear usuario',
                         style: TextStyle(color: Colors.white,
@@ -180,41 +165,26 @@ class PaginaConfigSysadminState extends State<PaginaConfigSysadmin> {
 
   Future<void> _ejecutarCrearUsuario({
     required String nombre, required String email,
-    required String pass, required String telefono, required String rol,
+    required String telefono, required String rol,
   }) async {
-    // Guardar sesión actual del sysadmin
-    final sesionJson = _client.auth.currentSession != null
-        ? jsonEncode(_client.auth.currentSession!.toJson())
-        : null;
-
     try {
-      final res = await _client.auth.signUp(
-        email: email,
-        password: pass,
-        data: {'full_name': nombre, 'role': rol},
+      final idUsuario = await _servicioAlta.invitarUsuario(
+        email: email, fullName: nombre, role: rol,
       );
 
-      if (res.user != null) {
-        await Future.delayed(const Duration(milliseconds: 800));
+      if (telefono.isNotEmpty) {
+        await _client.from('profiles')
+            .update({'phone': telefono}).eq('id', idUsuario);
+      }
 
-        final existe = await _client
-            .from('profiles').select().eq('id', res.user!.id).maybeSingle();
-        if (existe == null) {
-          await _client.from('profiles').upsert({
-            'id': res.user!.id,
-            'full_name': nombre,
-            'role': rol,
-            'is_active': true,
-          });
-        } else if (existe['role'] != rol) {
-          await _client.from('profiles')
-              .update({'role': rol}).eq('id', res.user!.id);
-        }
-
-        if (telefono.isNotEmpty) {
-          await _client.from('profiles')
-              .update({'phone': telefono}).eq('id', res.user!.id);
-        }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Invitación enviada correctamente'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        _cargar();
       }
     } catch (e) {
       if (mounted) {
@@ -222,23 +192,6 @@ class PaginaConfigSysadminState extends State<PaginaConfigSysadmin> {
           SnackBar(content: Text('Error al crear usuario: $e')),
         );
       }
-    }
-
-    // Restaurar sesión del sysadmin
-    if (sesionJson != null) {
-      try {
-        await _client.auth.recoverSession(sesionJson);
-      } catch (_) {}
-    }
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Usuario creado correctamente'),
-          backgroundColor: Colors.green,
-        ),
-      );
-      _cargar();
     }
   }
 

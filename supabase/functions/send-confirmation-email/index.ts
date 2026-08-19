@@ -29,15 +29,17 @@ Deno.serve(async (req) => {
 
     const { data: perfil } = await admin
       .from('profiles')
-      .select('full_name')
+      .select('full_name, tenant_id')
       .eq('id', user.id)
       .maybeSingle();
+    if (!perfil) throw new Error('profile_not_found');
 
     const token = crypto.randomUUID() + crypto.randomUUID();
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
 
     const { error: insertError } = await admin.from('email_verification_tokens').insert({
       user_id: user.id,
+      tenant_id: perfil.tenant_id,
       token,
       expires_at: expiresAt,
     });

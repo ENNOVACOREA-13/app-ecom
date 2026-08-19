@@ -1,9 +1,7 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import '../../core/constants.dart';
 import '../../data/employee_repository.dart';
 import '../../data/service_repository.dart';
+import '../../data/user_provisioning_service.dart';
 import '../../domain/enums/user_role.dart';
 import '../../domain/models/profile.dart';
 import '../../domain/models/service_model.dart';
@@ -39,6 +37,7 @@ class _PaginaGestionEmpleadosState extends State<PaginaGestionEmpleados>
     with SingleTickerProviderStateMixin {
   final _repo = RepositorioEmpleado();
   final _repoServicio = RepositorioServicio();
+  final _servicioAlta = ServicioAltaUsuarios();
   List<Perfil> _usuarios = [];
   bool _cargando = true;
   late TabController _pestanas;
@@ -121,7 +120,6 @@ class _PaginaGestionEmpleadosState extends State<PaginaGestionEmpleados>
   Future<void> _mostrarDialogoCrearEmpleado() async {
     final ctrlNombre = TextEditingController();
     final ctrlEmail = TextEditingController();
-    final ctrlContrasena = TextEditingController();
     final claveFormulario = GlobalKey<FormState>();
 
     final exito = await showDialog<bool>(
@@ -159,15 +157,10 @@ class _PaginaGestionEmpleadosState extends State<PaginaGestionEmpleados>
                 validator: (v) =>
                     (v == null || !v.contains('@')) ? 'Email inválido' : null,
               ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: ctrlContrasena,
-                style: const TextStyle(color: Color(0xFF1C1C1E)),
-                obscureText: true,
-                decoration:
-                    const InputDecoration(labelText: 'Contraseña temporal *'),
-                validator: (v) =>
-                    (v == null || v.length < 6) ? 'Mínimo 6 caracteres' : null,
+              const SizedBox(height: 8),
+              const Text(
+                'Se le manda un correo de invitación para que configure su propia contraseña.',
+                style: TextStyle(fontSize: 12, color: kTextSub),
               ),
             ],
           ),
@@ -191,37 +184,18 @@ class _PaginaGestionEmpleadosState extends State<PaginaGestionEmpleados>
     if (exito != true || !mounted) return;
 
     try {
-      final respuesta = await http.post(
-        Uri.parse('$kSupabaseUrl/auth/v1/signup'),
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': kSupabaseAnonKey,
-        },
-        body: jsonEncode({
-          'email': ctrlEmail.text.trim(),
-          'password': ctrlContrasena.text,
-          'data': {
-            'full_name': ctrlNombre.text.trim(),
-            'role': 'employee',
-          },
-        }),
+      await _servicioAlta.invitarUsuario(
+        email: ctrlEmail.text.trim(),
+        fullName: ctrlNombre.text.trim(),
+        role: 'employee',
       );
-
-      final cuerpo = jsonDecode(respuesta.body) as Map<String, dynamic>;
-
-      if (respuesta.statusCode == 200 && cuerpo['id'] != null) {
-        final idUsuario = cuerpo['id'] as String;
-        await _repo.actualizarRolUsuario(idUsuario, RolUsuario.employee);
-        await _cargar();
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text('Empleado creado correctamente'),
-                backgroundColor: Colors.green),
-          );
-        }
-      } else {
-        throw cuerpo['msg'] ?? cuerpo['message'] ?? 'Error desconocido';
+      await _cargar();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Invitación enviada correctamente'),
+              backgroundColor: Colors.green),
+        );
       }
     } catch (e) {
       if (mounted) {
@@ -234,7 +208,6 @@ class _PaginaGestionEmpleadosState extends State<PaginaGestionEmpleados>
 
     ctrlNombre.dispose();
     ctrlEmail.dispose();
-    ctrlContrasena.dispose();
   }
 
   @override

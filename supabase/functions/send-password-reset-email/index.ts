@@ -38,15 +38,17 @@ Deno.serve(async (req) => {
 
     const { data: perfil } = await admin
       .from('profiles')
-      .select('full_name')
+      .select('full_name, tenant_id')
       .eq('id', userId)
       .maybeSingle();
+    if (!perfil) return responderExito();
 
     const token = crypto.randomUUID() + crypto.randomUUID();
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString(); // 1 hora
 
     const { error: insertError } = await admin.from('password_reset_tokens').insert({
       user_id: userId,
+      tenant_id: perfil.tenant_id,
       token,
       expires_at: expiresAt,
     });
@@ -83,9 +85,10 @@ Deno.serve(async (req) => {
     await client.close();
 
     return responderExito();
-  } catch (_error) {
+  } catch (error) {
     // No filtramos detalles del error al cliente por el mismo motivo de
     // no-enumeración; queda registrado en los logs de la función.
+    console.error('send-password-reset-email failed:', error);
     return responderExito();
   }
 });

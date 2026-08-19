@@ -96,6 +96,31 @@ class RepositorioConfig {
     }
   }
 
+  Future<String?> obtenerLogoUrl() async {
+    try {
+      final data = await _db
+          .from('app_config')
+          .select('logo_url')
+          .single();
+      return data['logo_url'] as String?;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<bool> actualizarLogoUrl(String url) async {
+    try {
+      final res = await _db.from('app_config').upsert({
+        'id': true,
+        'logo_url': url,
+        'updated_at': DateTime.now().toUtc().toIso8601String(),
+      }).select();
+      return (res).isNotEmpty;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<bool> obtenerEditorVistasAdmin() async {
     try {
       final data = await _db

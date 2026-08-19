@@ -34,6 +34,13 @@ Deno.serve(async (req) => {
       .maybeSingle();
     if (!perfil) throw new Error('profile_not_found');
 
+    const { data: tenant } = await admin
+      .from('tenants')
+      .select('business_name')
+      .eq('id', perfil.tenant_id)
+      .maybeSingle();
+    const negocio = (tenant?.business_name as string | undefined) || 'tu negocio';
+
     const token = crypto.randomUUID() + crypto.randomUUID();
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
 
@@ -60,12 +67,12 @@ Deno.serve(async (req) => {
     await client.send({
       from: SMTP_USER,
       to: user.email,
-      subject: 'Confirma tu cuenta – Mil Cositas',
-      content: `Confirma tu cuenta en Mil Cositas visitando este enlace: ${link}\n\nSi no creaste esta cuenta, ignora este correo. El enlace expira en 24 horas.`,
+      subject: `Confirma tu cuenta – ${negocio}`,
+      content: `Confirma tu cuenta en ${negocio} visitando este enlace: ${link}\n\nSi no creaste esta cuenta, ignora este correo. El enlace expira en 24 horas.`,
       html: `
         <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;">
           <h2>¡Hola, ${nombre}!</h2>
-          <p>Gracias por registrarte en <strong>Mil Cositas</strong>. Confirma tu correo para activar tu cuenta:</p>
+          <p>Gracias por registrarte en <strong>${negocio}</strong>. Confirma tu correo para activar tu cuenta:</p>
           <p style="text-align:center;margin:28px 0;">
             <a href="${link}" style="background:#1C1C1E;color:#fff;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:bold;">Confirmar mi cuenta</a>
           </p>

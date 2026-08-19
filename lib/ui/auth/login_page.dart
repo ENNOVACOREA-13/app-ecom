@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/config_provider.dart';
 import '../../core/constants.dart';
 import '../../core/theme/app_theme.dart';
 import '../common/app_widgets.dart';
@@ -36,6 +37,7 @@ class _PaginaLoginState extends State<PaginaLogin> {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<ProveedorAuth>();
+    final logoUrl = context.watch<ProveedorConfig>().logoUrl;
 
     return Scaffold(
       backgroundColor: kBackground,
@@ -61,10 +63,9 @@ class _PaginaLoginState extends State<PaginaLogin> {
                     borderRadius: const BorderRadius.all(Radius.circular(24)),
                     child: Padding(
                       padding: const EdgeInsets.all(10),
-                      child: Image.asset(
-                        kLogoBarberiaAsset,
-                        fit: BoxFit.contain,
-                      ),
+                      child: logoUrl != null && logoUrl.isNotEmpty
+                          ? Image.network(logoUrl, fit: BoxFit.contain)
+                          : Image.asset(kLogoBarberiaAsset, fit: BoxFit.contain),
                     ),
                   ),
                 ),

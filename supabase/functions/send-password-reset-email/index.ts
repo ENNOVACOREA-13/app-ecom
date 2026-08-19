@@ -43,6 +43,13 @@ Deno.serve(async (req) => {
       .maybeSingle();
     if (!perfil) return responderExito();
 
+    const { data: tenant } = await admin
+      .from('tenants')
+      .select('business_name')
+      .eq('id', perfil.tenant_id)
+      .maybeSingle();
+    const negocio = (tenant?.business_name as string | undefined) || 'tu negocio';
+
     const token = crypto.randomUUID() + crypto.randomUUID();
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString(); // 1 hora
 
@@ -69,12 +76,12 @@ Deno.serve(async (req) => {
     await client.send({
       from: SMTP_USER,
       to: email,
-      subject: 'Restablece tu contraseña – Mil Cositas',
-      content: `Restablece tu contraseña en Mil Cositas visitando este enlace: ${link}\n\nSi no solicitaste esto, ignora este correo. El enlace expira en 1 hora.`,
+      subject: `Restablece tu contraseña – ${negocio}`,
+      content: `Restablece tu contraseña en ${negocio} visitando este enlace: ${link}\n\nSi no solicitaste esto, ignora este correo. El enlace expira en 1 hora.`,
       html: `
         <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;">
           <h2>¡Hola, ${nombre}!</h2>
-          <p>Recibimos una solicitud para restablecer tu contraseña en <strong>Mil Cositas</strong>:</p>
+          <p>Recibimos una solicitud para restablecer tu contraseña en <strong>${negocio}</strong>:</p>
           <p style="text-align:center;margin:28px 0;">
             <a href="${link}" style="background:#1C1C1E;color:#fff;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:bold;">Restablecer mi contraseña</a>
           </p>

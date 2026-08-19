@@ -81,6 +81,10 @@ Deno.serve(async (req) => {
       return responder(403, { success: false, error: 'role_not_allowed' });
     }
 
+    const { data: tenantInfo } = await admin
+      .from('tenants').select('business_name').eq('id', targetTenantId).maybeSingle();
+    const negocio = (tenantInfo?.business_name as string | undefined) || 'tu negocio';
+
     const { data: created, error: createError } = await admin.auth.admin.createUser({
       email,
       password: crypto.randomUUID() + crypto.randomUUID(),
@@ -129,12 +133,12 @@ Deno.serve(async (req) => {
     await client.send({
       from: SMTP_USER,
       to: email,
-      subject: 'Te invitaron a administrar tu negocio – Mil Cositas',
-      content: `¡Hola ${fullName}! Te dieron acceso como ${etiquetasRol[role] ?? role}. Configura tu contraseña aquí: ${link}\n\nEste enlace expira en 72 horas.`,
+      subject: `Te invitaron a administrar ${negocio}`,
+      content: `¡Hola ${fullName}! Te dieron acceso a ${negocio} como ${etiquetasRol[role] ?? role}. Configura tu contraseña aquí: ${link}\n\nEste enlace expira en 72 horas.`,
       html: `
         <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;">
           <h2>¡Hola, ${fullName}!</h2>
-          <p>Te dieron acceso como <strong>${etiquetasRol[role] ?? role}</strong>. Configura tu contraseña para entrar:</p>
+          <p>Te dieron acceso a <strong>${negocio}</strong> como <strong>${etiquetasRol[role] ?? role}</strong>. Configura tu contraseña para entrar:</p>
           <p style="text-align:center;margin:28px 0;">
             <a href="${link}" style="background:#1C1C1E;color:#fff;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:bold;">Configurar mi contraseña</a>
           </p>

@@ -70,7 +70,8 @@ class _PaginaTableroSysadminState extends State<PaginaTableroSysadmin> {
   @override
   Widget build(BuildContext context) {
     final perfil = context.watch<ProveedorAuth>().perfil;
-    final tiendaHabilitada = context.watch<ProveedorConfig>().tiendaHabilitada;
+    final cfg = context.watch<ProveedorConfig>();
+    final tiendaHabilitada = cfg.tiendaHabilitada;
     final color = context.colorPrimario;
     final fmt = NumberFormat.currency(locale: 'es_MX', symbol: '\$');
 
@@ -102,10 +103,12 @@ class _PaginaTableroSysadminState extends State<PaginaTableroSysadmin> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Row(children: [
-                              const CircleAvatar(
+                              CircleAvatar(
                                 radius: 21,
                                 backgroundColor: Colors.white,
-                                backgroundImage: AssetImage(kLogoBarberiaAsset),
+                                backgroundImage: (cfg.logoUrl != null && cfg.logoUrl!.isNotEmpty)
+                                    ? NetworkImage(cfg.logoUrl!)
+                                    : AssetImage(kLogoBarberiaAsset) as ImageProvider,
                               ),
                               const SizedBox(width: 8),
                               GestureDetector(

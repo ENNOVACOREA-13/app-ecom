@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Confirmar cuenta – Mil Cositas</title>
+  <title>Confirmar cuenta</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -63,7 +63,7 @@
         .then(function (r) { return r.json(); })
         .then(function (data) {
           if (data.success) {
-            render('✅', '¡Cuenta confirmada!', 'Ya puedes volver a la app de Mil Cositas e iniciar sesión.', 'ok');
+            render('✅', '¡Cuenta confirmada!', 'Ya puedes volver a la app e iniciar sesión.', 'ok');
           } else {
             var mensajes = {
               token_expired: 'Este enlace ya expiró. Vuelve a intentar registrarte o inicia sesión para pedir uno nuevo.',

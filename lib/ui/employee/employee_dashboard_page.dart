@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../data/booking_repository.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/commission_provider.dart';
+import '../../providers/config_provider.dart';
 import '../../domain/models/commission_model.dart';
 import '../../core/constants.dart';
 import '../../core/theme/app_theme.dart';
@@ -51,6 +52,7 @@ class PaginaTableroEmpleadoState extends State<PaginaTableroEmpleado> {
   Widget build(BuildContext context) {
     final perfil = context.watch<ProveedorAuth>().perfil;
     final comision = context.watch<ProveedorComision>();
+    final logoUrl = context.watch<ProveedorConfig>().logoUrl;
 
     return Scaffold(
       body: _cargando
@@ -90,10 +92,12 @@ class PaginaTableroEmpleadoState extends State<PaginaTableroEmpleado> {
                         ),
                         const IconoNotificaciones(color: Colors.white),
                         const SizedBox(width: 14),
-                        const CircleAvatar(
+                        CircleAvatar(
                           radius: 20,
                           backgroundColor: Colors.white,
-                          backgroundImage: AssetImage(kLogoBarberiaAsset),
+                          backgroundImage: (logoUrl != null && logoUrl.isNotEmpty)
+                              ? NetworkImage(logoUrl)
+                              : AssetImage(kLogoBarberiaAsset) as ImageProvider,
                         ),
                       ],
                     ),

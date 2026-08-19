@@ -16,6 +16,7 @@ class ProveedorConfig extends ChangeNotifier {
   String _bannerAlineacion = 'left';
   String? _bannerBotonTexto;
   String? _bannerBotonLink;
+  String? _logoUrl;
   bool _tiendaHabilitada = true;
   bool _editorVistasAdmin = false;
   String _categoriasTitulo = 'Categorías de Servicios';
@@ -49,6 +50,7 @@ class ProveedorConfig extends ChangeNotifier {
       List<Map<String, dynamic>>.from(kSeccionesHomePorDefecto);
 
   // ── Getters: en vivo ───────────────────────────────────────────
+  String? get logoUrl => _logoUrl;
   Color get colorPrimario => _colorPrimario;
   Color get colorSecundario => _colorSecundario;
   List<String> get bannerImagenes => List.unmodifiable(_bannerImagenes);
@@ -126,6 +128,7 @@ class ProveedorConfig extends ChangeNotifier {
   }
 
   Future<void> cargar() async {
+    _logoUrl = await _repo.obtenerLogoUrl();
     final color = await _repo.obtenerColorPrimario();
     final colorSecundario = await _repo.obtenerColorSecundario();
     final banner = await _repo.obtenerBannerConfig();
@@ -318,6 +321,15 @@ class ProveedorConfig extends ChangeNotifier {
     if (exito) {
       _reiniciarBorradorDesdeVivo();
       _tieneBorrador = false;
+      notifyListeners();
+    }
+    return exito;
+  }
+
+  Future<bool> actualizarLogoUrl(String url) async {
+    final exito = await _repo.actualizarLogoUrl(url);
+    if (exito) {
+      _logoUrl = url;
       notifyListeners();
     }
     return exito;

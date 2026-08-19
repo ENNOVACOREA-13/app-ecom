@@ -27,6 +27,26 @@ class PaginaDisenadorVista extends StatelessWidget {
     }
   }
 
+  Future<void> _cambiarLogo(BuildContext context) async {
+    final url = await ServicioFTP.seleccionarYSubirImagen(
+      nombreArchivo: 'logo',
+      onError: (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e)));
+        }
+      },
+    );
+    if (url == null || !context.mounted) return;
+
+    final exito = await context.read<ProveedorConfig>().actualizarLogoUrl(url);
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(exito ? 'Logo actualizado' : 'Error al guardar el logo'),
+        backgroundColor: exito ? Colors.green : Colors.red,
+      ));
+    }
+  }
+
   Future<void> _toggleEditorVistasAdmin(BuildContext context, bool valor) async {
     final cfg = context.read<ProveedorConfig>();
     final exito = await cfg.actualizarEditorVistasAdmin(valor);
@@ -818,6 +838,44 @@ class PaginaDisenadorVista extends StatelessWidget {
               ),
               const SizedBox(height: 24),
             ],
+            const Text('Identidad del negocio',
+                style: TextStyle(
+                    fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF1C1C1E))),
+            const SizedBox(height: 4),
+            const Text(
+              'El logo se usa en el login, el splash y los encabezados de toda la app.',
+              style: TextStyle(fontSize: 12, color: Color(0xFF8E8E93)),
+            ),
+            const SizedBox(height: 16),
+            TarjetaSeccion(
+              child: Row(
+                children: [
+                  ClipOval(
+                    child: cfg.logoUrl != null && cfg.logoUrl!.isNotEmpty
+                        ? Image.network(cfg.logoUrl!, width: 56, height: 56, fit: BoxFit.cover)
+                        : Container(
+                            width: 56,
+                            height: 56,
+                            color: const Color(0xFFF2F2F7),
+                            child: const Icon(Icons.storefront_outlined, color: Color(0xFF8E8E93)),
+                          ),
+                  ),
+                  const SizedBox(width: 14),
+                  const Expanded(
+                    child: Text('Logo del negocio',
+                        style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                            color: Color(0xFF1C1C1E))),
+                  ),
+                  TextButton(
+                    onPressed: () => _cambiarLogo(context),
+                    child: const Text('Cambiar'),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
             const Text('Módulos de la app',
                 style: TextStyle(
                     fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF1C1C1E))),

@@ -75,7 +75,8 @@ class PaginaTableroAdminState extends State<PaginaTableroAdmin> {
   @override
   Widget build(BuildContext context) {
     final perfil = context.watch<ProveedorAuth>().perfil;
-    final tiendaHabilitada = context.watch<ProveedorConfig>().tiendaHabilitada;
+    final cfg = context.watch<ProveedorConfig>();
+    final tiendaHabilitada = cfg.tiendaHabilitada;
     final nombre = perfil?.nombreCompleto.split(' ').first ?? 'Admin';
     final hoy = DateFormat("EEEE d 'de' MMMM", 'es_ES').format(DateTime.now());
 
@@ -150,10 +151,12 @@ class PaginaTableroAdminState extends State<PaginaTableroAdmin> {
                                 children: [
                                   const IconoNotificaciones(color: Colors.white),
                                   const SizedBox(width: 10),
-                                  const CircleAvatar(
+                                  CircleAvatar(
                                     radius: 20,
                                     backgroundColor: Colors.white,
-                                    backgroundImage: AssetImage(kLogoBarberiaAsset),
+                                    backgroundImage: (cfg.logoUrl != null && cfg.logoUrl!.isNotEmpty)
+                                        ? NetworkImage(cfg.logoUrl!)
+                                        : AssetImage(kLogoBarberiaAsset) as ImageProvider,
                                   ),
                                   const SizedBox(width: 8),
                                   GestureDetector(

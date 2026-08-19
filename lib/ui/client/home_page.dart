@@ -520,10 +520,12 @@ class _PaginaInicioState extends State<PaginaInicio> {
                     _IconoCarrito(key: _carritoKey),
                     const SizedBox(width: 12),
                   ],
-                  const CircleAvatar(
+                  CircleAvatar(
                     radius: 22,
                     backgroundColor: Colors.white,
-                    backgroundImage: AssetImage(kLogoBarberiaAsset),
+                    backgroundImage: (provConfig.logoUrl != null && provConfig.logoUrl!.isNotEmpty)
+                        ? NetworkImage(provConfig.logoUrl!)
+                        : AssetImage(kLogoBarberiaAsset) as ImageProvider,
                   ),
                   const SizedBox(width: 12),
                   AvatarRed(

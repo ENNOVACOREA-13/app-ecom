@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Restablecer contraseña – Mil Cositas</title>
+  <title>Restablecer contraseña</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -112,7 +112,7 @@
           .then(function (r) { return r.json(); })
           .then(function (data) {
             if (data.success) {
-              render('✅', '¡Contraseña actualizada!', 'Ya puedes volver a la app de Mil Cositas e iniciar sesión con tu nueva contraseña.', 'ok');
+              render('✅', '¡Contraseña actualizada!', 'Ya puedes volver a la app e iniciar sesión con tu nueva contraseña.', 'ok');
             } else {
               var mensajes = {
                 token_expired: 'Este enlace ya expiró. Solicita uno nuevo desde la app.',

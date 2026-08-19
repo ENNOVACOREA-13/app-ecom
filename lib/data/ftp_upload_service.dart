@@ -1,21 +1,25 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../core/constants.dart';
 
-/// Sube imágenes al servidor Hostinger vía HTTP multipart.
-/// El script PHP (server/upload.php) debe estar en public_html/upload.php.
+/// Sube imágenes a Supabase Storage (bucket público `media`), bajo
+/// `{tenant_id}/nombreArchivo.ext` — RLS en storage.objects exige que quien
+/// escribe sea admin/sysadmin del mismo tenant del prefijo (ver migración
+/// 20260819110000_storage_media_bucket_and_logo.sql). Reemplaza al viejo
+/// ServicioFTP (subía a un script PHP en el Hostinger/Hetzner ya dado de
+/// baja) manteniendo el mismo nombre de clase/método para no tocar cada
+/// pantalla que lo llama.
 class ServicioFTP {
-  static const _urlSubida = 'https://prettycore.xyz/upload.php';
-  static const _claveApi = 'Prettycore13.';
-
-  /// Abre la galería, sube la imagen al servidor y retorna la URL pública.
-  /// [nombreArchivo] se usa como nombre en el servidor (ej: "afeitadora").
-  /// Si se repite el nombre, sobreescribe el archivo anterior (sin duplicados).
-  /// Retorna null si el usuario cancela o si ocurre un error.
   static Future<String?> seleccionarYSubirImagen({
     String? nombreArchivo,
     void Function(String mensaje)? onError,
   }) async {
+    final tenantId = kTenantIdActivo;
+    if (tenantId == null || tenantId.isEmpty) {
+      onError?.call('No se pudo determinar el negocio actual.');
+      return null;
+    }
+
     final picker = ImagePicker();
     final picked = await picker.pickImage(
       source: ImageSource.gallery,
@@ -25,39 +29,21 @@ class ServicioFTP {
     if (picked == null) return null;
 
     try {
-      // XFile.readAsBytes() funciona en Android, iOS y Web
       final bytes = await picked.readAsBytes();
-      final fileName = picked.name;
+      final ext = picked.name.contains('.') ? picked.name.split('.').last : 'jpg';
+      final nombreBase = (nombreArchivo != null && nombreArchivo.isNotEmpty)
+          ? nombreArchivo.trim().replaceAll(RegExp(r'[^a-zA-Z0-9_-]'), '_')
+          : DateTime.now().millisecondsSinceEpoch.toString();
+      final ruta = '$tenantId/$nombreBase.$ext';
 
-      final request = http.MultipartRequest(
-        'POST',
-        Uri.parse(_urlSubida),
-      );
-      request.fields['key'] = _claveApi;
-      if (nombreArchivo != null && nombreArchivo.isNotEmpty) {
-        request.fields['filename'] = nombreArchivo;
-      }
-      request.files.add(
-        http.MultipartFile.fromBytes(
-          'image',
-          bytes,
-          filename: fileName,
-        ),
-      );
+      await Supabase.instance.client.storage.from('media').uploadBinary(
+            ruta,
+            bytes,
+            fileOptions: FileOptions(upsert: true, contentType: picked.mimeType),
+          );
 
-      final streamed = await request.send().timeout(
-        const Duration(seconds: 30),
-      );
-      final body = await streamed.stream.bytesToString();
-
-      if (streamed.statusCode == 200) {
-        final data = jsonDecode(body) as Map<String, dynamic>;
-        return data['url'] as String?;
-      } else {
-        final data = jsonDecode(body) as Map<String, dynamic>;
-        onError?.call(data['error']?.toString() ?? 'Error ${streamed.statusCode}');
-        return null;
-      }
+      final url = Supabase.instance.client.storage.from('media').getPublicUrl(ruta);
+      return '$url?v=${DateTime.now().millisecondsSinceEpoch}';
     } catch (e) {
       onError?.call('Error al subir imagen: $e');
       return null;

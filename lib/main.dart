@@ -91,9 +91,9 @@ class _BarberAppState extends State<BarberApp> {
   @override
   Widget build(BuildContext context) {
     if (_mostrandoSplash) {
-      return const MaterialApp(
+      return MaterialApp(
         debugShowCheckedModeBanner: false,
-        home: PaginaSplash(),
+        home: PaginaSplash(logoUrl: widget.proveedorConfig.logoUrl),
       );
     }
 
@@ -138,7 +138,8 @@ class _BarberAppState extends State<BarberApp> {
 }
 
 class PaginaSplash extends StatelessWidget {
-  const PaginaSplash({super.key});
+  final String? logoUrl;
+  const PaginaSplash({super.key, this.logoUrl});
 
   @override
   Widget build(BuildContext context) {
@@ -149,12 +150,14 @@ class PaginaSplash extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             ClipOval(
-              child: Image.asset(
-                kLogoBarberiaAsset,
-                width: 120,
-                height: 120,
-                fit: BoxFit.cover,
-              ),
+              child: logoUrl != null && logoUrl!.isNotEmpty
+                  ? Image.network(logoUrl!, width: 120, height: 120, fit: BoxFit.cover)
+                  : Image.asset(
+                      kLogoBarberiaAsset,
+                      width: 120,
+                      height: 120,
+                      fit: BoxFit.cover,
+                    ),
             ),
             const SizedBox(height: 24),
             const SizedBox(

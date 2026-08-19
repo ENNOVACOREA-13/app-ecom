@@ -1,6 +1,7 @@
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../core/constants.dart';
 
 /// Singleton que registra sesiones y actividad del usuario en Supabase.
 class ServicioActividad {
@@ -117,6 +118,7 @@ class ServicioActividad {
       // Crear nueva sesión
       await _client.from('session_logs').insert({
         'profile_id': profileId,
+        'tenant_id': kTenantIdActivo,
         'platform': plataforma,
         'device': dispositivo,
         'is_active': true,
@@ -204,6 +206,7 @@ class ServicioActividad {
       await _actualizarUltimaActividad();
       await _client.from('activity_logs').insert({
         'profile_id': _profileId,
+        'tenant_id': kTenantIdActivo,
         'session_id': _sessionId,
         'event_type': 'screen_view',
         'event_name': pantalla,
@@ -218,6 +221,7 @@ class ServicioActividad {
       await _actualizarUltimaActividad();
       await _client.from('activity_logs').insert({
         'profile_id': _profileId,
+        'tenant_id': kTenantIdActivo,
         'session_id': _sessionId,
         'event_type': 'tap',
         'event_name': elemento,
@@ -233,6 +237,7 @@ class ServicioActividad {
       await _actualizarUltimaActividad();
       await _client.from('activity_logs').insert({
         'profile_id': _profileId,
+        'tenant_id': kTenantIdActivo,
         'session_id': _sessionId,
         'event_type': 'feature',
         'event_name': feature,

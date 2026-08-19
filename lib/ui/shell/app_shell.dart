@@ -322,7 +322,7 @@ class _BarraNavegacion extends StatelessWidget {
             return GestureDetector(
               onTap: () => onTap(i),
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 220),
+                duration: const Duration(milliseconds: 140),
                 curve: Curves.easeOut,
                 padding: selected ? const EdgeInsets.all(6) : EdgeInsets.zero,
                 decoration: BoxDecoration(
@@ -330,9 +330,9 @@ class _BarraNavegacion extends StatelessWidget {
                   shape: BoxShape.circle,
                 ),
                 child: AnimatedScale(
-                  duration: const Duration(milliseconds: 220),
-                  curve: Curves.easeOutBack,
-                  scale: selected ? 1.1 : 1.0,
+                  duration: const Duration(milliseconds: 140),
+                  curve: Curves.easeOut,
+                  scale: selected ? 1.05 : 1.0,
                   child: Icon(
                     selected
                         ? _iconoActivo(pestanas[i].icono)

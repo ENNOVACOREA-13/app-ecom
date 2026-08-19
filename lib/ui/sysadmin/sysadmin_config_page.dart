@@ -440,6 +440,7 @@ class PaginaConfigSysadminState extends State<PaginaConfigSysadmin> {
                             final activo = u['is_active'] as bool? ?? true;
                             final nombre =
                                 u['full_name'] as String? ?? 'Sin nombre';
+                            final email = u['email'] as String? ?? '';
                             final miPropiaCuenta = u['id'] ==
                                 context.read<ProveedorAuth>().perfil?.id;
                             final esProtegida =
@@ -479,6 +480,13 @@ class PaginaConfigSysadminState extends State<PaginaConfigSysadmin> {
                                           style: const TextStyle(
                                               fontWeight: FontWeight.w600,
                                               color: Color(0xFF1C1C1E))),
+                                      if (email.isNotEmpty) ...[
+                                        const SizedBox(height: 1),
+                                        Text(email,
+                                            style: const TextStyle(
+                                                fontSize: 12, color: kTextSub),
+                                            overflow: TextOverflow.ellipsis),
+                                      ],
                                       const SizedBox(height: 2),
                                       _BadgeRol(rol: rol, color: color),
                                     ],

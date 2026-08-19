@@ -42,7 +42,7 @@ class _PaginaInicioState extends State<PaginaInicio> {
   // como una imagen decorativa de hero, no como el resto del contenido).
   double get _margenH {
     final ancho = MediaQuery.of(context).size.width;
-    return ancho >= kAnchoEscritorio ? margenLateralEscritorio(ancho) : 20.0;
+    return ancho >= kAnchoEscritorio ? (ancho * 0.09).clamp(32.0, 130.0) : 20.0;
   }
 
   @override
@@ -649,7 +649,7 @@ class _CategoriasProductosChips extends StatelessWidget {
     final categorias = context.watch<ProveedorCategoriasProducto>().categorias;
     if (categorias.isEmpty) return const SizedBox.shrink();
     final ancho = MediaQuery.of(context).size.width;
-    final margenH = ancho >= kAnchoEscritorio ? margenLateralEscritorio(ancho) : 20.0;
+    final margenH = ancho >= kAnchoEscritorio ? (ancho * 0.09).clamp(32.0, 130.0) : 20.0;
     return Padding(
       padding: const EdgeInsets.only(top: 4, bottom: 4),
       child: SizedBox(

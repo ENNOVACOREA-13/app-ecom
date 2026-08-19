@@ -544,7 +544,7 @@ class _TabCortes extends StatelessWidget {
 
     return CustomScrollView(
       slivers: [
-        // Resumen semana actual
+        // Resumen de lo pendiente de corte (no solo la semana actual)
         if (prov.resumenAdmin.isNotEmpty)
           SliverToBoxAdapter(
             child: Padding(
@@ -806,13 +806,13 @@ class _BotonProcesarCorte extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Procesar corte semanal',
+                  const Text('Procesar corte',
                       style: TextStyle(
                           color: Color(0xFF1C1C1E),
                           fontWeight: FontWeight.w700,
                           fontSize: 15)),
                   Text(
-                    'Generar registros de la semana actual',
+                    'Liquida todo lo pendiente, sin importar la fecha',
                     style: TextStyle(
                         color: color.withOpacity(0.7), fontSize: 12),
                   ),
@@ -841,11 +841,7 @@ class _BotonProcesarCorte extends StatelessWidget {
 
   Future<void> _confirmarCorte(
       BuildContext context, ProveedorComision prov) async {
-    final ahora = DateTime.now();
-    final diasDesdeLunes = ahora.weekday - 1;
-    final inicioSemana =
-        DateTime(ahora.year, ahora.month, ahora.day - diasDesdeLunes);
-    final finSemana = inicioSemana.add(const Duration(days: 6));
+    final hoy = DateTime.now();
     final fmt = DateFormat('dd MMM yyyy', 'es_ES');
     final color = context.colorPrimario;
 
@@ -870,7 +866,8 @@ class _BotonProcesarCorte extends StatelessWidget {
           ],
         ),
         content: Text(
-          'Semana del ${fmt.format(inicioSemana)}\nal ${fmt.format(finSemana)}\n\nSe generarán los cortes para todos los empleados con servicios completados esta semana.',
+          'Se liquidará TODO lo pendiente de corte hasta hoy (${fmt.format(hoy)}), '
+          'incluyendo semanas anteriores si las hay, para todos los empleados con servicios completados.',
           style: const TextStyle(
               color: Color(0xFF3C3C43), fontSize: 13, height: 1.5),
         ),
@@ -897,7 +894,7 @@ class _BotonProcesarCorte extends StatelessWidget {
 
     if (ok == true && context.mounted) {
       try {
-        await prov.procesarCorte(inicioSemana, finSemana);
+        await prov.procesarCorte(hoy);
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -951,7 +948,7 @@ class _TarjetaResumenSemana extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Semana actual · Sin corte',
+              const Text('Pendiente de corte',
                   style: TextStyle(
                       color: Colors.white70,
                       fontSize: 12,

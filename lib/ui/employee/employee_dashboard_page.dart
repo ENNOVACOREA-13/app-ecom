@@ -41,7 +41,7 @@ class PaginaTableroEmpleadoState extends State<PaginaTableroEmpleado> {
           _estadisticas = estadisticas;
           _cargando = false;
         });
-        context.read<ProveedorComision>().cargarSemanaEmpleado(id);
+        context.read<ProveedorComision>().cargarPendientesEmpleado(id);
       }
     } catch (_) {
       if (mounted) setState(() => _cargando = false);
@@ -237,13 +237,8 @@ class _TarjetaComisionSemana extends StatelessWidget {
       return const Center(child: CircularProgressIndicator());
     }
 
-    final total = prov.totalSemanaEmpleado;
-    final cantidad = prov.serviciosSemanaEmpleado;
-    final ahora = DateTime.now();
-    final diasDesdeLunes = ahora.weekday - 1;
-    final inicioSemana = DateTime(ahora.year, ahora.month, ahora.day - diasDesdeLunes);
-    final finSemana = inicioSemana.add(const Duration(days: 6));
-    final fmt = DateFormat('dd MMM', 'es_ES');
+    final total = prov.totalPendienteEmpleado;
+    final cantidad = prov.serviciosPendientesEmpleado;
 
     return Container(
       width: double.infinity,
@@ -277,9 +272,12 @@ class _TarjetaComisionSemana extends StatelessWidget {
                       color: Colors.white70,
                       fontSize: 12,
                       fontWeight: FontWeight.w600)),
-              Text(
-                '${fmt.format(inicioSemana)} – ${fmt.format(finSemana)}',
-                style: const TextStyle(color: Colors.white70, fontSize: 12),
+              // No es "esta semana": es TODO lo pendiente de corte, sin
+              // importar cuándo se ganó — así nunca desaparece nada de la
+              // vista sin que un corte real lo haya liquidado.
+              const Text(
+                'Pendiente de corte',
+                style: TextStyle(color: Colors.white70, fontSize: 12),
               ),
             ],
           ),
@@ -297,11 +295,11 @@ class _TarjetaComisionSemana extends StatelessWidget {
             '$cantidad servicio${cantidad == 1 ? '' : 's'} completado${cantidad == 1 ? '' : 's'}',
             style: const TextStyle(color: Colors.white70, fontSize: 13),
           ),
-          if (prov.entradasSemana.isNotEmpty) ...[
+          if (prov.entradasPendientes.isNotEmpty) ...[
             const SizedBox(height: 14),
             const Divider(color: Colors.white24, height: 1),
             const SizedBox(height: 10),
-            ...prov.entradasSemana.take(5).map((e) => Padding(
+            ...prov.entradasPendientes.take(5).map((e) => Padding(
                   padding: const EdgeInsets.only(bottom: 4),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -322,9 +320,9 @@ class _TarjetaComisionSemana extends StatelessWidget {
                     ],
                   ),
                 )),
-            if (prov.entradasSemana.length > 5)
+            if (prov.entradasPendientes.length > 5)
               Text(
-                '+ ${prov.entradasSemana.length - 5} más...',
+                '+ ${prov.entradasPendientes.length - 5} más...',
                 style: const TextStyle(color: Colors.white54, fontSize: 11),
               ),
           ],

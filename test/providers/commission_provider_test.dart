@@ -15,22 +15,22 @@ EntradaComision _entrada({String id = 'x1', double monto = 50}) {
 }
 
 void main() {
-  group('totalSemanaEmpleado / serviciosSemanaEmpleado', () {
+  group('totalPendienteEmpleado / serviciosPendientesEmpleado', () {
     test('0 y 0 sin entradas cargadas', () {
       final provider = ProveedorComision();
-      expect(provider.totalSemanaEmpleado, 0);
-      expect(provider.serviciosSemanaEmpleado, 0);
+      expect(provider.totalPendienteEmpleado, 0);
+      expect(provider.serviciosPendientesEmpleado, 0);
     });
 
-    test('suma el monto de cada entrada de la semana', () {
+    test('suma el monto de cada entrada pendiente', () {
       final provider = ProveedorComision();
-      provider.entradasSemana = [
+      provider.entradasPendientes = [
         _entrada(id: 'a', monto: 50),
         _entrada(id: 'b', monto: 30),
         _entrada(id: 'c', monto: 20),
       ];
-      expect(provider.totalSemanaEmpleado, 100);
-      expect(provider.serviciosSemanaEmpleado, 3);
+      expect(provider.totalPendienteEmpleado, 100);
+      expect(provider.serviciosPendientesEmpleado, 3);
     });
   });
 

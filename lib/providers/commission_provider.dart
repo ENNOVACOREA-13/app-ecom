@@ -9,7 +9,7 @@ class ProveedorComision extends ChangeNotifier {
 
   List<ConfigComision> configuraciones = [];
   AjustesComision? ajustes;
-  List<EntradaComision> entradasSemana = [];
+  List<EntradaComision> entradasPendientes = [];
   List<CorteComision> cortes = [];
   List<Map<String, dynamic>> resumenAdmin = [];
   bool cargando = false;
@@ -26,7 +26,7 @@ class ProveedorComision extends ChangeNotifier {
         _repo.obtenerConfiguraciones(),
         _repo.obtenerAjustes(),
         _repo.obtenerTodosLosCortes(),
-        _repo.obtenerResumenSemanaActual(),
+        _repo.obtenerResumenPendiente(),
       ]);
       configuraciones = resultados[0] as List<ConfigComision>;
       ajustes = resultados[1] as AjustesComision?;
@@ -40,17 +40,17 @@ class ProveedorComision extends ChangeNotifier {
     }
   }
 
-  // ── Empleado: cargar semana actual ────────────────────────────
+  // ── Empleado: cargar pendientes de corte ──────────────────────
 
-  Future<void> cargarSemanaEmpleado(String empleadoId) async {
+  Future<void> cargarPendientesEmpleado(String empleadoId) async {
     cargando = true;
     notifyListeners();
     try {
       final resultados = await Future.wait([
-        _repo.obtenerEntradaSemanaActual(empleadoId),
+        _repo.obtenerEntradasPendientes(empleadoId),
         _repo.obtenerCortesEmpleado(empleadoId),
       ]);
-      entradasSemana = resultados[0] as List<EntradaComision>;
+      entradasPendientes = resultados[0] as List<EntradaComision>;
       cortes = resultados[1] as List<CorteComision>;
     } catch (_) {}
     cargando = false;
@@ -121,11 +121,11 @@ class ProveedorComision extends ChangeNotifier {
 
   // ── Procesar corte ────────────────────────────────────────────
 
-  Future<void> procesarCorte(DateTime inicioSemana, DateTime finSemana) async {
+  Future<void> procesarCorte(DateTime hasta) async {
     cargando = true;
     notifyListeners();
     try {
-      await _repo.procesarCorte(inicioSemana, finSemana);
+      await _repo.procesarCorte(hasta);
       await cargarAdmin();
     } catch (e) {
       error = e.toString();
@@ -164,10 +164,10 @@ class ProveedorComision extends ChangeNotifier {
 
   // ── Helpers ───────────────────────────────────────────────────
 
-  double get totalSemanaEmpleado =>
-      entradasSemana.fold(0, (s, e) => s + e.monto);
+  double get totalPendienteEmpleado =>
+      entradasPendientes.fold(0, (s, e) => s + e.monto);
 
-  int get serviciosSemanaEmpleado => entradasSemana.length;
+  int get serviciosPendientesEmpleado => entradasPendientes.length;
 
   double montoPorServicio(String servicioId) {
     try {

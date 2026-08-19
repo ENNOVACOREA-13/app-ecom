@@ -59,14 +59,14 @@ void main() {
     });
   });
 
-  group('cargarSemanaEmpleado', () {
+  group('cargarPendientesEmpleado', () {
     test('carga entradas y cortes en paralelo', () async {
       final repo = MockRepositorioComision();
-      when(() => repo.obtenerEntradaSemanaActual('e1')).thenAnswer((_) async => []);
+      when(() => repo.obtenerEntradasPendientes('e1')).thenAnswer((_) async => []);
       when(() => repo.obtenerCortesEmpleado('e1')).thenAnswer((_) async => [_corte()]);
 
       final provider = ProveedorComision(repo: repo);
-      await provider.cargarSemanaEmpleado('e1');
+      await provider.cargarPendientesEmpleado('e1');
 
       expect(provider.cortes.length, 1);
       expect(provider.cargando, isFalse);

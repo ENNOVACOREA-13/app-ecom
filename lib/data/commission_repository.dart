@@ -1,6 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../domain/models/commission_model.dart';
-import '../utils/date_utils.dart';
 
 /// Agrupa filas crudas de `commission_entries` por empleado, sumando monto y
 /// conteo, y ordena de mayor a menor total. Filas sin `employee_id` o
@@ -94,15 +93,18 @@ class RepositorioComision {
     return (datos as List).map((e) => EntradaComision.fromMap(e)).toList();
   }
 
-  /// Entradas de la semana actual (sin corte asignado) para un empleado
-  Future<List<EntradaComision>> obtenerEntradaSemanaActual(
+  /// Entradas pendientes de corte (cut_id null) para un empleado — sin
+  /// importar cuándo se ganaron. Antes solo miraba desde el inicio de la
+  /// semana actual, así que comisiones de semanas anteriores que nunca se
+  /// cortaron desaparecían de la vista del empleado sin dejar rastro,
+  /// aunque seguían sumando en el total de comisiones del negocio.
+  Future<List<EntradaComision>> obtenerEntradasPendientes(
       String empleadoId) async {
-    final inicioSemana = inicioDeSemana(DateTime.now());
     final datos = await _client
         .from('commission_entries')
         .select()
         .eq('employee_id', empleadoId)
-        .gte('earned_at', inicioSemana.toUtc().toIso8601String())
+        .isFilter('cut_id', null)
         .order('earned_at', ascending: false);
     return (datos as List).map((e) => EntradaComision.fromMap(e)).toList();
   }
@@ -141,25 +143,22 @@ class RepositorioComision {
     }).eq('id', corteId);
   }
 
-  /// Procesa el corte semanal para el rango dado
-  Future<void> procesarCorte(DateTime inicioSemana, DateTime finSemana) async {
-    final ini =
-        '${inicioSemana.year}-${inicioSemana.month.toString().padLeft(2, '0')}-${inicioSemana.day.toString().padLeft(2, '0')}';
-    final fin =
-        '${finSemana.year}-${finSemana.month.toString().padLeft(2, '0')}-${finSemana.day.toString().padLeft(2, '0')}';
-    await _client.rpc('process_commission_cut', params: {
-      'p_week_start': ini,
-      'p_week_end': fin,
-    });
+  /// Procesa el corte de TODO lo pendiente (cut_id null) con earned_at
+  /// hasta la fecha dada — no solo "esta semana", así nunca queda un
+  /// residuo sin cortar por un corte que alguien se saltó.
+  Future<void> procesarCorte(DateTime hasta) async {
+    final fecha =
+        '${hasta.year}-${hasta.month.toString().padLeft(2, '0')}-${hasta.day.toString().padLeft(2, '0')}';
+    await _client.rpc('process_commission_cut', params: {'p_hasta': fecha});
   }
 
-  /// Resumen de comisiones de la semana actual por empleado (para admin)
-  Future<List<Map<String, dynamic>>> obtenerResumenSemanaActual() async {
-    final inicioSemana = inicioDeSemana(DateTime.now());
+  /// Resumen de comisiones PENDIENTES por empleado (para admin) — todo lo
+  /// que un corte se llevaría si se procesara ahora mismo, sin importar
+  /// cuándo se ganó.
+  Future<List<Map<String, dynamic>>> obtenerResumenPendiente() async {
     final datos = await _client
         .from('commission_entries')
         .select('employee_id, commission_amount, profiles(full_name)')
-        .gte('earned_at', inicioSemana.toUtc().toIso8601String())
         .isFilter('cut_id', null);
     return agruparComisionesPorEmpleado(datos as List);
   }

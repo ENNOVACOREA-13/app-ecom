@@ -1,11 +1,30 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:prettycore/data/user_provisioning_service.dart';
 import 'package:prettycore/providers/booking_provider.dart';
 import 'package:prettycore/providers/order_provider.dart';
 import 'package:prettycore/providers/product_provider.dart';
 
 void main() {
+  group('mapearErrorInvitacion', () {
+    test('correo repetido da mensaje específico', () {
+      expect(mapearErrorInvitacion('Exception: email_already_exists'),
+          'Ese correo ya tiene una cuenta.');
+    });
+
+    test('rol no permitido da mensaje específico', () {
+      expect(mapearErrorInvitacion('Exception: role_not_allowed'),
+          'No tienes permiso para asignar ese rol.');
+    });
+
+    test('un error desconocido no expone el código crudo', () {
+      final mensaje = mapearErrorInvitacion('Exception: create_user_failed');
+      expect(mensaje, 'No se pudo enviar la invitación.');
+      expect(mensaje.contains('create_user_failed'), isFalse);
+    });
+  });
+
   group('mapearErrorReserva', () {
     test('conflicto de horario da mensaje específico', () {
       expect(mapearErrorReserva('Exception: BOOKING_CONFLICT'),

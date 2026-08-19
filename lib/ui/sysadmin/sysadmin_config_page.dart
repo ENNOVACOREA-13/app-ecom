@@ -189,7 +189,7 @@ class PaginaConfigSysadminState extends State<PaginaConfigSysadmin> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al crear usuario: $e')),
+          SnackBar(content: Text(mapearErrorInvitacion(e.toString()))),
         );
       }
     }

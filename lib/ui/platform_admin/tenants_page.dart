@@ -241,7 +241,7 @@ class _PaginaNegociosState extends State<PaginaNegocios> {
                         );
                       } catch (e) {
                         ok = false;
-                        errorInvitacion = e.toString();
+                        errorInvitacion = mapearErrorInvitacion(e.toString());
                       }
                       if (ctx.mounted) Navigator.pop(ctx, ok);
                     },

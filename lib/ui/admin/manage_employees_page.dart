@@ -201,7 +201,8 @@ class _PaginaGestionEmpleadosState extends State<PaginaGestionEmpleados>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text('Error: $e'), backgroundColor: Colors.red),
+              content: Text(mapearErrorInvitacion(e.toString())),
+              backgroundColor: Colors.red),
         );
       }
     }

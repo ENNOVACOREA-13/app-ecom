@@ -3,6 +3,30 @@ import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/constants.dart';
 
+/// Traduce los códigos de error de admin-create-user a un mensaje legible.
+String mapearErrorInvitacion(String e) {
+  final codigo = e.replaceFirst('Exception: ', '').trim();
+  switch (codigo) {
+    case 'email_already_exists':
+      return 'Ese correo ya tiene una cuenta.';
+    case 'invalid_email':
+      return 'El correo no es válido.';
+    case 'invalid_name':
+      return 'Ingresa un nombre.';
+    case 'role_not_allowed':
+      return 'No tienes permiso para asignar ese rol.';
+    case 'invalid_tenant':
+    case 'missing_tenant_id':
+      return 'No se pudo determinar el negocio.';
+    case 'missing_auth':
+    case 'invalid_session':
+    case 'forbidden':
+      return 'Tu sesión no tiene permiso para hacer esto.';
+    default:
+      return 'No se pudo enviar la invitación.';
+  }
+}
+
 /// Crea cuentas con rol elevado (empleado/admin/sysadmin) a través de la
 /// Edge Function `admin-create-user`: el permiso se valida server-side
 /// contra el rol real de quien llama, nunca confiando en lo que mande el

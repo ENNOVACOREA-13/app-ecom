@@ -37,6 +37,14 @@ class _PaginaInicioState extends State<PaginaInicio> {
   String? _categoriaIdFiltro;
   ProveedorConfig? _cfgVistaPrevia;
 
+  // Margen lateral responsivo para todo el contenido — el carrusel y el
+  // banner promocional quedan afuera a propósito (van de borde a borde,
+  // como una imagen decorativa de hero, no como el resto del contenido).
+  double get _margenH {
+    final ancho = MediaQuery.of(context).size.width;
+    return ancho >= kAnchoEscritorio ? margenLateralEscritorio(ancho) : 20.0;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -264,7 +272,7 @@ class _PaginaInicioState extends State<PaginaInicio> {
       // ── Categorías de servicios — título ─────────────────
       SliverToBoxAdapter(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 28, 20, 14),
+          padding: EdgeInsets.fromLTRB(_margenH, 28, _margenH, 14),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -325,7 +333,7 @@ class _PaginaInicioState extends State<PaginaInicio> {
         )
       else if (servicios.isNotEmpty && provConfig.categoriasFormaEfectiva == 'cuadrado')
         SliverPadding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+          padding: EdgeInsets.fromLTRB(_margenH, 0, _margenH, 0),
           sliver: SliverGrid(
             gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
               maxCrossAxisExtent: 170,
@@ -357,7 +365,7 @@ class _PaginaInicioState extends State<PaginaInicio> {
             height: 90,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+              padding: EdgeInsets.symmetric(horizontal: _margenH),
               itemCount: servicios.length,
               separatorBuilder: (_, __) => const SizedBox(width: 14),
               itemBuilder: (context, i) => EntradaAnimada(
@@ -389,7 +397,7 @@ class _PaginaInicioState extends State<PaginaInicio> {
       if (todosProductos.isNotEmpty)
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 28, 20, 14),
+            padding: EdgeInsets.fromLTRB(_margenH, 28, _margenH, 14),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -441,7 +449,7 @@ class _PaginaInicioState extends State<PaginaInicio> {
       // ── Grid de productos (columnas según ancho de pantalla) ─
       if (productos.isNotEmpty)
         SliverPadding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+          padding: EdgeInsets.fromLTRB(_margenH, 0, _margenH, 0),
           sliver: SliverGrid(
             gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
               maxCrossAxisExtent: 230,
@@ -487,7 +495,7 @@ class _PaginaInicioState extends State<PaginaInicio> {
           children: [
             // ── Header fijo ──────────────────────────────────────
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+              padding: EdgeInsets.fromLTRB(_margenH, 16, _margenH, 0),
               child: Row(
                 children: [
                   Expanded(
@@ -540,7 +548,7 @@ class _PaginaInicioState extends State<PaginaInicio> {
             // ── Barra de búsqueda fija ────────────────────────────
             if (tiendaHabilitada)
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+              padding: EdgeInsets.fromLTRB(_margenH, 16, _margenH, 16),
               child: TextField(
                 controller: _ctrlBusqueda,
                 onChanged: (v) => setState(() => _busqueda = v),
@@ -640,13 +648,15 @@ class _CategoriasProductosChips extends StatelessWidget {
   Widget build(BuildContext context) {
     final categorias = context.watch<ProveedorCategoriasProducto>().categorias;
     if (categorias.isEmpty) return const SizedBox.shrink();
+    final ancho = MediaQuery.of(context).size.width;
+    final margenH = ancho >= kAnchoEscritorio ? margenLateralEscritorio(ancho) : 20.0;
     return Padding(
       padding: const EdgeInsets.only(top: 4, bottom: 4),
       child: SizedBox(
         height: 44,
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+          padding: EdgeInsets.symmetric(horizontal: margenH),
           itemCount: categorias.length + 1,
           separatorBuilder: (_, __) => const SizedBox(width: 10),
           itemBuilder: (context, i) {
@@ -714,10 +724,8 @@ class _BannerReferencia extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ancho = MediaQuery.of(context).size.width;
-    final margen = ancho >= kAnchoEscritorio ? margenLateralEscritorio(ancho) : 20.0;
     return Padding(
-      padding: EdgeInsets.fromLTRB(margen, 20, margen, 0),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
       child: GestureDetector(
         onTap: () {
           if (context.read<ProveedorAuth>().perfil == null) {
@@ -869,10 +877,8 @@ class _BannerPromoState extends State<_BannerPromo> {
       _ => (CrossAxisAlignment.start, Alignment.centerLeft),
     };
 
-    final ancho = MediaQuery.of(context).size.width;
-    final margen = ancho >= kAnchoEscritorio ? margenLateralEscritorio(ancho) : 20.0;
     return Padding(
-      padding: EdgeInsets.fromLTRB(margen, 20, margen, 0),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
       child: GestureDetector(
         onTap: !tieneTexto
             ? null

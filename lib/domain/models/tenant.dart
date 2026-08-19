@@ -17,7 +17,11 @@ class Tenant {
     this.admins = const [],
   });
 
-  factory Tenant.fromMap(Map<String, dynamic> map) {
+  factory Tenant.fromMap(
+    Map<String, dynamic> map, {
+    List<Map<String, dynamic>> membresias = const [],
+    Map<String, Map<String, dynamic>> perfilesPorId = const {},
+  }) {
     final dominiosData = map['tenant_domains'] as List<dynamic>? ?? [];
     // platform_admin puede aparecer aquí por la cláusula "ver mi propio
     // perfil" de RLS (su tenant_id es solo un relleno técnico, nunca
@@ -26,8 +30,17 @@ class Tenant {
     final adminsData = (map['profiles'] as List<dynamic>? ?? [])
         .where((a) => (a as Map<String, dynamic>)['role'] != 'platform_admin')
         .toList();
+    final deProfiles = adminsData
+        .map((a) => CuentaAdminTenant.fromMap(a as Map<String, dynamic>))
+        .toList();
+    final id = map['id'] as String;
+    // Filtra las membresías a las de ESTE tenant aquí adentro (no confía en
+    // que quien llama ya las haya filtrado) — así la función queda
+    // autocontenida y fácil de probar con la lista completa.
+    final membresiasDeEsteTenant =
+        membresias.where((m) => m['tenant_id'] == id).toList();
     return Tenant(
-      id: map['id'] as String,
+      id: id,
       slug: map['slug'] as String,
       businessName: map['business_name'] as String,
       status: map['status'] as String? ?? 'active',
@@ -35,13 +48,43 @@ class Tenant {
       dominios: dominiosData
           .map((d) => TenantDomain.fromMap(d as Map<String, dynamic>))
           .toList(),
-      admins: adminsData
-          .map((a) => CuentaAdminTenant.fromMap(a as Map<String, dynamic>))
-          .toList(),
+      admins: combinarCuentasAdmin(
+        deProfiles: deProfiles,
+        membresias: membresiasDeEsteTenant,
+        perfilesPorId: perfilesPorId,
+      ),
     );
   }
 
   bool get estaActivo => status == 'active';
+}
+
+/// Junta los admins "de casa" (profiles.tenant_id fijo) con los que
+/// administran este negocio solo por una membresía extra (una misma cuenta
+/// puede ser sysadmin de varios negocios — ver migración
+/// 20260819130000_multi_tenant_membership.sql). Sin esto, un admin/sysadmin
+/// invitado a un SEGUNDO negocio nunca aparecía en el panel de Negocios de
+/// ese negocio, porque profiles.tenant_id solo apunta a su negocio "de casa".
+/// Si una cuenta tiene ambas (poco común, ej. su propio negocio de casa
+/// también tiene una fila de membresía por el backfill), la membresía gana
+/// — refleja el mismo criterio que mi_rol_en_tenant_actual() en SQL.
+List<CuentaAdminTenant> combinarCuentasAdmin({
+  required List<CuentaAdminTenant> deProfiles,
+  required List<Map<String, dynamic>> membresias,
+  required Map<String, Map<String, dynamic>> perfilesPorId,
+}) {
+  final porId = {for (final a in deProfiles) a.id: a};
+  for (final m in membresias) {
+    final idUsuario = m['user_id'] as String;
+    final perfil = perfilesPorId[idUsuario];
+    porId[idUsuario] = CuentaAdminTenant(
+      id: idUsuario,
+      rol: m['role'] as String? ?? 'admin',
+      nombreCompleto: perfil?['full_name'] as String?,
+      email: perfil?['email'] as String?,
+    );
+  }
+  return porId.values.toList();
 }
 
 class CuentaAdminTenant {

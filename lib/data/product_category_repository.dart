@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../core/constants.dart';
 import '../domain/models/product_category.dart';
 
 class RepositorioCategoriasProducto {
@@ -16,8 +17,8 @@ class RepositorioCategoriasProducto {
 
   Future<void> crearCategoria(
       {required String nombre, required String icono, String? imagenUrl}) async {
-    await _client.from('product_categories')
-        .insert({'name': nombre, 'icon': icono, 'image_url': imagenUrl});
+    await _client.from('product_categories').insert(
+        {'tenant_id': kTenantIdActivo, 'name': nombre, 'icon': icono, 'image_url': imagenUrl});
   }
 
   Future<void> actualizarCategoria(String id,

@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../core/constants.dart';
 import '../domain/models/service_model.dart';
 
 class RepositorioServicio {
@@ -22,7 +23,7 @@ class RepositorioServicio {
   Future<ModeloServicio> crearServicio(ModeloServicio servicio) async {
     final datos = await _client
         .from('services')
-        .insert(servicio.toMap())
+        .insert({...servicio.toMap(), 'tenant_id': kTenantIdActivo})
         .select()
         .single();
     return ModeloServicio.fromMap(datos);

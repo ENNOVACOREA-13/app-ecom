@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/constants.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../data/activity_service.dart';
@@ -127,6 +128,7 @@ class _PaginaInsumosState extends State<PaginaInsumos> {
                   };
                   if (insumo == null) {
                     datos['created_by'] = perfil!.id;
+                    datos['tenant_id'] = kTenantIdActivo;
                     await _client.from('supplies').insert(datos);
                     ServicioActividad.instancia.registrarFeature('crear_insumo');
                   } else {

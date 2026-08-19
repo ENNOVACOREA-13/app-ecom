@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../core/constants.dart';
 import '../domain/models/product.dart';
 
 class RepositorioProducto {
@@ -33,6 +34,7 @@ class RepositorioProducto {
     String? urlImagen,
   }) async {
     final datos = await _client.from('products').insert({
+      'tenant_id': kTenantIdActivo,
       'name': nombre,
       'description': descripcion,
       'price': precio,
@@ -54,12 +56,12 @@ class RepositorioProducto {
   }
 
   Future<String> subirImagenProducto(String idProducto, Uint8List bytes, String formato) async {
-    final ruta = '$idProducto.$formato';
-    await _client.storage.from('products').uploadBinary(
+    final ruta = '$kTenantIdActivo/$idProducto.$formato';
+    await _client.storage.from('media').uploadBinary(
       ruta,
       bytes,
       fileOptions: FileOptions(upsert: true, contentType: 'image/$formato'),
     );
-    return _client.storage.from('products').getPublicUrl(ruta);
+    return _client.storage.from('media').getPublicUrl(ruta);
   }
 }

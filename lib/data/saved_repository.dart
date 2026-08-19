@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../core/constants.dart';
 
 class RepositorioGuardados {
   SupabaseClient get _client => Supabase.instance.client;
@@ -13,6 +14,7 @@ class RepositorioGuardados {
 
   Future<void> guardar(String userId, String productId) async {
     await _client.from('saved_products').insert({
+      'tenant_id': kTenantIdActivo,
       'user_id': userId,
       'product_id': productId,
     });

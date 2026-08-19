@@ -74,7 +74,7 @@ class _ItemVoladorState extends State<_ItemVolador>
     super.initState();
     _controller =
         AnimationController(vsync: this, duration: const Duration(milliseconds: 600));
-    _curva = CurvedAnimation(parent: _controller, curve: Curves.easeInCubic);
+    _curva = CurvedAnimation(parent: _controller, curve: Curves.easeInOutCubic);
     _controller.forward().whenComplete(widget.alTerminar);
   }
 

@@ -5,6 +5,8 @@ import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'data/stripe_web_service.dart'
     if (dart.library.io) 'data/stripe_web_stub.dart';
+import 'data/favicon_updater.dart'
+    if (dart.library.io) 'data/favicon_updater_stub.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -64,14 +66,18 @@ Future<void> main() async {
   final proveedorConfig = ProveedorConfig();
   await proveedorConfig.cargar();
 
-  runApp(BarberApp(proveedorConfig: proveedorConfig));
+  runApp(BarberApp(
+    proveedorConfig: proveedorConfig,
+    nombreNegocio: tenant.businessName,
+  ));
 }
 
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 
 class BarberApp extends StatefulWidget {
   final ProveedorConfig proveedorConfig;
-  const BarberApp({super.key, required this.proveedorConfig});
+  final String? nombreNegocio;
+  const BarberApp({super.key, required this.proveedorConfig, this.nombreNegocio});
 
   @override
   State<BarberApp> createState() => _BarberAppState();
@@ -119,9 +125,16 @@ class _BarberAppState extends State<BarberApp> {
           // pantallas — se actualiza aquí para que la vista previa del
           // sysadmin y el color publicado se reflejen en toda la app.
           kBackground = config.colorSecundarioEfectivo;
+          // El tab del navegador debe reflejar el negocio del dominio
+          // actual, no un nombre genérico fijo — y el favicon el logo que
+          // ese negocio haya subido (si no subió uno, se queda el genérico
+          // de PrettyCore ya puesto en index.html).
+          if (kIsWeb && config.logoUrl != null && config.logoUrl!.isNotEmpty) {
+            ActualizadorFavicon.actualizar(config.logoUrl!);
+          }
           return MaterialApp.router(
             debugShowCheckedModeBanner: false,
-            title: 'BarberApp',
+            title: widget.nombreNegocio ?? 'PrettyCore',
             theme: crearTema(
               config.colorPrimarioEfectivo,
               fontFamily: config.fontFamilyEfectiva,

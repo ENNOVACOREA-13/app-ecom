@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/constants.dart';
 import '../domain/models/product.dart';
+import 'media_url_service.dart';
 
 /// Separado de crearProducto() para poder probar en un test puro (sin
 /// mockear Supabase) que el payload siempre incluye tenant_id — el tipo
@@ -92,6 +93,6 @@ class RepositorioProducto {
       bytes,
       fileOptions: FileOptions(upsert: true, contentType: 'image/$formato'),
     );
-    return _client.storage.from('media').getPublicUrl(ruta);
+    return ServicioUrlMedia.firmarUrlMedia(ruta);
   }
 }

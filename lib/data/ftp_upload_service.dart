@@ -1,14 +1,17 @@
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/constants.dart';
+import 'media_url_service.dart';
 
-/// Sube imágenes a Supabase Storage (bucket público `media`), bajo
+/// Sube imágenes a Supabase Storage (bucket privado `media`), bajo
 /// `{tenant_id}/nombreArchivo.ext` — RLS en storage.objects exige que quien
 /// escribe sea admin/sysadmin del mismo tenant del prefijo (ver migración
-/// 20260819110000_storage_media_bucket_and_logo.sql). Reemplaza al viejo
-/// ServicioFTP (subía a un script PHP en el Hostinger/Hetzner ya dado de
-/// baja) manteniendo el mismo nombre de clase/método para no tocar cada
-/// pantalla que lo llama.
+/// 20260819110000_storage_media_bucket_and_logo.sql). La URL de lectura la
+/// firma media-sign-url (ver ServicioUrlMedia) porque el bucket ya no es
+/// público (migración 20260819160000). Reemplaza al viejo ServicioFTP
+/// (subía a un script PHP en el Hostinger/Hetzner ya dado de baja)
+/// manteniendo el mismo nombre de clase/método para no tocar cada pantalla
+/// que lo llama.
 class ServicioFTP {
   static Future<String?> seleccionarYSubirImagen({
     String? nombreArchivo,
@@ -42,8 +45,7 @@ class ServicioFTP {
             fileOptions: FileOptions(upsert: true, contentType: picked.mimeType),
           );
 
-      final url = Supabase.instance.client.storage.from('media').getPublicUrl(ruta);
-      return '$url?v=${DateTime.now().millisecondsSinceEpoch}';
+      return await ServicioUrlMedia.firmarUrlMedia(ruta);
     } catch (e) {
       onError?.call('Error al subir imagen: $e');
       return null;

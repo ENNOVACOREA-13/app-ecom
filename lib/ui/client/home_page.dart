@@ -523,7 +523,7 @@ class _PaginaInicioState extends State<PaginaInicio> {
                   const CircleAvatar(
                     radius: 22,
                     backgroundColor: Colors.white,
-                    backgroundImage: NetworkImage(kUrlLogoBarberia),
+                    backgroundImage: AssetImage(kLogoBarberiaAsset),
                   ),
                   const SizedBox(width: 12),
                   AvatarRed(

@@ -59,7 +59,6 @@ class _PaginaPerfilState extends State<PaginaPerfil> {
     final base = perfil?.id ?? DateTime.now().millisecondsSinceEpoch.toString();
     final rand = Random();
     final urls = [
-      kUrlLogoBarberia,
       ...List.generate(
         6,
         (_) =>

@@ -34,9 +34,7 @@ const kAvatarBucket = 'avatars';
 const kServicesBucket = 'services';
 const kProductsBucket = 'products';
 
-// TODO: el logo de splash sigue hardcodeado al de MC-BARBER — con más de
-// un tenant esto debería salir de app_config por dominio, no ser un
-// const global. Sigue funcionando hoy porque el Hetzner viejo de
-// MC-BARBER se deja encendido (periodo de gracia) después del corte.
-const kUrlLogoBarberia =
-    'https://mc-barber-api.62-238-60-24.sslip.io/storage/v1/object/public/services/shop-logo.png';
+// TODO: logo genérico mientras no hay branding por tenant en app_config —
+// el Hetzner viejo de MC-BARBER que servía este logo ya no responde
+// (dado de baja), así que usamos un asset local en vez de una URL muerta.
+const kLogoBarberiaAsset = 'IMG/LOGOp.png';

@@ -105,7 +105,7 @@ class _PaginaTableroSysadminState extends State<PaginaTableroSysadmin> {
                               const CircleAvatar(
                                 radius: 21,
                                 backgroundColor: Colors.white,
-                                backgroundImage: NetworkImage(kUrlLogoBarberia),
+                                backgroundImage: AssetImage(kLogoBarberiaAsset),
                               ),
                               const SizedBox(width: 8),
                               GestureDetector(

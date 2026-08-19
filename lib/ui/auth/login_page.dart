@@ -61,11 +61,9 @@ class _PaginaLoginState extends State<PaginaLogin> {
                     borderRadius: const BorderRadius.all(Radius.circular(24)),
                     child: Padding(
                       padding: const EdgeInsets.all(10),
-                      child: Image.network(
-                        kUrlLogoBarberia,
+                      child: Image.asset(
+                        kLogoBarberiaAsset,
                         fit: BoxFit.contain,
-                        errorBuilder: (context, error, stackTrace) =>
-                            const Icon(Icons.content_cut, color: Colors.black, size: 36),
                       ),
                     ),
                   ),

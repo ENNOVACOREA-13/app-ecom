@@ -153,7 +153,7 @@ class PaginaTableroAdminState extends State<PaginaTableroAdmin> {
                                   const CircleAvatar(
                                     radius: 20,
                                     backgroundColor: Colors.white,
-                                    backgroundImage: NetworkImage(kUrlLogoBarberia),
+                                    backgroundImage: AssetImage(kLogoBarberiaAsset),
                                   ),
                                   const SizedBox(width: 8),
                                   GestureDetector(

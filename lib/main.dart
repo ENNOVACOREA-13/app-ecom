@@ -149,13 +149,11 @@ class PaginaSplash extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             ClipOval(
-              child: Image.network(
-                kUrlLogoBarberia,
+              child: Image.asset(
+                kLogoBarberiaAsset,
                 width: 120,
                 height: 120,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => const Icon(Icons.content_cut,
-                    size: 64, color: Color(0xFF1C1C1E)),
               ),
             ),
             const SizedBox(height: 24),

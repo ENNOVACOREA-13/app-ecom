@@ -85,6 +85,55 @@ Deno.serve(async (req) => {
       .from('tenants').select('business_name').eq('id', targetTenantId).maybeSingle();
     const negocio = (tenantInfo?.business_name as string | undefined) || 'tu negocio';
 
+    const esRolAdminNivel = ['admin', 'super_admin', 'sysadmin'].includes(role);
+    const etiquetasRol: Record<string, string> = {
+      client: 'cliente', employee: 'empleado', admin: 'administrador',
+      super_admin: 'administrador', sysadmin: 'sysadmin',
+    };
+
+    const client = new SMTPClient({
+      connection: {
+        hostname: SMTP_HOST,
+        port: SMTP_PORT,
+        tls: SMTP_PORT === 465,
+        auth: { username: SMTP_USER, password: SMTP_PASSWORD },
+      },
+    });
+
+    // Correo ya existe: solo se puede otorgar acceso adicional si el rol es
+    // admin-nivel (una misma cuenta administrando varios negocios). Para
+    // client/employee sigue sin poder haber dos cuentas con el mismo correo
+    // — eso queda fuera de alcance (ver migración 20260819130000).
+    const { data: existingUserId } = await admin.rpc('get_user_id_by_email', { p_email: email });
+    if (existingUserId) {
+      if (!esRolAdminNivel) {
+        return responder(409, { success: false, error: 'email_already_exists' });
+      }
+
+      const { error: membershipError } = await admin
+        .from('user_tenant_memberships')
+        .upsert({ user_id: existingUserId, tenant_id: targetTenantId, role },
+          { onConflict: 'user_id,tenant_id' });
+      if (membershipError) throw membershipError;
+
+      await client.send({
+        from: SMTP_USER,
+        to: email,
+        subject: `Ahora también administras ${negocio}`,
+        content: `¡Hola ${fullName}! Te dieron acceso a ${negocio} como ${etiquetasRol[role] ?? role}. Entra con tu contraseña de siempre desde el dominio de ese negocio.`,
+        html: `
+          <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;">
+            <h2>¡Hola, ${fullName}!</h2>
+            <p>Te dieron acceso a <strong>${negocio}</strong> como <strong>${etiquetasRol[role] ?? role}</strong>.</p>
+            <p>No necesitas configurar nada nuevo — entra con tu contraseña de siempre desde el dominio de ese negocio.</p>
+          </div>
+        `,
+      });
+      await client.close();
+
+      return responder(200, { success: true, id: existingUserId as string });
+    }
+
     const { data: created, error: createError } = await admin.auth.admin.createUser({
       email,
       password: crypto.randomUUID() + crypto.randomUUID(),
@@ -105,6 +154,16 @@ Deno.serve(async (req) => {
       .from('profiles').update({ role }).eq('id', newUserId);
     if (roleUpdateError) throw roleUpdateError;
 
+    if (esRolAdminNivel) {
+      // Siembra su membresía "de casa" para que quede consistente con
+      // futuras invitaciones a otros negocios.
+      const { error: seedError } = await admin
+        .from('user_tenant_memberships')
+        .upsert({ user_id: newUserId, tenant_id: targetTenantId, role },
+          { onConflict: 'user_id,tenant_id' });
+      if (seedError) throw seedError;
+    }
+
     const token = crypto.randomUUID() + crypto.randomUUID();
     const expiresAt = new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString(); // 72 horas
     const { error: tokenError } = await admin.from('password_reset_tokens').insert({
@@ -116,19 +175,6 @@ Deno.serve(async (req) => {
     if (tokenError) throw tokenError;
 
     const link = `${RESET_URL_BASE}?token=${token}`;
-    const etiquetasRol: Record<string, string> = {
-      client: 'cliente', employee: 'empleado', admin: 'administrador',
-      super_admin: 'administrador', sysadmin: 'sysadmin',
-    };
-
-    const client = new SMTPClient({
-      connection: {
-        hostname: SMTP_HOST,
-        port: SMTP_PORT,
-        tls: SMTP_PORT === 465,
-        auth: { username: SMTP_USER, password: SMTP_PASSWORD },
-      },
-    });
 
     await client.send({
       from: SMTP_USER,

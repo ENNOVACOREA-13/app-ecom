@@ -105,16 +105,15 @@ class RepositorioAuth {
     await _client.auth.signOut();
   }
 
-  // Reintenta hasta 3 veces con delay (por si el trigger tarda)
+  // Reintenta hasta 3 veces con delay (por si el trigger tarda). Usa
+  // obtener_mi_perfil_efectivo() en vez de leer profiles directo: si esta
+  // cuenta tiene una membresía admin-nivel extra para el negocio del
+  // dominio actual (ver 20260819130000), el rol/tenant que regresa reflejan
+  // ESE negocio, no el rol fijo de su cuenta "de casa".
   Future<Perfil> _obtenerPerfilConReintento(String idUsuario, {int reintentos = 3}) async {
     for (int i = 0; i < reintentos; i++) {
-      final datos = await _client
-          .from('profiles')
-          .select()
-          .eq('id', idUsuario)
-          .maybeSingle();
-
-      if (datos != null) return Perfil.fromMap(datos);
+      final filas = await _client.rpc('obtener_mi_perfil_efectivo') as List;
+      if (filas.isNotEmpty) return Perfil.fromMap(filas.first as Map<String, dynamic>);
 
       if (i < reintentos - 1) await Future.delayed(const Duration(milliseconds: 800));
     }

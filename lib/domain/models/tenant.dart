@@ -19,7 +19,13 @@ class Tenant {
 
   factory Tenant.fromMap(Map<String, dynamic> map) {
     final dominiosData = map['tenant_domains'] as List<dynamic>? ?? [];
-    final adminsData = map['profiles'] as List<dynamic>? ?? [];
+    // platform_admin puede aparecer aquí por la cláusula "ver mi propio
+    // perfil" de RLS (su tenant_id es solo un relleno técnico, nunca
+    // significa que administra este negocio) — se excluye explícitamente
+    // en vez de confiar en que el filtro de rol de la policy baste.
+    final adminsData = (map['profiles'] as List<dynamic>? ?? [])
+        .where((a) => (a as Map<String, dynamic>)['role'] != 'platform_admin')
+        .toList();
     return Tenant(
       id: map['id'] as String,
       slug: map['slug'] as String,

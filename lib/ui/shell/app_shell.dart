@@ -290,6 +290,11 @@ class _CarcasaAppState extends State<CarcasaApp> with SingleTickerProviderStateM
 }
 
 // ── Barra de navegación con carrito flotante ─────────────────
+// Curvas propias (las de Flutter por defecto se sienten débiles) — misma
+// idea que --ease-out/--ease-in-out de la skill de Emil Kowalski.
+const _kEaseOutFuerte = Cubic(0.23, 1, 0.32, 1);
+const _kEaseInOutFuerte = Cubic(0.77, 0, 0.175, 1);
+
 class _BarraNavegacion extends StatelessWidget {
   final List<_Pestana> pestanas;
   final int indiceSafe;
@@ -306,61 +311,82 @@ class _BarraNavegacion extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final itemWidth = (screenWidth - 40) / pestanas.length;
+    final itemWidth = screenWidth / pestanas.length;
     final iconSize = (itemWidth * 0.70).clamp(22.0, 38.0);
     final barHeight = (iconSize + 44).clamp(64.0, 84.0);
+    final indicadorTamano = iconSize + 12;
 
-    return Padding(
-      padding: EdgeInsets.zero,
-      child: Container(
-        height: barHeight,
-        decoration: BoxDecoration(
-          color: kCard,
-          borderRadius: BorderRadius.zero,
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x33000000),
-              blurRadius: 20,
-              offset: Offset(0, 8),
+    return Container(
+      height: barHeight,
+      decoration: const BoxDecoration(
+        color: kCard,
+        borderRadius: BorderRadius.zero,
+        boxShadow: [
+          BoxShadow(
+            color: Color(0x33000000),
+            blurRadius: 20,
+            offset: Offset(0, 8),
+          ),
+          BoxShadow(
+            color: Color(0x22FFFFFF),
+            blurRadius: 12,
+            spreadRadius: 1,
+            offset: Offset(0, -2),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          // El indicador es UN solo círculo que se desliza de pestaña en
+          // pestaña — antes cada ícono aparecía/desaparecía por su cuenta
+          // en su propio lugar, sin ningún movimiento que conectara una
+          // selección con la siguiente, así que el cambio se sentía
+          // "cortado" en vez de fluido.
+          AnimatedPositioned(
+            duration: const Duration(milliseconds: 260),
+            curve: _kEaseInOutFuerte,
+            left: indiceSafe * itemWidth + (itemWidth - indicadorTamano) / 2,
+            top: (barHeight - indicadorTamano) / 2,
+            width: indicadorTamano,
+            height: indicadorTamano,
+            child: const DecoratedBox(
+              decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle),
             ),
-            BoxShadow(
-              color: Color(0x22FFFFFF),
-              blurRadius: 12,
-              spreadRadius: 1,
-              offset: Offset(0, -2),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: List.generate(pestanas.length, (i) {
-            final selected = i == indiceSafe;
-            return GestureDetector(
-              onTap: () => onTap(i),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 140),
-                curve: Curves.easeOut,
-                padding: selected ? const EdgeInsets.all(6) : EdgeInsets.zero,
-                decoration: BoxDecoration(
-                  color: selected ? Colors.white : Colors.transparent,
-                  shape: BoxShape.circle,
-                ),
-                child: AnimatedScale(
-                  duration: const Duration(milliseconds: 140),
-                  curve: Curves.easeOut,
-                  scale: selected ? 1.05 : 1.0,
-                  child: Icon(
-                    selected
-                        ? _iconoActivo(pestanas[i].icono)
-                        : pestanas[i].icono,
-                    color: selected ? Colors.black : Colors.white,
-                    size: iconSize * 0.85,
+          ),
+          Row(
+            children: List.generate(pestanas.length, (i) {
+              final selected = i == indiceSafe;
+              return Expanded(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => onTap(i),
+                  child: Center(
+                    child: AnimatedScale(
+                      duration: const Duration(milliseconds: 180),
+                      curve: _kEaseOutFuerte,
+                      scale: selected ? 1.05 : 1.0,
+                      child: TweenAnimationBuilder<Color?>(
+                        tween: ColorTween(
+                          begin: Colors.white,
+                          end: selected ? Colors.black : Colors.white,
+                        ),
+                        duration: const Duration(milliseconds: 180),
+                        curve: Curves.ease,
+                        builder: (context, color, child) => Icon(
+                          selected
+                              ? _iconoActivo(pestanas[i].icono)
+                              : pestanas[i].icono,
+                          color: color,
+                          size: iconSize * 0.85,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            );
-          }),
-        ),
+              );
+            }),
+          ),
+        ],
       ),
     );
   }

@@ -426,6 +426,69 @@ class _PaginaNegociosState extends State<PaginaNegocios> {
     await context.read<ProveedorTenants>().actualizarStatus(tenant.id, nuevoStatus);
   }
 
+  Future<void> _confirmarEliminarTenant(Tenant tenant) async {
+    final ctrlSlug = TextEditingController();
+    bool coincide = false;
+
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setLocal) => AlertDialog(
+          backgroundColor: Colors.white,
+          title: const Text('Eliminar negocio', style: TextStyle(color: Color(0xFF1C1C1E))),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Esto borra "${tenant.businessName}" POR COMPLETO: todos sus clientes, '
+                'empleados, administradores (con sus cuentas de acceso), reservas, pedidos, '
+                'productos y comisiones. No se puede deshacer.',
+                style: const TextStyle(color: Color(0xFF6E6E73)),
+              ),
+              const SizedBox(height: 16),
+              Text('Escribe "${tenant.slug}" para confirmar:',
+                  style: const TextStyle(
+                      color: Color(0xFF1C1C1E), fontWeight: FontWeight.w600, fontSize: 13)),
+              const SizedBox(height: 8),
+              TextField(
+                controller: ctrlSlug,
+                autofocus: true,
+                style: const TextStyle(color: Color(0xFF1C1C1E)),
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: const Color(0xFFF2F2F7),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                ),
+                onChanged: (v) => setLocal(() => coincide = v.trim() == tenant.slug),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
+            TextButton(
+              onPressed: coincide ? () => Navigator.pop(ctx, true) : null,
+              child: const Text('Eliminar para siempre', style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (confirmar != true || !mounted) return;
+
+    final exito = await context
+        .read<ProveedorTenants>()
+        .eliminarTenant(tenantId: tenant.id, slugConfirmacion: ctrlSlug.text.trim());
+    if (!mounted) return;
+    final error = context.read<ProveedorTenants>().error;
+    mostrarToast(
+      context,
+      exito ? 'Negocio eliminado' : (error ?? 'No se pudo eliminar el negocio'),
+      tipo: exito ? TipoToast.exito : TipoToast.error,
+    );
+  }
+
   Color _colorStatus(String status) {
     switch (status) {
       case 'active':
@@ -536,6 +599,7 @@ class _PaginaNegociosState extends State<PaginaNegocios> {
                                         if (accion == 'sysadmin') {
                                           _mostrarDialogoInvitarAdmin(t, 'sysadmin');
                                         }
+                                        if (accion == 'eliminar') _confirmarEliminarTenant(t);
                                       },
                                       itemBuilder: (_) => [
                                         const PopupMenuItem(
@@ -569,6 +633,15 @@ class _PaginaNegociosState extends State<PaginaNegocios> {
                                                   size: 18),
                                               const SizedBox(width: 8),
                                               Text(t.estaActivo ? 'Suspender' : 'Reactivar'),
+                                            ])),
+                                        const PopupMenuItem(
+                                            value: 'eliminar',
+                                            child: Row(children: [
+                                              Icon(Icons.delete_forever_outlined,
+                                                  size: 18, color: Colors.red),
+                                              SizedBox(width: 8),
+                                              Text('Eliminar negocio',
+                                                  style: TextStyle(color: Colors.red)),
                                             ])),
                                       ],
                                     ),

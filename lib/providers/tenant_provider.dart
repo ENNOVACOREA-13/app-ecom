@@ -123,4 +123,19 @@ class ProveedorTenants extends ChangeNotifier {
       return false;
     }
   }
+
+  Future<bool> eliminarTenant({
+    required String tenantId,
+    required String slugConfirmacion,
+  }) async {
+    try {
+      await _repo.eliminarTenant(tenantId: tenantId, slugConfirmacion: slugConfirmacion);
+      await cargarTenants();
+      return true;
+    } catch (e) {
+      _error = mapearErrorBorradoTenant(e.toString());
+      notifyListeners();
+      return false;
+    }
+  }
 }

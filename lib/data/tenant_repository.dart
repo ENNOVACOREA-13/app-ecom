@@ -1,6 +1,31 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../core/constants.dart';
 import '../domain/models/tenant.dart';
 import 'user_provisioning_service.dart';
+
+/// Traduce los códigos de error de admin-delete-tenant a un mensaje legible.
+String mapearErrorBorradoTenant(String e) {
+  final codigo = e.replaceFirst('Exception: ', '').trim();
+  switch (codigo) {
+    case 'slug_mismatch':
+      return 'El slug no coincide. Escríbelo exactamente para confirmar.';
+    case 'contains_principal_sysadmin':
+      return 'No se puede eliminar: este negocio tiene la cuenta sysadmin principal de la plataforma.';
+    case 'contains_platform_admin':
+      return 'No se puede eliminar: este negocio tiene una cuenta de administrador de la plataforma ligada.';
+    case 'tenant_not_found':
+      return 'Ese negocio ya no existe.';
+    case 'forbidden':
+      return 'No tienes permiso para eliminar negocios.';
+    case 'missing_auth':
+    case 'invalid_session':
+      return 'Tu sesión no tiene permiso para hacer esto.';
+    default:
+      return 'No se pudo eliminar el negocio.';
+  }
+}
 
 class RepositorioTenants {
   SupabaseClient get _client => Supabase.instance.client;
@@ -96,5 +121,34 @@ class RepositorioTenants {
   /// trigger a nivel de base de datos).
   Future<void> eliminarPerfilAdmin(String userId) async {
     await _servicioAlta.eliminarUsuario(userId);
+  }
+
+  /// Elimina un negocio por completo e irreversiblemente — vía Edge Function
+  /// admin-delete-tenant, que borra en cascada TODO lo que le pertenece
+  /// (reservas, pedidos, productos, comisiones, perfiles y cuentas de Auth
+  /// de sus clientes/empleados/admins) y exige el slug exacto como
+  /// confirmación server-side, no solo en el diálogo de la UI. Rechaza
+  /// borrar cualquier negocio que sea "de casa" del sysadmin principal de
+  /// la plataforma.
+  Future<void> eliminarTenant({
+    required String tenantId,
+    required String slugConfirmacion,
+  }) async {
+    final session = _client.auth.currentSession;
+    if (session == null) throw Exception('missing_session');
+
+    final respuesta = await http.post(
+      Uri.parse('$kSupabaseUrl/functions/v1/admin-delete-tenant'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ${session.accessToken}',
+      },
+      body: jsonEncode({'tenant_id': tenantId, 'slug_confirmacion': slugConfirmacion}),
+    );
+
+    final cuerpo = jsonDecode(respuesta.body) as Map<String, dynamic>;
+    if (cuerpo['success'] != true) {
+      throw Exception(cuerpo['error'] ?? 'unknown_error');
+    }
   }
 }

@@ -171,8 +171,15 @@ Deno.serve(async (req) => {
 
     const newUserId = created.user.id;
 
+    // email_verificado también queda en true: a diferencia del autoregistro
+    // (que valida el correo mandando su propio enlace de confirmación), acá
+    // el admin ya está vouching por ese correo al invitarlo, y createUser ya
+    // se llamó con email_confirm:true. Sin esto, cualquier empleado/admin
+    // invitado quedaba bloqueado para siempre en el login (email_not_verified,
+    // ver RepositorioAuth.iniciarSesion) aunque configurara bien su
+    // contraseña — bug real encontrado 2026-08-20.
     const { error: roleUpdateError } = await admin
-      .from('profiles').update({ role }).eq('id', newUserId);
+      .from('profiles').update({ role, email_verificado: true }).eq('id', newUserId);
     if (roleUpdateError) throw roleUpdateError;
 
     if (esRolAdminNivel) {

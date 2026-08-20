@@ -41,64 +41,31 @@ class RepositorioAuth {
     return perfil;
   }
 
-  Future<Perfil> registrarse({
+  /// Registro público de clientes: no pide contraseña en el formulario — se
+  /// crea la cuenta y se manda UN SOLO correo (Edge Function `self-register`)
+  /// con un enlace que confirma la cuenta Y deja poner la contraseña, en vez
+  /// de un correo de confirmación separado (que además no estaba llegando
+  /// bien) seguido de una contraseña que ya se había puesto en el formulario.
+  Future<void> registrarse({
     required String correo,
-    required String contrasena,
     required String nombreCompleto,
     String? telefono,
   }) async {
-    final resultado = await _client.auth.signUp(
-      email: correo,
-      password: contrasena,
-      data: {'full_name': nombreCompleto, 'role': 'client', 'tenant_id': kTenantIdActivo},
-    );
-    if (resultado.user == null) throw Exception('Error al crear la cuenta');
-
-    // Esperar a que el trigger cree el perfil
-    await Future.delayed(const Duration(seconds: 1));
-
-    // Si el trigger falló, crear el perfil manualmente usando upsert
-    final existente = await _client
-        .from('profiles')
-        .select()
-        .eq('id', resultado.user!.id)
-        .maybeSingle();
-
-    if (existente == null) {
-      await _client.from('profiles').upsert({
-        'id': resultado.user!.id,
+    final respuesta = await http.post(
+      Uri.parse('$kSupabaseUrl/functions/v1/self-register'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'email': correo,
         'full_name': nombreCompleto,
-        'role': 'client',
-        'is_active': true,
+        if (telefono != null && telefono.isNotEmpty) 'phone': telefono,
         'tenant_id': kTenantIdActivo,
-      });
-    }
-
-    if (telefono != null && telefono.isNotEmpty) {
-      await _client.from('profiles').update({'phone': telefono}).eq('id', resultado.user!.id);
-    }
-
-    // El registro nunca deja al usuario logueado: debe confirmar su correo
-    // (enviado con nuestro propio SMTP) antes de poder iniciar sesión.
-    if (resultado.session != null) {
-      try {
-        await _enviarCorreoConfirmacion();
-      } catch (_) {}
-      await _client.auth.signOut();
-    }
-    throw Exception('email_confirmation_required');
-  }
-
-  Future<void> _enviarCorreoConfirmacion() async {
-    final session = _client.auth.currentSession;
-    if (session == null) return;
-    await http.post(
-      Uri.parse('$kSupabaseUrl/functions/v1/send-confirmation-email'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ${session.accessToken}',
-      },
+      }),
     );
+
+    final cuerpo = jsonDecode(respuesta.body) as Map<String, dynamic>;
+    if (cuerpo['success'] != true) {
+      throw Exception(cuerpo['error'] ?? 'unknown_error');
+    }
   }
 
   /// Envía el correo de recuperación (vía nuestro SMTP) si el correo existe.

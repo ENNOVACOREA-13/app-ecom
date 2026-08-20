@@ -37,6 +37,13 @@ Deno.serve(async (req) => {
 
     await admin.from('password_reset_tokens').update({ used: true }).eq('token', token);
 
+    // Completar este flujo (con un token único mandado a su correo) ya
+    // prueba que la persona tiene acceso a ese correo — cubre tanto al
+    // invitado (admin-create-user también lo marca, pero por si acaso)
+    // como a la cuenta que se autoregistra por el flujo unificado de un
+    // solo correo (confirmar + crear contraseña en el mismo enlace).
+    await admin.from('profiles').update({ email_verificado: true }).eq('id', fila.user_id as string);
+
     // El correo/contraseña ya quedaron bien, pero si la persona intenta
     // iniciar sesión en un dominio que no es el de SU negocio, la app la
     // rechaza con el mismo mensaje que una contraseña incorrecta (a

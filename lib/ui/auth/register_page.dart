@@ -5,6 +5,7 @@ import '../../providers/auth_provider.dart';
 import '../../core/entrada_animada.dart';
 import '../../core/theme/app_theme.dart';
 import '../common/app_widgets.dart';
+import '../common/toast.dart';
 
 class PaginaRegistro extends StatefulWidget {
   const PaginaRegistro({super.key});
@@ -18,17 +19,12 @@ class _PaginaRegistroState extends State<PaginaRegistro> {
   final _nombre = TextEditingController();
   final _correo = TextEditingController();
   final _telefono = TextEditingController();
-  final _contrasena = TextEditingController();
-  final _confirmContrasena = TextEditingController();
-  bool _ocultar = true;
 
   @override
   void dispose() {
     _nombre.dispose();
     _correo.dispose();
     _telefono.dispose();
-    _contrasena.dispose();
-    _confirmContrasena.dispose();
     super.dispose();
   }
 
@@ -37,11 +33,18 @@ class _PaginaRegistroState extends State<PaginaRegistro> {
     final auth = context.read<ProveedorAuth>();
     final exito = await auth.registrarse(
       correo: _correo.text.trim(),
-      contrasena: _contrasena.text,
       nombreCompleto: _nombre.text.trim(),
       telefono: _telefono.text.trim(),
     );
-    if (exito && mounted) context.go('/');
+    if (!mounted) return;
+    if (exito) {
+      mostrarToast(
+        context,
+        'Cuenta creada. Revisa tu correo para confirmarla y crear tu contraseña.',
+        tipo: TipoToast.exito,
+      );
+      context.go('/login');
+    }
   }
 
   @override
@@ -121,39 +124,13 @@ class _PaginaRegistroState extends State<PaginaRegistro> {
                       controlador: _telefono,
                       tipoTeclado: TextInputType.phone,
                       prefijo: const Icon(Icons.phone_outlined, color: kTextSub),
-                      accionTeclado: TextInputAction.next,
-                    ),
-                    const SizedBox(height: 16),
-                    CampoTexto(
-                      etiqueta: 'Contraseña',
-                      controlador: _contrasena,
-                      ocultar: _ocultar,
-                      prefijo: const Icon(Icons.lock_outline, color: kTextSub),
-                      sufijo: IconButton(
-                        icon: Icon(
-                          _ocultar ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                          color: kTextSub,
-                        ),
-                        onPressed: () => setState(() => _ocultar = !_ocultar),
-                      ),
-                      accionTeclado: TextInputAction.next,
-                      validador: (v) {
-                        if (v == null || v.length < 6) return 'Mínimo 6 caracteres';
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    CampoTexto(
-                      etiqueta: 'Confirmar contraseña',
-                      controlador: _confirmContrasena,
-                      ocultar: _ocultar,
-                      prefijo: const Icon(Icons.lock_outline, color: kTextSub),
                       accionTeclado: TextInputAction.done,
                       alEnviar: (_) => _enviar(),
-                      validador: (v) {
-                        if (v != _contrasena.text) return 'Las contraseñas no coinciden';
-                        return null;
-                      },
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Te mandamos un correo para confirmar tu cuenta y crear tu contraseña ahí.',
+                      style: TextStyle(fontSize: 12, color: kTextSub),
                     ),
                     const SizedBox(height: 28),
                     BotonPrincipal(

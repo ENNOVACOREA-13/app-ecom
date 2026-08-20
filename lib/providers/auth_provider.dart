@@ -20,6 +20,10 @@ String parsearErrorAuth(String e) {
   if (e.contains('valid email')) return 'Ingresa un email válido';
   if (e.contains('email_confirmation_required')) return 'Revisa tu correo para confirmar tu cuenta antes de entrar';
   if (e.contains('email_not_verified')) return 'Confirma tu correo antes de iniciar sesión. Revisa tu bandeja de entrada (y spam)';
+  if (e.contains('email_already_exists')) return 'Ese correo ya tiene una cuenta';
+  if (e.contains('invalid_email')) return 'El correo no es válido';
+  if (e.contains('invalid_name')) return 'Ingresa un nombre';
+  if (e.contains('missing_tenant_id') || e.contains('invalid_tenant')) return 'No se pudo identificar el negocio desde este dominio. Intenta de nuevo o contacta soporte';
   if (e.contains('row-level security') || e.contains('violates') || e.contains('42501')) return 'Error de permisos en la base de datos. Contacta al administrador';
   if (e.contains('does not exist') || e.contains('relation')) return 'Error de configuración en la base de datos';
   if (e.contains('Email rate limit') || e.contains('rate limit')) return 'Demasiados intentos. Espera unos minutos';
@@ -177,9 +181,11 @@ class ProveedorAuth extends ChangeNotifier {
     }
   }
 
+  /// No deja al usuario logueado: la cuenta se crea sin contraseña y se le
+  /// manda un correo con un enlace para confirmarla y ponerle contraseña
+  /// (ver RepositorioAuth.registrarse).
   Future<bool> registrarse({
     required String correo,
-    required String contrasena,
     required String nombreCompleto,
     String? telefono,
   }) async {
@@ -187,14 +193,11 @@ class ProveedorAuth extends ChangeNotifier {
     _error = null;
     notifyListeners();
     try {
-      _sesionExpirada = false;
-      _perfil = await _repo.registrarse(
+      await _repo.registrarse(
         correo: correo,
-        contrasena: contrasena,
         nombreCompleto: nombreCompleto,
         telefono: telefono,
       );
-      await ServicioActividad.instancia.iniciarSesion(_perfil!.id);
       return true;
     } catch (e) {
       _error = parsearErrorAuth(e.toString());

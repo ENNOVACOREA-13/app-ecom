@@ -60,12 +60,14 @@ class _PaginaDiasLibresState extends State<PaginaDiasLibres> {
         content: TextField(
           controller: ctrlMotivo,
           style: const TextStyle(color: Color(0xFF1C1C1E)),
+          maxLength: 200,
           decoration: InputDecoration(
             labelText: 'Motivo (opcional)',
             filled: true,
             fillColor: const Color(0xFFF2F2F7),
             border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+            counterText: '',
           ),
         ),
         actions: [

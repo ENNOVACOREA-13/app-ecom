@@ -208,6 +208,7 @@ class _PaginaCategoriasProductoState extends State<PaginaCategoriasProducto> {
                 TextFormField(
                   controller: ctrlNombre,
                   autofocus: true,
+                  maxLength: 40,
                   style: const TextStyle(color: Color(0xFF1C1C1E)),
                   decoration: InputDecoration(
                     labelText: 'Nombre de la categoría',
@@ -215,6 +216,7 @@ class _PaginaCategoriasProductoState extends State<PaginaCategoriasProducto> {
                     fillColor: const Color(0xFFF2F2F7),
                     border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                    counterText: '',
                   ),
                   validator: (v) =>
                       (v == null || v.trim().isEmpty) ? 'Ingresa un nombre' : null,

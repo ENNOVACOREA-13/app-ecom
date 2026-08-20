@@ -79,6 +79,7 @@ class CampoTexto extends StatelessWidget {
   final int maxLineas;
   final TextInputAction? accionTeclado;
   final void Function(String)? alEnviar;
+  final int? maxLongitud;
 
   const CampoTexto({
     super.key,
@@ -92,6 +93,7 @@ class CampoTexto extends StatelessWidget {
     this.maxLineas = 1,
     this.accionTeclado,
     this.alEnviar,
+    this.maxLongitud,
   });
 
   @override
@@ -104,6 +106,7 @@ class CampoTexto extends StatelessWidget {
       maxLines: maxLineas,
       textInputAction: accionTeclado,
       onFieldSubmitted: alEnviar,
+      maxLength: maxLongitud ?? (ocultar ? 128 : (maxLineas > 1 ? 500 : 100)),
       // Solo texto plano: evita pegar imágenes u otro contenido enriquecido
       // que el portapapeles pudiera traer junto con el texto (no aplica a
       // campos multilínea como bio/descripción).
@@ -115,6 +118,7 @@ class CampoTexto extends StatelessWidget {
         labelText: etiqueta,
         prefixIcon: prefijo,
         suffixIcon: sufijo,
+        counterText: '',
       ),
     );
   }

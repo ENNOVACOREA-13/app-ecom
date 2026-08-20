@@ -250,12 +250,14 @@ class _PaginaConfigLealtadState extends State<PaginaConfigLealtad> {
     return TextField(
       controller: ctrl,
       onChanged: (_) => setState(() {}),
+      maxLength: 60,
       decoration: InputDecoration(
         hintText: hint,
         filled: true,
         fillColor: Colors.white,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        counterText: '',
       ),
     );
   }
@@ -266,6 +268,7 @@ class _PaginaConfigLealtadState extends State<PaginaConfigLealtad> {
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}'))],
       onChanged: (_) => setState(() {}),
+      maxLength: 10,
       style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
       decoration: InputDecoration(
         prefixText: prefijo,
@@ -273,6 +276,7 @@ class _PaginaConfigLealtadState extends State<PaginaConfigLealtad> {
         fillColor: Colors.white,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        counterText: '',
       ),
     );
   }

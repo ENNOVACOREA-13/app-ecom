@@ -46,6 +46,7 @@ class _PaginaNegociosState extends State<PaginaNegocios> {
                 TextFormField(
                   controller: ctrlNombre,
                   autofocus: true,
+                  maxLength: 60,
                   style: const TextStyle(color: Color(0xFF1C1C1E)),
                   decoration: InputDecoration(
                     labelText: 'Nombre del negocio',
@@ -53,12 +54,14 @@ class _PaginaNegociosState extends State<PaginaNegocios> {
                     fillColor: const Color(0xFFF2F2F7),
                     border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                    counterText: '',
                   ),
                   validator: (v) => (v == null || v.trim().isEmpty) ? 'Ingresa un nombre' : null,
                 ),
                 const SizedBox(height: 14),
                 TextFormField(
                   controller: ctrlSlug,
+                  maxLength: 40,
                   style: const TextStyle(color: Color(0xFF1C1C1E)),
                   decoration: InputDecoration(
                     labelText: 'Slug (identificador corto, ej. mi-barberia)',
@@ -66,6 +69,7 @@ class _PaginaNegociosState extends State<PaginaNegocios> {
                     fillColor: const Color(0xFFF2F2F7),
                     border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                    counterText: '',
                   ),
                   validator: (v) {
                     if (v == null || v.trim().isEmpty) return 'Ingresa un slug';
@@ -126,6 +130,7 @@ class _PaginaNegociosState extends State<PaginaNegocios> {
             child: TextFormField(
               controller: ctrlDominio,
               autofocus: true,
+              maxLength: 253,
               style: const TextStyle(color: Color(0xFF1C1C1E)),
               decoration: InputDecoration(
                 labelText: 'Dominio (ej. mi-barberia.vercel.app)',
@@ -133,6 +138,7 @@ class _PaginaNegociosState extends State<PaginaNegocios> {
                 fillColor: const Color(0xFFF2F2F7),
                 border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                counterText: '',
               ),
               validator: (v) => (v == null || v.trim().isEmpty) ? 'Ingresa un dominio' : null,
             ),
@@ -190,6 +196,7 @@ class _PaginaNegociosState extends State<PaginaNegocios> {
                 TextFormField(
                   controller: ctrlNombre,
                   autofocus: true,
+                  maxLength: 60,
                   style: const TextStyle(color: Color(0xFF1C1C1E)),
                   decoration: InputDecoration(
                     labelText: 'Nombre completo',
@@ -197,6 +204,7 @@ class _PaginaNegociosState extends State<PaginaNegocios> {
                     fillColor: const Color(0xFFF2F2F7),
                     border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                    counterText: '',
                   ),
                   validator: (v) => (v == null || v.trim().isEmpty) ? 'Ingresa un nombre' : null,
                 ),
@@ -204,6 +212,7 @@ class _PaginaNegociosState extends State<PaginaNegocios> {
                 TextFormField(
                   controller: ctrlEmail,
                   keyboardType: TextInputType.emailAddress,
+                  maxLength: 254,
                   style: const TextStyle(color: Color(0xFF1C1C1E)),
                   decoration: InputDecoration(
                     labelText: 'Email',
@@ -211,6 +220,7 @@ class _PaginaNegociosState extends State<PaginaNegocios> {
                     fillColor: const Color(0xFFF2F2F7),
                     border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                    counterText: '',
                   ),
                   validator: (v) =>
                       (v == null || !v.contains('@')) ? 'Email inválido' : null,
@@ -304,6 +314,7 @@ class _PaginaNegociosState extends State<PaginaNegocios> {
                 TextFormField(
                   controller: ctrlNombre,
                   autofocus: true,
+                  maxLength: 60,
                   style: const TextStyle(color: Color(0xFF1C1C1E)),
                   decoration: InputDecoration(
                     labelText: 'Nombre completo',
@@ -311,6 +322,7 @@ class _PaginaNegociosState extends State<PaginaNegocios> {
                     fillColor: const Color(0xFFF2F2F7),
                     border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                    counterText: '',
                   ),
                   validator: (v) => (v == null || v.trim().isEmpty) ? 'Ingresa un nombre' : null,
                 ),
@@ -318,6 +330,7 @@ class _PaginaNegociosState extends State<PaginaNegocios> {
                 TextFormField(
                   controller: ctrlTelefono,
                   keyboardType: TextInputType.phone,
+                  maxLength: 20,
                   style: const TextStyle(color: Color(0xFF1C1C1E)),
                   decoration: InputDecoration(
                     labelText: 'Teléfono (opcional)',
@@ -325,6 +338,7 @@ class _PaginaNegociosState extends State<PaginaNegocios> {
                     fillColor: const Color(0xFFF2F2F7),
                     border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                    counterText: '',
                   ),
                 ),
               ],
@@ -454,12 +468,14 @@ class _PaginaNegociosState extends State<PaginaNegocios> {
               TextField(
                 controller: ctrlSlug,
                 autofocus: true,
+                maxLength: 40,
                 style: const TextStyle(color: Color(0xFF1C1C1E)),
                 decoration: InputDecoration(
                   filled: true,
                   fillColor: const Color(0xFFF2F2F7),
                   border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                  counterText: '',
                 ),
                 onChanged: (v) => setLocal(() => coincide = v.trim() == tenant.slug),
               ),

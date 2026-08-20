@@ -289,12 +289,14 @@ class _CampoOscuro extends StatelessWidget {
       validator: validador,
       textInputAction: accionTeclado,
       onFieldSubmitted: alEnviar,
+      maxLength: ocultar ? 128 : 254,
       style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
         labelText: etiqueta,
         labelStyle: const TextStyle(color: Colors.white60),
         prefixIcon: prefijo,
         suffixIcon: sufijo,
+        counterText: '',
         filled: true,
         fillColor: const Color(0xFF1C1C1E),
         border: OutlineInputBorder(

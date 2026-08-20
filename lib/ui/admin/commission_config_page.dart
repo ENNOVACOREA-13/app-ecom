@@ -243,11 +243,13 @@ class _TabConfiguracion extends StatelessWidget {
                   inputFormatters: [
                     FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
                   ],
+                  maxLength: 10,
                   style: TextStyle(
                       color: color,
                       fontSize: 28,
                       fontWeight: FontWeight.w900),
                   decoration: InputDecoration(
+                    counterText: '',
                     prefixText: '\$ ',
                     prefixStyle: TextStyle(
                         color: color,
@@ -689,6 +691,7 @@ class _TabCortes extends StatelessWidget {
               const SizedBox(height: 16),
               TextField(
                 controller: ctrlNotas,
+                maxLength: 300,
                 decoration: InputDecoration(
                   hintText: 'Notas (método de pago, referencia...)',
                   filled: true,
@@ -699,6 +702,7 @@ class _TabCortes extends StatelessWidget {
                   ),
                   contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16, vertical: 14),
+                  counterText: '',
                 ),
                 maxLines: 2,
               ),

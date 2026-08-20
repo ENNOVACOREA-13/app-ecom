@@ -116,19 +116,22 @@ class _PaginaInsumosState extends State<PaginaInsumos> {
                   style: const TextStyle(color: kTextSub, fontSize: 12)),
             ],
             const SizedBox(height: 16),
-            _campo(nombreCtrl, 'Nombre', Icons.inventory_2_outlined),
+            _campo(nombreCtrl, 'Nombre', Icons.inventory_2_outlined,
+                maxLongitud: 60),
             const SizedBox(height: 12),
-            _campo(descCtrl, 'Descripción (opcional)', Icons.notes_outlined),
+            _campo(descCtrl, 'Descripción (opcional)', Icons.notes_outlined,
+                maxLongitud: 300),
             const SizedBox(height: 12),
             Row(children: [
               Expanded(child: _campo(cantidadCtrl, 'Cantidad comprada', Icons.numbers,
-                  tipo: TextInputType.number)),
+                  tipo: TextInputType.number, maxLongitud: 8)),
               const SizedBox(width: 12),
               Expanded(child: _campo(precioCtrl, 'Precio unitario (\$)', Icons.attach_money,
-                  tipo: TextInputType.number)),
+                  tipo: TextInputType.number, maxLongitud: 10)),
             ]),
             const SizedBox(height: 12),
-            _campo(unidadCtrl, 'Unidad (ej: unidad, kg, litro)', Icons.straighten),
+            _campo(unidadCtrl, 'Unidad (ej: unidad, kg, litro)', Icons.straighten,
+                maxLongitud: 20),
             const SizedBox(height: 20),
             SizedBox(
               width: double.infinity,
@@ -179,10 +182,11 @@ class _PaginaInsumosState extends State<PaginaInsumos> {
   }
 
   Widget _campo(TextEditingController ctrl, String label, IconData icon,
-      {TextInputType tipo = TextInputType.text}) {
+      {TextInputType tipo = TextInputType.text, int? maxLongitud}) {
     return TextField(
       controller: ctrl,
       keyboardType: tipo,
+      maxLength: maxLongitud,
       style: const TextStyle(color: Color(0xFF1C1C1E)),
       decoration: InputDecoration(
         labelText: label,
@@ -193,6 +197,7 @@ class _PaginaInsumosState extends State<PaginaInsumos> {
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide.none),
         labelStyle: const TextStyle(color: kTextSub),
+        counterText: '',
       ),
     );
   }

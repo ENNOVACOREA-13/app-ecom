@@ -146,8 +146,9 @@ class _PaginaGestionEmpleadosState extends State<PaginaGestionEmpleados>
               TextFormField(
                 controller: ctrlNombre,
                 style: const TextStyle(color: Color(0xFF1C1C1E)),
-                decoration:
-                    const InputDecoration(labelText: 'Nombre completo *'),
+                decoration: const InputDecoration(
+                    labelText: 'Nombre completo *', counterText: ''),
+                maxLength: 60,
                 validator: (v) =>
                     (v == null || v.isEmpty) ? 'Requerido' : null,
               ),
@@ -156,7 +157,9 @@ class _PaginaGestionEmpleadosState extends State<PaginaGestionEmpleados>
                 controller: ctrlEmail,
                 style: const TextStyle(color: Color(0xFF1C1C1E)),
                 keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(labelText: 'Email *'),
+                decoration: const InputDecoration(
+                    labelText: 'Email *', counterText: ''),
+                maxLength: 254,
                 validator: (v) =>
                     (v == null || !v.contains('@')) ? 'Email inválido' : null,
               ),

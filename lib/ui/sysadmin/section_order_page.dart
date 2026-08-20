@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../core/entrada_animada.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/config_provider.dart';
 
@@ -100,8 +101,10 @@ class _PaginaOrdenSeccionesState extends State<PaginaOrdenSecciones> {
                   final key = s['key'] as String;
                   final visible = s['visible'] as bool? ?? true;
                   final info = _kEtiquetasSeccion[key];
-                  return Container(
+                  return EntradaAnimada(
                     key: ValueKey(key),
+                    index: i,
+                    child: Container(
                     margin: const EdgeInsets.only(bottom: 10),
                     decoration: BoxDecoration(
                       color: Colors.white,
@@ -157,6 +160,7 @@ class _PaginaOrdenSeccionesState extends State<PaginaOrdenSecciones> {
                           ),
                         ),
                       ],
+                    ),
                     ),
                   );
                 },

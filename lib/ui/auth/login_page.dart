@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/config_provider.dart';
 import '../../core/constants.dart';
+import '../../core/entrada_animada.dart';
 import '../../core/theme/app_theme.dart';
 import '../common/app_widgets.dart';
 
@@ -49,36 +50,44 @@ class _PaginaLoginState extends State<PaginaLogin> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 48),
-              // Logo — dark card with glow
-              Center(
-                child: Container(
-                  width: 80,
-                  height: 80,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.all(Radius.circular(24)),
-                    boxShadow: kNeumorphicShadows,
-                  ),
-                  child: ClipRRect(
-                    borderRadius: const BorderRadius.all(Radius.circular(24)),
-                    child: Padding(
-                      padding: const EdgeInsets.all(10),
-                      child: logoUrl != null && logoUrl.isNotEmpty
-                          ? Image.network(logoUrl, fit: BoxFit.contain)
-                          : Image.asset(kLogoBarberiaAsset, fit: BoxFit.contain),
+              EntradaAnimada(
+                index: 0,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Logo — dark card with glow
+                    Center(
+                      child: Container(
+                        width: 80,
+                        height: 80,
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.all(Radius.circular(24)),
+                          boxShadow: kNeumorphicShadows,
+                        ),
+                        child: ClipRRect(
+                          borderRadius: const BorderRadius.all(Radius.circular(24)),
+                          child: Padding(
+                            padding: const EdgeInsets.all(10),
+                            child: logoUrl != null && logoUrl.isNotEmpty
+                                ? Image.network(logoUrl, fit: BoxFit.contain)
+                                : Image.asset(kLogoBarberiaAsset, fit: BoxFit.contain),
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 32),
+                    const Text(
+                      'Bienvenido',
+                      style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFF1C1C1E)),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Inicia sesión en tu cuenta',
+                      style: TextStyle(color: Color(0xFF6E6E73)),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 32),
-              const Text(
-                'Bienvenido',
-                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFF1C1C1E)),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Inicia sesión en tu cuenta',
-                style: TextStyle(color: Color(0xFF6E6E73)),
               ),
               const SizedBox(height: 40),
 

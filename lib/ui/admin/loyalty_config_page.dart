@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../core/entrada_animada.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/loyalty_repository.dart';
 import '../../domain/models/loyalty.dart';
@@ -109,7 +110,9 @@ class _PaginaConfigLealtadState extends State<PaginaConfigLealtad> {
                 children: [
                   // Vista previa de la regla
                   if (monto > 0)
-                    Container(
+                    EntradaAnimada(
+                      index: 0,
+                      child: Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
@@ -131,63 +134,99 @@ class _PaginaConfigLealtadState extends State<PaginaConfigLealtad> {
                           ),
                         ],
                       ),
+                      ),
                     ),
                   const SizedBox(height: 24),
 
-                  _TarjetaSwitch(
-                    titulo: 'Programa activo',
-                    subtitulo: 'Si está apagado, nadie gana ni ve puntos',
-                    valor: _activo,
-                    onCambio: (v) => setState(() => _activo = v),
+                  EntradaAnimada(
+                    index: 1,
+                    child: _TarjetaSwitch(
+                      titulo: 'Programa activo',
+                      subtitulo: 'Si está apagado, nadie gana ni ve puntos',
+                      valor: _activo,
+                      onCambio: (v) => setState(() => _activo = v),
+                    ),
                   ),
                   const SizedBox(height: 20),
 
-                  const Text('Nombre del programa',
-                      style: TextStyle(
-                          color: Color(0xFF1C1C1E), fontWeight: FontWeight.w700, fontSize: 15)),
-                  const SizedBox(height: 10),
-                  _campoTexto(_ctrlNombre, hint: 'Programa de lealtad'),
-                  const SizedBox(height: 24),
-
-                  const Text('Cómo se ganan los puntos',
-                      style: TextStyle(
-                          color: Color(0xFF1C1C1E), fontWeight: FontWeight.w700, fontSize: 15)),
-                  const SizedBox(height: 10),
-                  _TarjetaSwitch(
-                    titulo: 'Reservas completadas',
-                    subtitulo: 'Servicios/citas del salón',
-                    valor: _ganaPorReservas,
-                    onCambio: (v) => setState(() => _ganaPorReservas = v),
-                    compacta: true,
-                  ),
-                  const SizedBox(height: 10),
-                  _TarjetaSwitch(
-                    titulo: 'Pedidos pagados',
-                    subtitulo: 'Compras de productos',
-                    valor: _ganaPorPedidos,
-                    onCambio: (v) => setState(() => _ganaPorPedidos = v),
-                    compacta: true,
+                  EntradaAnimada(
+                    index: 2,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Nombre del programa',
+                            style: TextStyle(
+                                color: Color(0xFF1C1C1E), fontWeight: FontWeight.w700, fontSize: 15)),
+                        const SizedBox(height: 10),
+                        _campoTexto(_ctrlNombre, hint: 'Programa de lealtad'),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 24),
 
-                  const Text('Pesos gastados por cada punto',
-                      style: TextStyle(
-                          color: Color(0xFF1C1C1E), fontWeight: FontWeight.w700, fontSize: 15)),
-                  const SizedBox(height: 4),
-                  const Text('Ej. 100 → gastar \$100 da 1 punto',
-                      style: TextStyle(color: Color(0xFF8E8E93), fontSize: 12)),
-                  const SizedBox(height: 10),
-                  _campoNumero(_ctrlMontoPorPunto, prefijo: '\$ '),
+                  EntradaAnimada(
+                    index: 3,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Cómo se ganan los puntos',
+                            style: TextStyle(
+                                color: Color(0xFF1C1C1E), fontWeight: FontWeight.w700, fontSize: 15)),
+                        const SizedBox(height: 10),
+                        _TarjetaSwitch(
+                          titulo: 'Reservas completadas',
+                          subtitulo: 'Servicios/citas del salón',
+                          valor: _ganaPorReservas,
+                          onCambio: (v) => setState(() => _ganaPorReservas = v),
+                          compacta: true,
+                        ),
+                        const SizedBox(height: 10),
+                        _TarjetaSwitch(
+                          titulo: 'Pedidos pagados',
+                          subtitulo: 'Compras de productos',
+                          valor: _ganaPorPedidos,
+                          onCambio: (v) => setState(() => _ganaPorPedidos = v),
+                          compacta: true,
+                        ),
+                      ],
+                    ),
+                  ),
                   const SizedBox(height: 24),
 
-                  const Text('Puntos necesarios para canjear \$1',
-                      style: TextStyle(
-                          color: Color(0xFF1C1C1E), fontWeight: FontWeight.w700, fontSize: 15)),
-                  const SizedBox(height: 4),
-                  const Text('Ej. 10 → 10 puntos equivalen a \$1 de descuento',
-                      style: TextStyle(color: Color(0xFF8E8E93), fontSize: 12)),
-                  const SizedBox(height: 10),
-                  _campoNumero(_ctrlPuntosPorPesoCanje),
+                  EntradaAnimada(
+                    index: 4,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Pesos gastados por cada punto',
+                            style: TextStyle(
+                                color: Color(0xFF1C1C1E), fontWeight: FontWeight.w700, fontSize: 15)),
+                        const SizedBox(height: 4),
+                        const Text('Ej. 100 → gastar \$100 da 1 punto',
+                            style: TextStyle(color: Color(0xFF8E8E93), fontSize: 12)),
+                        const SizedBox(height: 10),
+                        _campoNumero(_ctrlMontoPorPunto, prefijo: '\$ '),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  EntradaAnimada(
+                    index: 5,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Puntos necesarios para canjear \$1',
+                            style: TextStyle(
+                                color: Color(0xFF1C1C1E), fontWeight: FontWeight.w700, fontSize: 15)),
+                        const SizedBox(height: 4),
+                        const Text('Ej. 10 → 10 puntos equivalen a \$1 de descuento',
+                            style: TextStyle(color: Color(0xFF8E8E93), fontSize: 12)),
+                        const SizedBox(height: 10),
+                        _campoNumero(_ctrlPuntosPorPesoCanje),
+                      ],
+                    ),
+                  ),
                   const SizedBox(height: 32),
 
                   SizedBox(

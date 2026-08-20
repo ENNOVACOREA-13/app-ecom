@@ -7,6 +7,7 @@ import '../../providers/commission_provider.dart';
 import '../../providers/config_provider.dart';
 import '../../domain/models/commission_model.dart';
 import '../../core/constants.dart';
+import '../../core/entrada_animada.dart';
 import '../../core/theme/app_theme.dart';
 import '../common/app_widgets.dart';
 import 'time_off_page.dart';
@@ -63,7 +64,9 @@ class PaginaTableroEmpleadoState extends State<PaginaTableroEmpleado> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Saludo
-                  Container(
+                  EntradaAnimada(
+                    index: 0,
+                    child: Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
@@ -101,135 +104,160 @@ class PaginaTableroEmpleadoState extends State<PaginaTableroEmpleado> {
                         ),
                       ],
                     ),
+                    ),
                   ),
                   const SizedBox(height: 16),
 
-                  Material(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(14),
-                    child: InkWell(
+                  EntradaAnimada(
+                    index: 1,
+                    child: Material(
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(14),
-                      onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                          builder: (_) => const PaginaDiasLibres())),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(14),
-                          boxShadow: kNeumorphicShadowsSmall,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(14),
+                        onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                            builder: (_) => const PaginaDiasLibres())),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(14),
+                            boxShadow: kNeumorphicShadowsSmall,
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: context.colorPrimario.withOpacity(0.12),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(Icons.event_busy_outlined,
+                                    color: context.colorPrimario, size: 18),
+                              ),
+                              const SizedBox(width: 12),
+                              const Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('Mis días libres',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.w700,
+                                            fontSize: 14,
+                                            color: Color(0xFF1C1C1E))),
+                                    SizedBox(height: 2),
+                                    Text('Marca fechas en las que no estarás disponible',
+                                        style: TextStyle(fontSize: 11, color: Color(0xFF8E8E93))),
+                                  ],
+                                ),
+                              ),
+                              const Icon(Icons.arrow_forward_ios_rounded,
+                                  size: 14, color: Color(0xFF8E8E93)),
+                            ],
+                          ),
                         ),
-                        child: Row(
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 28),
+
+                  // ── Comisiones pendientes de corte ────────
+                  EntradaAnimada(
+                    index: 2,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Comisiones',
+                            style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF1C1C1E))),
+                        const SizedBox(height: 12),
+                        _TarjetaComisionSemana(prov: comision),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 28),
+
+                  EntradaAnimada(
+                    index: 3,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Estadísticas',
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1C1C1E))),
+                        const SizedBox(height: 16),
+                        GridView(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                            maxCrossAxisExtent: 220,
+                            crossAxisSpacing: 12,
+                            mainAxisSpacing: 12,
+                            childAspectRatio: 1.3,
+                          ),
                           children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: context.colorPrimario.withOpacity(0.12),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(Icons.event_busy_outlined,
-                                  color: context.colorPrimario, size: 18),
+                            TarjetaEstadistica(
+                              etiqueta: 'Completadas',
+                              valor: '${_estadisticas['total_completadas'] ?? 0}',
+                              icono: Icons.check_circle_outline,
+                              color: Colors.green,
                             ),
-                            const SizedBox(width: 12),
-                            const Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('Mis días libres',
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.w700,
-                                          fontSize: 14,
-                                          color: Color(0xFF1C1C1E))),
-                                  SizedBox(height: 2),
-                                  Text('Marca fechas en las que no estarás disponible',
-                                      style: TextStyle(fontSize: 11, color: Color(0xFF8E8E93))),
-                                ],
-                              ),
+                            TarjetaEstadistica(
+                              etiqueta: 'Pendientes',
+                              valor: '${_estadisticas['total_pendientes'] ?? 0}',
+                              icono: Icons.hourglass_empty_outlined,
+                              color: Colors.orange,
                             ),
-                            const Icon(Icons.arrow_forward_ios_rounded,
-                                size: 14, color: Color(0xFF8E8E93)),
+                            TarjetaEstadistica(
+                              etiqueta: 'Canceladas',
+                              valor: '${_estadisticas['total_canceladas'] ?? 0}',
+                              icono: Icons.cancel_outlined,
+                              color: Colors.red,
+                            ),
+                            TarjetaEstadistica(
+                              etiqueta: 'Ingresos',
+                              valor: '\$${(_estadisticas['ingresos_totales'] ?? 0).toStringAsFixed(0)}',
+                              icono: Icons.attach_money,
+                              color: context.colorPrimario,
+                            ),
                           ],
                         ),
-                      ),
+                      ],
                     ),
                   ),
 
-                  const SizedBox(height: 28),
-
-                  // ── Comisiones semana actual ──────────────
-                  const Text('Comisiones esta semana',
-                      style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF1C1C1E))),
-                  const SizedBox(height: 12),
-                  _TarjetaComisionSemana(prov: comision),
-                  const SizedBox(height: 28),
-
-                  const Text('Estadísticas',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1C1C1E))),
-                  const SizedBox(height: 16),
-
-                  GridView(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                      maxCrossAxisExtent: 220,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                      childAspectRatio: 1.3,
+                  if (comision.cortes.isNotEmpty)
+                    EntradaAnimada(
+                      index: 4,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 24),
+                          const Text('Cortes anteriores',
+                              style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF1C1C1E))),
+                          const SizedBox(height: 12),
+                          ...() {
+                            // El "mejor corte" se calcula sobre TODO el
+                            // historial, no solo los 5 que se muestran — para
+                            // que el destacado sea real aunque el corte más
+                            // grande ya no aparezca en la lista visible.
+                            final mejorId = comision.cortes.length > 1
+                                ? comision.cortes
+                                    .reduce((a, b) => b.montoTotal > a.montoTotal ? b : a)
+                                    .id
+                                : null;
+                            return comision.cortes.take(5).map(
+                                  (c) => _FilaCorteEmpleado(
+                                      corte: c, esMejor: c.id == mejorId),
+                                );
+                          }(),
+                        ],
+                      ),
                     ),
-                    children: [
-                      TarjetaEstadistica(
-                        etiqueta: 'Completadas',
-                        valor: '${_estadisticas['total_completadas'] ?? 0}',
-                        icono: Icons.check_circle_outline,
-                        color: Colors.green,
-                      ),
-                      TarjetaEstadistica(
-                        etiqueta: 'Pendientes',
-                        valor: '${_estadisticas['total_pendientes'] ?? 0}',
-                        icono: Icons.hourglass_empty_outlined,
-                        color: Colors.orange,
-                      ),
-                      TarjetaEstadistica(
-                        etiqueta: 'Canceladas',
-                        valor: '${_estadisticas['total_canceladas'] ?? 0}',
-                        icono: Icons.cancel_outlined,
-                        color: Colors.red,
-                      ),
-                      TarjetaEstadistica(
-                        etiqueta: 'Ingresos',
-                        valor: '\$${(_estadisticas['ingresos_totales'] ?? 0).toStringAsFixed(0)}',
-                        icono: Icons.attach_money,
-                        color: context.colorPrimario,
-                      ),
-                    ],
-                  ),
-
-
-                  if (comision.cortes.isNotEmpty) ...[
-                    const SizedBox(height: 24),
-                    const Text('Cortes anteriores',
-                        style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF1C1C1E))),
-                    const SizedBox(height: 12),
-                    ...() {
-                      // El "mejor corte" se calcula sobre TODO el
-                      // historial, no solo los 5 que se muestran — para
-                      // que el destacado sea real aunque el corte más
-                      // grande ya no aparezca en la lista visible.
-                      final mejorId = comision.cortes.length > 1
-                          ? comision.cortes
-                              .reduce((a, b) => b.montoTotal > a.montoTotal ? b : a)
-                              .id
-                          : null;
-                      return comision.cortes.take(5).map(
-                            (c) => _FilaCorteEmpleado(
-                                corte: c, esMejor: c.id == mejorId),
-                          );
-                    }(),
-                  ],
 
                   const SizedBox(height: 40),
                 ],

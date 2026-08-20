@@ -8,6 +8,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/order_provider.dart';
 import '../../data/stripe_service.dart';
 import '../../data/stripe_web_service.dart' if (dart.library.io) '../../data/stripe_web_stub.dart';
+import '../../core/entrada_animada.dart';
 import '../../core/theme/app_theme.dart';
 
 class PaginaCarrito extends StatelessWidget {
@@ -113,7 +114,8 @@ class PaginaCarrito extends StatelessWidget {
             itemCount: carrito.items.length,
             itemBuilder: (context, i) {
               final item = carrito.items[i];
-              return _TarjetaItem(item: item, carrito: carrito);
+              return EntradaAnimada(
+                  index: i, child: _TarjetaItem(item: item, carrito: carrito));
             },
           ),
         ),

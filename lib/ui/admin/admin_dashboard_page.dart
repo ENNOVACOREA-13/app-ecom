@@ -13,6 +13,7 @@ import '../../core/constants.dart';
 import '../../core/theme/app_theme.dart';
 import '../common/app_widgets.dart';
 import '../client/profile_page.dart';
+import '../../core/entrada_animada.dart';
 
 class PaginaTableroAdmin extends StatefulWidget {
   const PaginaTableroAdmin({super.key});
@@ -108,7 +109,9 @@ class PaginaTableroAdminState extends State<PaginaTableroAdmin> {
                 slivers: [
                   // ── Header ──────────────────────────────────
                   SliverToBoxAdapter(
-                    child: Container(
+                    child: EntradaAnimada(
+                      index: 0,
+                      child: Container(
                       padding: const EdgeInsets.fromLTRB(20, 56, 20, 28),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
@@ -221,6 +224,7 @@ class PaginaTableroAdminState extends State<PaginaTableroAdmin> {
                           ),
                         ],
                       ),
+                      ),
                     ),
                   ),
 
@@ -232,166 +236,219 @@ class PaginaTableroAdminState extends State<PaginaTableroAdmin> {
                         children: [
 
                           // ── Acciones rápidas ─────────────────
-                          GestureDetector(
-                            onTap: () => context.push('/booking/service'),
-                            child: Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 18, vertical: 14),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(16),
-                                boxShadow: kNeumorphicShadowsSmall,
-                              ),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(8),
+                          EntradaAnimada(
+                            index: 1,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                GestureDetector(
+                                  onTap: () => context.push('/booking/service'),
+                                  child: Container(
+                                    width: double.infinity,
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 18, vertical: 14),
                                     decoration: BoxDecoration(
-                                      color: context.colorPrimario.withOpacity(0.12),
-                                      shape: BoxShape.circle,
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(16),
+                                      boxShadow: kNeumorphicShadowsSmall,
                                     ),
-                                    child: Icon(Icons.add_rounded,
-                                        color: context.colorPrimario, size: 20),
-                                  ),
-                                  const SizedBox(width: 14),
-                                  const Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                                    child: Row(
                                       children: [
-                                        Text('Nueva reserva',
-                                            style: TextStyle(
-                                                color: Color(0xFF1C1C1E),
-                                                fontWeight: FontWeight.w700,
-                                                fontSize: 14)),
-                                        Text('Crear reserva para un cliente',
-                                            style: TextStyle(
-                                                color: Color(0xFF8E8E93),
-                                                fontSize: 11)),
+                                        Container(
+                                          padding: const EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                            color: context.colorPrimario.withOpacity(0.12),
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: Icon(Icons.add_rounded,
+                                              color: context.colorPrimario, size: 20),
+                                        ),
+                                        const SizedBox(width: 14),
+                                        const Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text('Nueva reserva',
+                                                  style: TextStyle(
+                                                      color: Color(0xFF1C1C1E),
+                                                      fontWeight: FontWeight.w700,
+                                                      fontSize: 14)),
+                                              Text('Crear reserva para un cliente',
+                                                  style: TextStyle(
+                                                      color: Color(0xFF8E8E93),
+                                                      fontSize: 11)),
+                                            ],
+                                          ),
+                                        ),
+                                        const Icon(Icons.arrow_forward_ios_rounded,
+                                            size: 14, color: Color(0xFF8E8E93)),
                                       ],
                                     ),
                                   ),
-                                  const Icon(Icons.arrow_forward_ios_rounded,
-                                      size: 14, color: Color(0xFF8E8E93)),
+                                ),
+                                const SizedBox(height: 24),
+                              ],
+                            ),
+                          ),
+
+                          // ── Sección: Ingresos separados ──────
+                          EntradaAnimada(
+                            index: 2,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const _SeccionTitulo('Ingresos por área'),
+                                const SizedBox(height: 12),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: _TarjetaIngreso(
+                                        titulo: 'Servicios',
+                                        monto: ingresosServicios,
+                                        icono: Icons.content_cut_rounded,
+                                        color: context.colorPrimario,
+                                        subtitulo: '$totalCompletadas completados',
+                                      ),
+                                    ),
+                                    if (tiendaHabilitada) ...[
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: _TarjetaIngreso(
+                                          titulo: 'Tienda',
+                                          monto: ingresosTienda,
+                                          icono: Icons.shopping_bag_rounded,
+                                          color: const Color(0xFF34C759),
+                                          subtitulo:
+                                              '${pedidosActivos.length} pedidos',
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                                const SizedBox(height: 24),
+                              ],
+                            ),
+                          ),
+
+                          // ── Sección: Ganancias netas ─────────
+                          EntradaAnimada(
+                            index: 3,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const _SeccionTitulo('Ganancias netas'),
+                                const SizedBox(height: 12),
+                                _TarjetaGanancias(
+                                  ingresos: ingresosTotales,
+                                  comisiones: _totalComisiones,
+                                  insumos: _totalInsumos,
+                                  ganancias: gananciasNetas,
+                                ),
+                                const SizedBox(height: 24),
+                              ],
+                            ),
+                          ),
+
+                          // ── Sección: Stats rápidas ───────────
+                          EntradaAnimada(
+                            index: 4,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const _SeccionTitulo('Resumen general'),
+                                const SizedBox(height: 12),
+                                GridView(
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                                    maxCrossAxisExtent: 240,
+                                    crossAxisSpacing: 12,
+                                    mainAxisSpacing: 12,
+                                    childAspectRatio: 1.5,
+                                  ),
+                                  children: [
+                                    _TarjetaStat(
+                                      etiqueta: 'Servicios\ncompletados',
+                                      valor: '$totalCompletadas',
+                                      icono: Icons.check_circle_outline_rounded,
+                                      color: context.colorPrimario,
+                                    ),
+                                    _TarjetaStat(
+                                      etiqueta: 'Empleados\nactivos',
+                                      valor: '${_estEmpleados.length}',
+                                      icono: Icons.people_outline_rounded,
+                                      color: const Color(0xFF007AFF),
+                                    ),
+                                    if (tiendaHabilitada)
+                                      _TarjetaStat(
+                                        etiqueta: 'Pedidos\npendientes',
+                                        valor: '$pedidosPendientes',
+                                        icono: Icons.hourglass_top_rounded,
+                                        color: const Color(0xFFFF9500),
+                                      ),
+                                    _TarjetaStat(
+                                      etiqueta: 'Servicios\npopulares',
+                                      valor: '${_serviciosPopulares.length}',
+                                      icono: Icons.trending_up_rounded,
+                                      color: const Color(0xFFFF2D55),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 24),
+                              ],
+                            ),
+                          ),
+
+                          // ── Pedidos recientes ────────────────
+                          if (tiendaHabilitada && _pedidos.isNotEmpty)
+                            EntradaAnimada(
+                              index: 5,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const _SeccionTitulo('Pedidos recientes'),
+                                  const SizedBox(height: 12),
+                                  ..._pedidos.take(4).map(
+                                        (p) => _FilaPedido(pedido: p),
+                                      ),
+                                  const SizedBox(height: 24),
                                 ],
                               ),
                             ),
-                          ),
-                          const SizedBox(height: 24),
-
-                          // ── Sección: Ingresos separados ──────
-                          const _SeccionTitulo('Ingresos por área'),
-                          const SizedBox(height: 12),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _TarjetaIngreso(
-                                  titulo: 'Servicios',
-                                  monto: ingresosServicios,
-                                  icono: Icons.content_cut_rounded,
-                                  color: context.colorPrimario,
-                                  subtitulo: '$totalCompletadas completados',
-                                ),
-                              ),
-                              if (tiendaHabilitada) ...[
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: _TarjetaIngreso(
-                                    titulo: 'Tienda',
-                                    monto: ingresosTienda,
-                                    icono: Icons.shopping_bag_rounded,
-                                    color: const Color(0xFF34C759),
-                                    subtitulo:
-                                        '${pedidosActivos.length} pedidos',
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
-                          const SizedBox(height: 24),
-
-                          // ── Sección: Ganancias netas ─────────
-                          const _SeccionTitulo('Ganancias netas'),
-                          const SizedBox(height: 12),
-                          _TarjetaGanancias(
-                            ingresos: ingresosTotales,
-                            comisiones: _totalComisiones,
-                            insumos: _totalInsumos,
-                            ganancias: gananciasNetas,
-                          ),
-                          const SizedBox(height: 24),
-
-                          // ── Sección: Stats rápidas ───────────
-                          const _SeccionTitulo('Resumen general'),
-                          const SizedBox(height: 12),
-                          GridView(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                              maxCrossAxisExtent: 240,
-                              crossAxisSpacing: 12,
-                              mainAxisSpacing: 12,
-                              childAspectRatio: 1.5,
-                            ),
-                            children: [
-                              _TarjetaStat(
-                                etiqueta: 'Servicios\ncompletados',
-                                valor: '$totalCompletadas',
-                                icono: Icons.check_circle_outline_rounded,
-                                color: context.colorPrimario,
-                              ),
-                              _TarjetaStat(
-                                etiqueta: 'Empleados\nactivos',
-                                valor: '${_estEmpleados.length}',
-                                icono: Icons.people_outline_rounded,
-                                color: const Color(0xFF007AFF),
-                              ),
-                              if (tiendaHabilitada)
-                                _TarjetaStat(
-                                  etiqueta: 'Pedidos\npendientes',
-                                  valor: '$pedidosPendientes',
-                                  icono: Icons.hourglass_top_rounded,
-                                  color: const Color(0xFFFF9500),
-                                ),
-                              _TarjetaStat(
-                                etiqueta: 'Servicios\npopulares',
-                                valor: '${_serviciosPopulares.length}',
-                                icono: Icons.trending_up_rounded,
-                                color: const Color(0xFFFF2D55),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 24),
-
-                          // ── Pedidos recientes ────────────────
-                          if (tiendaHabilitada && _pedidos.isNotEmpty) ...[
-                            const _SeccionTitulo('Pedidos recientes'),
-                            const SizedBox(height: 12),
-                            ..._pedidos.take(4).map(
-                                  (p) => _FilaPedido(pedido: p),
-                                ),
-                            const SizedBox(height: 24),
-                          ],
 
                           // ── Servicios populares ──────────────
-                          if (_serviciosPopulares.isNotEmpty) ...[
-                            const _SeccionTitulo('Servicios más reservados'),
-                            const SizedBox(height: 12),
-                            ..._serviciosPopulares.take(5).map(
-                                  (s) => _FilaServicio(data: s),
-                                ),
-                            const SizedBox(height: 24),
-                          ],
+                          if (_serviciosPopulares.isNotEmpty)
+                            EntradaAnimada(
+                              index: 6,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const _SeccionTitulo('Servicios más reservados'),
+                                  const SizedBox(height: 12),
+                                  ..._serviciosPopulares.take(5).map(
+                                        (s) => _FilaServicio(data: s),
+                                      ),
+                                  const SizedBox(height: 24),
+                                ],
+                              ),
+                            ),
 
                           // ── Rendimiento empleados ────────────
-                          if (_estEmpleados.isNotEmpty) ...[
-                            const _SeccionTitulo('Rendimiento por empleado'),
-                            const SizedBox(height: 12),
-                            ..._estEmpleados.map(
-                                  (e) => _FilaEmpleado(data: e),
-                                ),
-                          ],
+                          if (_estEmpleados.isNotEmpty)
+                            EntradaAnimada(
+                              index: 7,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const _SeccionTitulo('Rendimiento por empleado'),
+                                  const SizedBox(height: 12),
+                                  ..._estEmpleados.map(
+                                        (e) => _FilaEmpleado(data: e),
+                                      ),
+                                ],
+                              ),
+                            ),
 
                           const SizedBox(height: 100),
                         ],

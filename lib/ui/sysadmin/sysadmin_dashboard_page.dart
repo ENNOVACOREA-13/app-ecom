@@ -9,6 +9,7 @@ import '../../providers/config_provider.dart';
 import '../../data/activity_service.dart';
 import '../client/profile_page.dart';
 import '../common/app_widgets.dart';
+import '../../core/entrada_animada.dart';
 
 class PaginaTableroSysadmin extends StatefulWidget {
   const PaginaTableroSysadmin({super.key});
@@ -89,7 +90,9 @@ class _PaginaTableroSysadminState extends State<PaginaTableroSysadmin> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Header
-                      Container(
+                      EntradaAnimada(
+                        index: 0,
+                        child: Container(
                         margin: const EdgeInsets.only(top: 16, bottom: 20),
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
@@ -162,38 +165,50 @@ class _PaginaTableroSysadminState extends State<PaginaTableroSysadmin> {
                                 style: TextStyle(color: Colors.white60, fontSize: 12)),
                           ],
                         ),
+                        ),
                       ),
 
                       // Stats grid
-                      GridView(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                          maxCrossAxisExtent: 240,
-                          crossAxisSpacing: 12,
-                          mainAxisSpacing: 12,
-                          childAspectRatio: 1.5,
+                      EntradaAnimada(
+                        index: 1,
+                        child: GridView(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                            maxCrossAxisExtent: 240,
+                            crossAxisSpacing: 12,
+                            mainAxisSpacing: 12,
+                            childAspectRatio: 1.5,
+                          ),
+                          children: [
+                            _Stat(icono: Icons.people_outline, label: 'Usuarios',
+                                valor: '$_totalUsuarios', color: color),
+                            _Stat(icono: Icons.wifi_rounded, label: 'Sesiones activas',
+                                valor: '$_sesionesActivas', color: Colors.green),
+                            if (tiendaHabilitada)
+                              _Stat(icono: Icons.receipt_long_outlined, label: 'Pedidos',
+                                  valor: '$_totalPedidos', color: Colors.orange),
+                            _Stat(icono: Icons.trending_up_rounded, label: 'Ingresos',
+                                valor: fmt.format(_ingresosTotales), color: Colors.teal),
+                          ],
                         ),
-                        children: [
-                          _Stat(icono: Icons.people_outline, label: 'Usuarios',
-                              valor: '$_totalUsuarios', color: color),
-                          _Stat(icono: Icons.wifi_rounded, label: 'Sesiones activas',
-                              valor: '$_sesionesActivas', color: Colors.green),
-                          if (tiendaHabilitada)
-                            _Stat(icono: Icons.receipt_long_outlined, label: 'Pedidos',
-                                valor: '$_totalPedidos', color: Colors.orange),
-                          _Stat(icono: Icons.trending_up_rounded, label: 'Ingresos',
-                              valor: fmt.format(_ingresosTotales), color: Colors.teal),
-                        ],
                       ),
                       const SizedBox(height: 24),
 
                       // Últimas sesiones
-                      const Text('Actividad reciente',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold,
-                              color: Color(0xFF1C1C1E))),
-                      const SizedBox(height: 12),
-                      ..._ultimasSesiones.map((s) => _FilaSesion(sesion: s)),
+                      EntradaAnimada(
+                        index: 2,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Actividad reciente',
+                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold,
+                                    color: Color(0xFF1C1C1E))),
+                            const SizedBox(height: 12),
+                            ..._ultimasSesiones.map((s) => _FilaSesion(sesion: s)),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 ),

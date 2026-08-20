@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/cart_fly_animation.dart';
+import '../../core/entrada_animada.dart';
 import '../../domain/models/product.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/cart_provider.dart';
@@ -80,7 +81,9 @@ class _PaginaDetalleProductoState extends State<PaginaDetalleProducto> {
           children: [
             Expanded(
               child: SingleChildScrollView(
-                child: Column(
+                child: EntradaAnimada(
+                  index: 0,
+                  child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // ── Imagen ────────────────────────────────
@@ -276,6 +279,7 @@ class _PaginaDetalleProductoState extends State<PaginaDetalleProducto> {
                     ] else
                       const SizedBox(height: 12),
                   ],
+                ),
                 ),
               ),
             ),

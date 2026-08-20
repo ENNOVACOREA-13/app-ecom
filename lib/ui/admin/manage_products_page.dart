@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../core/entrada_animada.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/ftp_upload_service.dart';
 import '../../domain/models/product.dart';
@@ -174,10 +175,13 @@ class _PaginaInventarioState extends State<PaginaInventario> {
                   separatorBuilder: (_, __) => const SizedBox(height: 10),
                   itemBuilder: (_, i) {
                     final p = prov.productos[i];
-                    return _FilaProducto(
-                      producto: p,
-                      alEditar: () => _mostrarDialogoEditar(p),
-                      alEliminar: () => _confirmarEliminar(p),
+                    return EntradaAnimada(
+                      index: i,
+                      child: _FilaProducto(
+                        producto: p,
+                        alEditar: () => _mostrarDialogoEditar(p),
+                        alEliminar: () => _confirmarEliminar(p),
+                      ),
                     );
                   },
                 ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/entrada_animada.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../data/activity_service.dart';
@@ -446,7 +447,9 @@ class PaginaConfigSysadminState extends State<PaginaConfigSysadmin> {
                             final esProtegida =
                                 rol == 'sysadmin' || miPropiaCuenta;
 
-                            return Container(
+                            return EntradaAnimada(
+                              index: i,
+                              child: Container(
                               margin: const EdgeInsets.only(bottom: 8),
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 14, vertical: 12),
@@ -536,6 +539,7 @@ class PaginaConfigSysadminState extends State<PaginaConfigSysadmin> {
                                   ],
                                 ),
                               ]),
+                            ),
                             );
                           },
                         ),

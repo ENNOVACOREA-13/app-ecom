@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/entrada_animada.dart';
 import '../../core/theme/app_theme.dart';
 
 class PaginaMuroInvitado extends StatelessWidget {
@@ -16,7 +17,9 @@ class PaginaMuroInvitado extends StatelessWidget {
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(32),
-          child: Column(
+          child: EntradaAnimada(
+            index: 0,
+            child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
@@ -79,6 +82,7 @@ class PaginaMuroInvitado extends StatelessWidget {
                 ),
               ),
             ],
+            ),
           ),
         ),
       ),

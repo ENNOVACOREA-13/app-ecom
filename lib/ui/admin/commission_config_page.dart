@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import '../../core/entrada_animada.dart';
 import '../../core/theme/app_theme.dart';
 import '../../domain/models/service_model.dart';
 import '../../domain/models/commission_model.dart';
@@ -113,9 +114,12 @@ class _TabConfiguracion extends StatelessWidget {
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: _BannerResumen(
-              total: conComision,
-              totalServicios: servicios.length,
+            child: EntradaAnimada(
+              index: 0,
+              child: _BannerResumen(
+                total: conComision,
+                totalServicios: servicios.length,
+              ),
             ),
           ),
         ),
@@ -130,11 +134,14 @@ class _TabConfiguracion extends StatelessWidget {
                 final monto = prov.montoPorServicio(s.id);
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 10),
-                  child: _TarjetaServicioComision(
-                    servicio: s,
-                    monto: monto,
-                    onEditar: () =>
-                        _mostrarDialogoMonto(context, prov, s, monto),
+                  child: EntradaAnimada(
+                    index: i + 1,
+                    child: _TarjetaServicioComision(
+                      servicio: s,
+                      monto: monto,
+                      onEditar: () =>
+                          _mostrarDialogoMonto(context, prov, s, monto),
+                    ),
                   ),
                 );
               },
@@ -549,7 +556,8 @@ class _TabCortes extends StatelessWidget {
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-              child: _TarjetaResumenSemana(resumen: prov.resumenAdmin),
+              child: EntradaAnimada(
+                  index: 0, child: _TarjetaResumenSemana(resumen: prov.resumenAdmin)),
             ),
           ),
 
@@ -557,7 +565,7 @@ class _TabCortes extends StatelessWidget {
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-            child: _BotonProcesarCorte(prov: prov),
+            child: EntradaAnimada(index: 1, child: _BotonProcesarCorte(prov: prov)),
           ),
         ),
 
@@ -589,9 +597,12 @@ class _TabCortes extends StatelessWidget {
               delegate: SliverChildBuilderDelegate(
                 (context, i) => Padding(
                   padding: const EdgeInsets.only(bottom: 10),
-                  child: _TarjetaCorte(
-                    corte: prov.cortes[i],
-                    onPagar: () => _marcarPagado(context, prov, prov.cortes[i]),
+                  child: EntradaAnimada(
+                    index: i + 2,
+                    child: _TarjetaCorte(
+                      corte: prov.cortes[i],
+                      onPagar: () => _marcarPagado(context, prov, prov.cortes[i]),
+                    ),
                   ),
                 ),
                 childCount: prov.cortes.length,

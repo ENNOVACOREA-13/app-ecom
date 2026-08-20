@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/entrada_animada.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/activity_service.dart';
 import '../common/app_widgets.dart';
@@ -436,10 +437,12 @@ class _PaginaLogsState extends State<PaginaLogs>
                                             onTap: _cargarMasSesiones,
                                           );
                                         }
-                                        return _TarjetaSesion(
-                                            sesion: _sesionesFiltradas[i],
-                                            color: color,
-                                            onCerrar: _cerrarSesionIndividual);
+                                        return EntradaAnimada(
+                                            index: i,
+                                            child: _TarjetaSesion(
+                                                sesion: _sesionesFiltradas[i],
+                                                color: color,
+                                                onCerrar: _cerrarSesionIndividual));
                                       },
                                     ),
                                   ),
@@ -497,9 +500,11 @@ class _PaginaLogsState extends State<PaginaLogs>
                                           onTap: _cargarMasActividad,
                                         );
                                       }
-                                      return _FilaActividad(
-                                          evento: _actividadFiltrada[i],
-                                          color: color);
+                                      return EntradaAnimada(
+                                          index: i,
+                                          child: _FilaActividad(
+                                              evento: _actividadFiltrada[i],
+                                              color: color));
                                     },
                                   ),
                                 ),

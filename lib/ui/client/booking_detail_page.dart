@@ -10,6 +10,7 @@ import '../../domain/enums/booking_status.dart';
 import '../../domain/models/booking.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/booking_provider.dart';
+import '../../core/entrada_animada.dart';
 import '../../core/theme/app_theme.dart';
 import '../common/app_widgets.dart';
 
@@ -175,7 +176,9 @@ class _PaginaDetalleReservaState extends State<PaginaDetalleReserva> {
             child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              RepaintBoundary(
+              EntradaAnimada(
+                index: 0,
+                child: RepaintBoundary(
                 key: _claveTarjeta,
                 child: Container(
                     decoration: BoxDecoration(
@@ -360,6 +363,7 @@ class _PaginaDetalleReservaState extends State<PaginaDetalleReserva> {
                       ],
                     ),
                   ),
+                ),
                 ),
 
               if (r.puedeCancelarDirecto) ...[

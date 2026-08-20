@@ -3,6 +3,7 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:provider/provider.dart';
 import '../../domain/models/service_model.dart';
 import '../../providers/service_provider.dart';
+import '../../core/entrada_animada.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/service_icons.dart';
 import '../../data/ftp_upload_service.dart';
@@ -449,7 +450,9 @@ class _PaginaGestionServiciosState extends State<PaginaGestionServicios> {
                     final s = proveedor.servicios[i];
                     final colorIcono = colorDesdeHex(s.iconoColor) ?? context.colorPrimario;
                     final colorActivo = s.estaActivo ? colorIcono : const Color(0xFFC7C7CC);
-                    return Material(
+                    return EntradaAnimada(
+                      index: i,
+                      child: Material(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(16),
                       child: InkWell(
@@ -554,6 +557,7 @@ class _PaginaGestionServiciosState extends State<PaginaGestionServicios> {
                             ],
                           ),
                         ),
+                      ),
                       ),
                     );
                   },

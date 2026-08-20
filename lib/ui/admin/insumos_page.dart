@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/constants.dart';
+import '../../core/entrada_animada.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../data/activity_service.dart';
@@ -307,12 +308,15 @@ class _PaginaInsumosState extends State<PaginaInsumos> {
                       : ListView.builder(
                           padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
                           itemCount: _filtrados.length,
-                          itemBuilder: (_, i) => _TarjetaInsumo(
-                            insumo: _filtrados[i],
-                            color: color,
-                            fecha: _fmtFecha(_filtrados[i]['created_at'] as String?),
-                            onEditar: () => _mostrarFormulario(insumo: _filtrados[i]),
-                            onEliminar: () => _eliminar(_filtrados[i]['id']),
+                          itemBuilder: (_, i) => EntradaAnimada(
+                            index: i,
+                            child: _TarjetaInsumo(
+                              insumo: _filtrados[i],
+                              color: color,
+                              fecha: _fmtFecha(_filtrados[i]['created_at'] as String?),
+                              onEditar: () => _mostrarFormulario(insumo: _filtrados[i]),
+                              onEliminar: () => _eliminar(_filtrados[i]['id']),
+                            ),
                           ),
                         ),
             ),

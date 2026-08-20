@@ -5,6 +5,7 @@ import '../../data/user_provisioning_service.dart';
 import '../../domain/enums/user_role.dart';
 import '../../domain/models/profile.dart';
 import '../../domain/models/service_model.dart';
+import '../../core/entrada_animada.dart';
 import '../../core/theme/app_theme.dart';
 import '../common/app_widgets.dart';
 
@@ -784,7 +785,9 @@ class _ListaUsuarios extends StatelessWidget {
       itemBuilder: (context, i) {
         final usuario = usuarios[i];
         final esEmpleado = usuario.rol == RolUsuario.employee;
-        return Container(
+        return EntradaAnimada(
+          index: i,
+          child: Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: Colors.white,
@@ -940,6 +943,7 @@ class _ListaUsuarios extends StatelessWidget {
                 },
               ),
             ],
+          ),
           ),
         );
       },

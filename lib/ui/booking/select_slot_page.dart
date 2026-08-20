@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../data/employee_repository.dart';
 import '../../domain/models/profile.dart';
 import '../../providers/booking_provider.dart';
+import '../../core/entrada_animada.dart';
 import '../../core/theme/app_theme.dart';
 import '../common/app_widgets.dart';
 
@@ -233,21 +234,24 @@ class _PaginaSeleccionarTurnoState extends State<PaginaSeleccionarTurno> {
                           itemBuilder: (context, i) {
                             final turno = proveedor.turnos[i];
                             final seleccionado = proveedor.turnoSeleccionado?.inicio == turno.inicio;
-                            return GestureDetector(
-                              onTap: () => proveedor.seleccionarTurno(turno),
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 150),
-                                alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                                  color: seleccionado ? context.colorPrimario : const Color(0xFFF2F2F7),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Text(
-                                  turno.inicio,
-                                  style: TextStyle(
-                                    color: seleccionado ? Colors.white : const Color(0xFF3C3C43),
-                                    fontWeight: seleccionado ? FontWeight.bold : FontWeight.w500,
-                                    fontSize: 13,
+                            return EntradaAnimada(
+                              index: i,
+                              child: GestureDetector(
+                                onTap: () => proveedor.seleccionarTurno(turno),
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 150),
+                                  alignment: Alignment.center,
+                                  decoration: BoxDecoration(
+                                    color: seleccionado ? context.colorPrimario : const Color(0xFFF2F2F7),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Text(
+                                    turno.inicio,
+                                    style: TextStyle(
+                                      color: seleccionado ? Colors.white : const Color(0xFF3C3C43),
+                                      fontWeight: seleccionado ? FontWeight.bold : FontWeight.w500,
+                                      fontSize: 13,
+                                    ),
                                   ),
                                 ),
                               ),

@@ -3,6 +3,7 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../core/app_fonts.dart';
+import '../../core/entrada_animada.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/ftp_upload_service.dart';
 import '../../domain/enums/user_role.dart';
@@ -850,32 +851,35 @@ class PaginaDisenadorVista extends StatelessWidget {
               style: TextStyle(fontSize: 12, color: Color(0xFF8E8E93)),
             ),
             const SizedBox(height: 16),
-            TarjetaSeccion(
-              child: Row(
-                children: [
-                  ClipOval(
-                    child: cfg.logoUrl != null && cfg.logoUrl!.isNotEmpty
-                        ? Image.network(cfg.logoUrl!, width: 56, height: 56, fit: BoxFit.cover)
-                        : Container(
-                            width: 56,
-                            height: 56,
-                            color: const Color(0xFFF2F2F7),
-                            child: const Icon(Icons.storefront_outlined, color: Color(0xFF8E8E93)),
-                          ),
-                  ),
-                  const SizedBox(width: 14),
-                  const Expanded(
-                    child: Text('Logo del negocio',
-                        style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 14,
-                            color: Color(0xFF1C1C1E))),
-                  ),
-                  TextButton(
-                    onPressed: () => _cambiarLogo(context),
-                    child: const Text('Cambiar'),
-                  ),
-                ],
+            EntradaAnimada(
+              index: 0,
+              child: TarjetaSeccion(
+                child: Row(
+                  children: [
+                    ClipOval(
+                      child: cfg.logoUrl != null && cfg.logoUrl!.isNotEmpty
+                          ? Image.network(cfg.logoUrl!, width: 56, height: 56, fit: BoxFit.cover)
+                          : Container(
+                              width: 56,
+                              height: 56,
+                              color: const Color(0xFFF2F2F7),
+                              child: const Icon(Icons.storefront_outlined, color: Color(0xFF8E8E93)),
+                            ),
+                    ),
+                    const SizedBox(width: 14),
+                    const Expanded(
+                      child: Text('Logo del negocio',
+                          style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 14,
+                              color: Color(0xFF1C1C1E))),
+                    ),
+                    TextButton(
+                      onPressed: () => _cambiarLogo(context),
+                      child: const Text('Cambiar'),
+                    ),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 20),
@@ -888,43 +892,46 @@ class PaginaDisenadorVista extends StatelessWidget {
               style: TextStyle(fontSize: 12, color: Color(0xFF8E8E93)),
             ),
             const SizedBox(height: 16),
-            TarjetaSeccion(
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: context.colorPrimario.withOpacity(0.12),
-                      shape: BoxShape.circle,
+            EntradaAnimada(
+              index: 1,
+              child: TarjetaSeccion(
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: context.colorPrimario.withOpacity(0.12),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(Icons.storefront_outlined, color: context.colorPrimario),
                     ),
-                    child: Icon(Icons.storefront_outlined, color: context.colorPrimario),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Tienda en línea',
-                            style: TextStyle(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 14,
-                                color: Color(0xFF1C1C1E))),
-                        const SizedBox(height: 2),
-                        Text(
-                          tiendaHabilitada
-                              ? 'Productos, carrito y pedidos visibles en toda la app'
-                              : 'Productos, carrito y pedidos ocultos en toda la app',
-                          style: const TextStyle(fontSize: 11, color: Color(0xFF8E8E93)),
-                        ),
-                      ],
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Tienda en línea',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 14,
+                                  color: Color(0xFF1C1C1E))),
+                          const SizedBox(height: 2),
+                          Text(
+                            tiendaHabilitada
+                                ? 'Productos, carrito y pedidos visibles en toda la app'
+                                : 'Productos, carrito y pedidos ocultos en toda la app',
+                            style: const TextStyle(fontSize: 11, color: Color(0xFF8E8E93)),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  Switch(
-                    value: tiendaHabilitada,
-                    activeColor: context.colorPrimario,
-                    onChanged: (v) => _toggleTienda(context, v),
-                  ),
-                ],
+                    Switch(
+                      value: tiendaHabilitada,
+                      activeColor: context.colorPrimario,
+                      onChanged: (v) => _toggleTienda(context, v),
+                    ),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 12),
@@ -952,43 +959,46 @@ class PaginaDisenadorVista extends StatelessWidget {
               ),
             if (esSysadmin) ...[
               const SizedBox(height: 12),
-              TarjetaSeccion(
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: context.colorPrimario.withOpacity(0.12),
-                        shape: BoxShape.circle,
+              EntradaAnimada(
+                index: 2,
+                child: TarjetaSeccion(
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: context.colorPrimario.withOpacity(0.12),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(Icons.dashboard_customize_outlined, color: context.colorPrimario),
                       ),
-                      child: Icon(Icons.dashboard_customize_outlined, color: context.colorPrimario),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('Editor de vistas para admin',
-                              style: TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 14,
-                                  color: Color(0xFF1C1C1E))),
-                          const SizedBox(height: 2),
-                          Text(
-                            editorVistasAdmin
-                                ? 'El rol admin también ve la pestaña "Vista"'
-                                : 'Solo sysadmin ve la pestaña "Vista" (como hasta ahora)',
-                            style: const TextStyle(fontSize: 11, color: Color(0xFF8E8E93)),
-                          ),
-                        ],
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Editor de vistas para admin',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 14,
+                                    color: Color(0xFF1C1C1E))),
+                            const SizedBox(height: 2),
+                            Text(
+                              editorVistasAdmin
+                                  ? 'El rol admin también ve la pestaña "Vista"'
+                                  : 'Solo sysadmin ve la pestaña "Vista" (como hasta ahora)',
+                              style: const TextStyle(fontSize: 11, color: Color(0xFF8E8E93)),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    Switch(
-                      value: editorVistasAdmin,
-                      activeColor: context.colorPrimario,
-                      onChanged: (v) => _toggleEditorVistasAdmin(context, v),
-                    ),
-                  ],
+                      Switch(
+                        value: editorVistasAdmin,
+                        activeColor: context.colorPrimario,
+                        onChanged: (v) => _toggleEditorVistasAdmin(context, v),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],

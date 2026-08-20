@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../domain/enums/order_status.dart';
 import '../../domain/models/order.dart';
 import '../../providers/order_provider.dart';
+import '../../core/entrada_animada.dart';
 import '../../core/theme/app_theme.dart';
 import '../common/app_widgets.dart';
 
@@ -138,7 +139,8 @@ class _PaginaPedidosAdminState extends State<PaginaPedidosAdmin> {
                                     .cargarMasPedidos(),
                               );
                             }
-                            return _TarjetaPedido(pedido: filtrados[i]);
+                            return EntradaAnimada(
+                                index: i, child: _TarjetaPedido(pedido: filtrados[i]));
                           },
                         ),
             ),

@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/booking_provider.dart';
+import '../../core/entrada_animada.dart';
 import '../../core/theme/app_theme.dart';
 import '../common/app_widgets.dart';
 
@@ -68,7 +69,9 @@ class PaginaConfirmarReserva extends StatelessWidget {
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF1C1C1E))),
             const SizedBox(height: 24),
 
-            TarjetaSeccion(
+            EntradaAnimada(
+              index: 0,
+              child: TarjetaSeccion(
               child: Column(
                 children: [
                   // Fila(s) de servicios
@@ -101,6 +104,7 @@ class PaginaConfirmarReserva extends StatelessWidget {
                     negrita: true,
                   ),
                 ],
+              ),
               ),
             ),
 

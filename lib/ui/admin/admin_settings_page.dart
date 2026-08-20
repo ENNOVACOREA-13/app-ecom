@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import '../../core/entrada_animada.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/config_provider.dart';
@@ -48,59 +49,77 @@ class PaginaConfigAdmin extends StatelessWidget {
         child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
         children: [
-          FilaOpcion(
-            icono: Icons.design_services_outlined,
-            titulo: 'Servicios',
-            subtitulo: 'Gestionar servicios del negocio',
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const PaginaGestionServicios()),
+          EntradaAnimada(
+            index: 0,
+            child: FilaOpcion(
+              icono: Icons.design_services_outlined,
+              titulo: 'Servicios',
+              subtitulo: 'Gestionar servicios del negocio',
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const PaginaGestionServicios()),
+              ),
             ),
           ),
           const SizedBox(height: 12),
-          FilaOpcion(
-            icono: Icons.people_outline,
-            titulo: 'Perfiles',
-            subtitulo: 'Empleados y clientes registrados',
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const PaginaGestionEmpleados()),
+          EntradaAnimada(
+            index: 1,
+            child: FilaOpcion(
+              icono: Icons.people_outline,
+              titulo: 'Perfiles',
+              subtitulo: 'Empleados y clientes registrados',
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const PaginaGestionEmpleados()),
+              ),
             ),
           ),
           if (tiendaHabilitada) ...[
             const SizedBox(height: 12),
-            FilaOpcion(
-              icono: Icons.inventory_2_outlined,
-              titulo: 'Inventario',
-              subtitulo: 'Agregar, editar y eliminar productos',
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const PaginaInventario()),
+            EntradaAnimada(
+              index: 2,
+              child: FilaOpcion(
+                icono: Icons.inventory_2_outlined,
+                titulo: 'Inventario',
+                subtitulo: 'Agregar, editar y eliminar productos',
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const PaginaInventario()),
+                ),
               ),
             ),
             const SizedBox(height: 12),
-            FilaOpcion(
-              icono: Icons.storefront_outlined,
-              titulo: 'Inspeccionar Tienda',
-              subtitulo: 'Ver la tienda como la ven los clientes',
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const PaginaProductos()),
+            EntradaAnimada(
+              index: 3,
+              child: FilaOpcion(
+                icono: Icons.storefront_outlined,
+                titulo: 'Inspeccionar Tienda',
+                subtitulo: 'Ver la tienda como la ven los clientes',
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const PaginaProductos()),
+                ),
               ),
             ),
           ],
           const SizedBox(height: 12),
-          FilaOpcion(
-            icono: Icons.percent_rounded,
-            titulo: 'Comisiones',
-            subtitulo: 'Configurar comisiones por servicio',
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const PaginaConfigComisiones()),
+          EntradaAnimada(
+            index: 4,
+            child: FilaOpcion(
+              icono: Icons.percent_rounded,
+              titulo: 'Comisiones',
+              subtitulo: 'Configurar comisiones por servicio',
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const PaginaConfigComisiones()),
+              ),
             ),
           ),
           const SizedBox(height: 12),
-          FilaOpcion(
-            icono: Icons.card_giftcard_outlined,
-            titulo: 'Programa de lealtad',
-            subtitulo: 'Configurar cómo se ganan y valen los puntos',
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const PaginaConfigLealtad()),
+          EntradaAnimada(
+            index: 5,
+            child: FilaOpcion(
+              icono: Icons.card_giftcard_outlined,
+              titulo: 'Programa de lealtad',
+              subtitulo: 'Configurar cómo se ganan y valen los puntos',
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const PaginaConfigLealtad()),
+              ),
             ),
           ),
           const SizedBox(height: 24),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants.dart';
+import '../../core/entrada_animada.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/user_provisioning_service.dart';
 import '../../domain/models/tenant.dart';
@@ -373,7 +374,9 @@ class _PaginaNegociosState extends State<PaginaNegocios> {
                         itemCount: tenants.length,
                         itemBuilder: (context, i) {
                           final t = tenants[i];
-                          return Container(
+                          return EntradaAnimada(
+                            index: i,
+                            child: Container(
                             margin: const EdgeInsets.only(bottom: 12),
                             padding: const EdgeInsets.all(14),
                             decoration: BoxDecoration(
@@ -545,6 +548,7 @@ class _PaginaNegociosState extends State<PaginaNegocios> {
                                       )),
                                 ],
                               ],
+                            ),
                             ),
                           );
                         },

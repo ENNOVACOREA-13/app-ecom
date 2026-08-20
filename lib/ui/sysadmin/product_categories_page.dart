@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../core/entrada_animada.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/service_icons.dart';
 import '../../data/ftp_upload_service.dart';
@@ -313,8 +314,10 @@ class _PaginaCategoriasProductoState extends State<PaginaCategoriasProducto> {
                 },
                 itemBuilder: (context, i) {
                   final c = categorias[i];
-                  return Container(
+                  return EntradaAnimada(
                     key: ValueKey(c.id),
+                    index: i,
+                    child: Container(
                     margin: const EdgeInsets.only(bottom: 10),
                     decoration: BoxDecoration(
                       color: Colors.white,
@@ -397,6 +400,7 @@ class _PaginaCategoriasProductoState extends State<PaginaCategoriasProducto> {
                         ),
                         const SizedBox(width: 6),
                       ],
+                    ),
                     ),
                   );
                 },
@@ -484,7 +488,9 @@ class _PaginaProductosDeCategoriaState extends State<_PaginaProductosDeCategoria
                     itemBuilder: (context, i) {
                       final p = productos[i];
                       final seleccionado = _seleccionados.contains(p.id);
-                      return GestureDetector(
+                      return EntradaAnimada(
+                        index: i,
+                        child: GestureDetector(
                         onTap: () => setState(() {
                           if (seleccionado) {
                             _seleccionados.remove(p.id);
@@ -553,6 +559,7 @@ class _PaginaProductosDeCategoriaState extends State<_PaginaProductosDeCategoria
                               ),
                             ],
                           ),
+                        ),
                         ),
                       );
                     },

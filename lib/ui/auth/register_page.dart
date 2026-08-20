@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../core/entrada_animada.dart';
 import '../../core/theme/app_theme.dart';
 import '../common/app_widgets.dart';
 
@@ -58,14 +59,22 @@ class _PaginaRegistroState extends State<PaginaRegistro> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Crea tu cuenta',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF1C1C1E)),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Completa los datos para registrarte',
-                style: TextStyle(color: Color(0xFF6E6E73)),
+              EntradaAnimada(
+                index: 0,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Crea tu cuenta',
+                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF1C1C1E)),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Completa los datos para registrarte',
+                      style: TextStyle(color: Color(0xFF6E6E73)),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 32),
 

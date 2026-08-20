@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../data/employee_repository.dart';
 import '../../providers/auth_provider.dart';
+import '../../core/entrada_animada.dart';
 import '../../core/theme/app_theme.dart';
 import '../common/app_widgets.dart';
 
@@ -143,7 +144,9 @@ class _PaginaDiasLibresState extends State<PaginaDiasLibres> {
                     final fecha = DateTime.parse(d['date'] as String);
                     final motivo = d['reason'] as String?;
                     final texto = fmt.format(fecha);
-                    return Container(
+                    return EntradaAnimada(
+                      index: i,
+                      child: Container(
                       margin: const EdgeInsets.only(bottom: 10),
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                       decoration: BoxDecoration(
@@ -188,6 +191,7 @@ class _PaginaDiasLibresState extends State<PaginaDiasLibres> {
                             onPressed: () => _eliminarDiaLibre(d['id'] as String),
                           ),
                         ],
+                      ),
                       ),
                     );
                   },

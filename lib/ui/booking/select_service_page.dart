@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../providers/booking_provider.dart';
 import '../../providers/service_provider.dart';
+import '../../core/entrada_animada.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/service_icons.dart';
 import '../common/app_widgets.dart';
@@ -52,7 +53,9 @@ class _PaginaSeleccionarServicioState extends State<PaginaSeleccionarServicio> {
                         final s = proveedorServicio.servicios[i];
                         final estaSeleccionado =
                             seleccionados.any((sel) => sel.id == s.id);
-                        return GestureDetector(
+                        return EntradaAnimada(
+                          index: i,
+                          child: GestureDetector(
                           onTap: () {
                             context.read<ProveedorReserva>().seleccionarServicio(s);
                           },
@@ -116,6 +119,7 @@ class _PaginaSeleccionarServicioState extends State<PaginaSeleccionarServicio> {
                                 ],
                               ),
                             ),
+                          ),
                           ),
                         );
                       },

@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/constants.dart';
+import '../../core/entrada_animada.dart';
 import '../../core/theme/app_theme.dart';
 import '../common/app_widgets.dart';
 import 'tickets_page.dart';
@@ -214,21 +215,24 @@ class _PaginaPerfilState extends State<PaginaPerfil> {
               child: Column(
                 children: [
             // Avatar
-            GestureDetector(
-              onTap: _elegirAvatar,
-              child: Stack(
-                alignment: Alignment.bottomRight,
-                children: [
-                  AvatarRed(url: perfil?.urlAvatar, nombre: perfil?.nombreCompleto, radio: 48),
-                  Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: context.colorPrimario,
-                      shape: BoxShape.circle,
+            EntradaAnimada(
+              index: 0,
+              child: GestureDetector(
+                onTap: _elegirAvatar,
+                child: Stack(
+                  alignment: Alignment.bottomRight,
+                  children: [
+                    AvatarRed(url: perfil?.urlAvatar, nombre: perfil?.nombreCompleto, radio: 48),
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: context.colorPrimario,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.camera_alt, size: 14, color: Colors.white),
                     ),
-                    child: const Icon(Icons.camera_alt, size: 14, color: Colors.white),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 8),
@@ -260,53 +264,62 @@ class _PaginaPerfilState extends State<PaginaPerfil> {
                 ],
               )
             else ...[
-              FilaOpcion(
-                icono: Icons.receipt_long_outlined,
-                titulo: 'Tickets',
-                subtitulo: 'Historial de tus citas pagadas',
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const PaginaTickets()),
+              EntradaAnimada(
+                index: 1,
+                child: FilaOpcion(
+                  icono: Icons.receipt_long_outlined,
+                  titulo: 'Tickets',
+                  subtitulo: 'Historial de tus citas pagadas',
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const PaginaTickets()),
+                  ),
                 ),
               ),
               const SizedBox(height: 12),
-              FilaOpcion(
-                icono: Icons.card_giftcard_outlined,
-                titulo: 'Programa de lealtad',
-                subtitulo: 'Acumula y consulta tus puntos',
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const PaginaLealtad()),
+              EntradaAnimada(
+                index: 2,
+                child: FilaOpcion(
+                  icono: Icons.card_giftcard_outlined,
+                  titulo: 'Programa de lealtad',
+                  subtitulo: 'Acumula y consulta tus puntos',
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const PaginaLealtad()),
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
-              TarjetaSeccion(
-                child: Column(
-                  children: [
-                    _FilaInfo(
-                      Icons.person_outline,
-                      'Nombre completo',
-                      perfil?.nombreCompleto.isNotEmpty == true
-                          ? perfil!.nombreCompleto
-                          : '—',
-                    ),
-                    const Divider(height: 24),
-                    _FilaInfo(
-                      Icons.email_outlined,
-                      'Email',
-                      Supabase.instance.client.auth.currentUser?.email ?? '—',
-                    ),
-                    const Divider(height: 24),
-                    _FilaInfo(
-                      Icons.phone_outlined,
-                      'Teléfono',
-                      perfil?.telefono?.isNotEmpty == true
-                          ? perfil!.telefono!
-                          : '—',
-                    ),
-                    if (perfil?.bio != null && perfil!.bio!.isNotEmpty) ...[
+              EntradaAnimada(
+                index: 3,
+                child: TarjetaSeccion(
+                  child: Column(
+                    children: [
+                      _FilaInfo(
+                        Icons.person_outline,
+                        'Nombre completo',
+                        perfil?.nombreCompleto.isNotEmpty == true
+                            ? perfil!.nombreCompleto
+                            : '—',
+                      ),
                       const Divider(height: 24),
-                      _FilaInfo(Icons.info_outline, 'Bio', perfil.bio!),
+                      _FilaInfo(
+                        Icons.email_outlined,
+                        'Email',
+                        Supabase.instance.client.auth.currentUser?.email ?? '—',
+                      ),
+                      const Divider(height: 24),
+                      _FilaInfo(
+                        Icons.phone_outlined,
+                        'Teléfono',
+                        perfil?.telefono?.isNotEmpty == true
+                            ? perfil!.telefono!
+                            : '—',
+                      ),
+                      if (perfil?.bio != null && perfil!.bio!.isNotEmpty) ...[
+                        const Divider(height: 24),
+                        _FilaInfo(Icons.info_outline, 'Bio', perfil.bio!),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
               ),
             ],

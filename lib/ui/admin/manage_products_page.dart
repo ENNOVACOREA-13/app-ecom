@@ -125,7 +125,7 @@ class _PaginaInventarioState extends State<PaginaInventario> {
     return Scaffold(
       backgroundColor: kBackground,
       appBar: AppBar(
-        title: const Text('Inventario'),
+        title: const Text('Productos'),
         actions: [
           IconButton(
             icon: Icon(Icons.add, color: context.colorPrimario),

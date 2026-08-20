@@ -78,7 +78,7 @@ class PaginaConfigAdmin extends StatelessWidget {
               index: 2,
               child: FilaOpcion(
                 icono: Icons.inventory_2_outlined,
-                titulo: 'Inventario',
+                titulo: 'Productos',
                 subtitulo: 'Agregar, editar y eliminar productos',
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const PaginaInventario()),

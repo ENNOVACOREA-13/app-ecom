@@ -471,6 +471,7 @@ class _PaginaGestionServiciosState extends State<PaginaGestionServicios> {
                               Container(
                                 width: 50,
                                 height: 50,
+                                clipBehavior: Clip.antiAlias,
                                 decoration: BoxDecoration(
                                   color: colorActivo,
                                   shape: BoxShape.circle,
@@ -478,7 +479,13 @@ class _PaginaGestionServiciosState extends State<PaginaGestionServicios> {
                                       ? [BoxShadow(color: colorActivo.withOpacity(0.35), blurRadius: 10, offset: const Offset(0, 4))]
                                       : null,
                                 ),
-                                child: Icon(obtenerIconoServicio(s.iconoNombre), color: Colors.white, size: 24),
+                                child: s.urlImagen != null && s.urlImagen!.isNotEmpty
+                                    ? Image.network(s.urlImagen!,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (_, __, ___) => Icon(
+                                            obtenerIconoServicio(s.iconoNombre),
+                                            color: Colors.white, size: 24))
+                                    : Icon(obtenerIconoServicio(s.iconoNombre), color: Colors.white, size: 24),
                               ),
                               const SizedBox(width: 14),
                               Expanded(

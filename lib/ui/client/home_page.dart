@@ -1026,12 +1026,19 @@ class _ChipServicio extends StatelessWidget {
           Container(
             width: 56,
             height: 56,
+            clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
               color: colorDesdeHex(servicio.iconoColor) ?? kCard,
               shape: BoxShape.circle,
               boxShadow: kNeumorphicShadowsSmall,
             ),
-            child: Icon(obtenerIconoServicio(servicio.iconoNombre), color: Colors.white, size: tamanoIcono),
+            child: servicio.urlImagen != null && servicio.urlImagen!.isNotEmpty
+                ? Image.network(servicio.urlImagen!,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Icon(
+                        obtenerIconoServicio(servicio.iconoNombre),
+                        color: Colors.white, size: tamanoIcono))
+                : Icon(obtenerIconoServicio(servicio.iconoNombre), color: Colors.white, size: tamanoIcono),
           ),
           const SizedBox(height: 6),
           SizedBox(
@@ -1077,7 +1084,17 @@ class _ChipServicioCuadrado extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(obtenerIconoServicio(servicio.iconoNombre), color: Colors.white, size: tamanoIcono),
+            servicio.urlImagen != null && servicio.urlImagen!.isNotEmpty
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: Image.network(servicio.urlImagen!,
+                        width: tamanoIcono + 8,
+                        height: tamanoIcono + 8,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Icon(
+                            obtenerIconoServicio(servicio.iconoNombre),
+                            color: Colors.white, size: tamanoIcono)))
+                : Icon(obtenerIconoServicio(servicio.iconoNombre), color: Colors.white, size: tamanoIcono),
             const SizedBox(height: 10),
             Text(
               servicio.nombre,

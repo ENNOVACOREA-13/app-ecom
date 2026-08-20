@@ -81,12 +81,19 @@ class _PaginaSeleccionarServicioState extends State<PaginaSeleccionarServicio> {
                               leading: Container(
                                 width: 46,
                                 height: 46,
+                                clipBehavior: Clip.antiAlias,
                                 decoration: BoxDecoration(
                                   color: colorDesdeHex(s.iconoColor) ?? context.colorPrimario,
                                   borderRadius: BorderRadius.circular(10),
                                 ),
-                                child: Icon(obtenerIconoServicio(s.iconoNombre),
-                                    color: Colors.white),
+                                child: s.urlImagen != null && s.urlImagen!.isNotEmpty
+                                    ? Image.network(s.urlImagen!,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (_, __, ___) => Icon(
+                                            obtenerIconoServicio(s.iconoNombre),
+                                            color: Colors.white))
+                                    : Icon(obtenerIconoServicio(s.iconoNombre),
+                                        color: Colors.white),
                               ),
                               title: Text(s.nombre,
                                   style: const TextStyle(

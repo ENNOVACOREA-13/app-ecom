@@ -88,6 +88,7 @@ List<CuentaAdminTenant> combinarCuentasAdmin({
       rol: m['role'] as String? ?? 'admin',
       nombreCompleto: perfil?['full_name'] as String?,
       email: perfil?['email'] as String?,
+      telefono: perfil?['phone'] as String?,
       // Solo se puede "quitar" una membresía que sea EXTRA a su tenant de
       // casa — borrar la fila de un admin en su propio negocio de casa no
       // le quita el acceso (profiles.tenant_id lo sigue apuntando ahí).
@@ -101,6 +102,7 @@ class CuentaAdminTenant {
   final String id;
   final String? nombreCompleto;
   final String? email;
+  final String? telefono;
   final String rol;
   final bool esMembresiaExtra;
 
@@ -109,6 +111,7 @@ class CuentaAdminTenant {
     required this.rol,
     this.nombreCompleto,
     this.email,
+    this.telefono,
     this.esMembresiaExtra = false,
   });
 
@@ -118,6 +121,7 @@ class CuentaAdminTenant {
       rol: map['role'] as String? ?? 'admin',
       nombreCompleto: map['full_name'] as String?,
       email: map['email'] as String?,
+      telefono: map['phone'] as String?,
     );
   }
 }

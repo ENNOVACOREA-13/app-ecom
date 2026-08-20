@@ -94,4 +94,34 @@ class ProveedorTenants extends ChangeNotifier {
       return false;
     }
   }
+
+  Future<bool> editarPerfilAdmin({
+    required String userId,
+    required String nombre,
+    String? telefono,
+  }) async {
+    try {
+      await _repo.editarPerfilAdmin(userId: userId, nombre: nombre, telefono: telefono);
+      await cargarTenants();
+      return true;
+    } catch (e) {
+      _error = 'No se pudo guardar los cambios de esa cuenta.';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> eliminarPerfilAdmin(String userId) async {
+    try {
+      await _repo.eliminarPerfilAdmin(userId);
+      await cargarTenants();
+      return true;
+    } catch (e) {
+      _error = e.toString().contains('No se puede eliminar una cuenta sysadmin')
+          ? 'Las cuentas sysadmin no se pueden eliminar.'
+          : 'No se pudo eliminar esa cuenta.';
+      notifyListeners();
+      return false;
+    }
+  }
 }

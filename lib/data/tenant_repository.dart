@@ -7,7 +7,7 @@ class RepositorioTenants {
   Future<List<Tenant>> obtenerTenants() async {
     final datos = await _client
         .from('tenants')
-        .select('*, tenant_domains(*), profiles(id, full_name, email, role)')
+        .select('*, tenant_domains(*), profiles(id, full_name, email, role, phone)')
         .order('created_at');
 
     // user_tenant_memberships no tiene una FK directa a profiles (ambas
@@ -22,7 +22,7 @@ class RepositorioTenants {
         ? const <Map<String, dynamic>>[]
         : await _client
             .from('profiles')
-            .select('id, full_name, email, role, tenant_id')
+            .select('id, full_name, email, role, tenant_id, phone')
             .inFilter('id', idsUsuarios) as List;
     final perfilesPorId = {
       for (final p in perfiles) (p as Map<String, dynamic>)['id'] as String: p
@@ -69,5 +69,28 @@ class RepositorioTenants {
         .delete()
         .eq('user_id', userId)
         .eq('tenant_id', tenantId);
+  }
+
+  /// Edita nombre/teléfono de una cuenta admin/sysadmin de cualquier
+  /// negocio (RLS: profiles_update_platform_admin). No toca el rol ni el
+  /// email — un trigger bloquea cualquier intento de cambiar el rol del
+  /// sysadmin principal de la plataforma.
+  Future<void> editarPerfilAdmin({
+    required String userId,
+    required String nombre,
+    String? telefono,
+  }) async {
+    await _client.from('profiles').update({
+      'full_name': nombre,
+      'phone': telefono,
+    }).eq('id', userId);
+  }
+
+  /// Elimina por completo el perfil "de casa" de un admin/super_admin de un
+  /// negocio (RLS: profiles_delete_platform_admin). Las cuentas sysadmin
+  /// nunca se pueden eliminar (bloqueado por trigger a nivel de base de
+  /// datos, no solo aquí).
+  Future<void> eliminarPerfilAdmin(String userId) async {
+    await _client.from('profiles').delete().eq('id', userId);
   }
 }

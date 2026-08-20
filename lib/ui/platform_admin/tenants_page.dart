@@ -283,6 +283,116 @@ class _PaginaNegociosState extends State<PaginaNegocios> {
     }
   }
 
+  Future<void> _mostrarDialogoEditarAdmin(CuentaAdminTenant cuenta) async {
+    final ctrlNombre = TextEditingController(text: cuenta.nombreCompleto ?? '');
+    final ctrlTelefono = TextEditingController(text: cuenta.telefono ?? '');
+    bool guardando = false;
+    final claveFormulario = GlobalKey<FormState>();
+
+    final exito = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setLocal) => AlertDialog(
+          backgroundColor: Colors.white,
+          title: Text('Editar ${cuenta.email ?? cuenta.id}',
+              style: const TextStyle(color: Color(0xFF1C1C1E))),
+          content: Form(
+            key: claveFormulario,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: ctrlNombre,
+                  autofocus: true,
+                  style: const TextStyle(color: Color(0xFF1C1C1E)),
+                  decoration: InputDecoration(
+                    labelText: 'Nombre completo',
+                    filled: true,
+                    fillColor: const Color(0xFFF2F2F7),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                  ),
+                  validator: (v) => (v == null || v.trim().isEmpty) ? 'Ingresa un nombre' : null,
+                ),
+                const SizedBox(height: 14),
+                TextFormField(
+                  controller: ctrlTelefono,
+                  keyboardType: TextInputType.phone,
+                  style: const TextStyle(color: Color(0xFF1C1C1E)),
+                  decoration: InputDecoration(
+                    labelText: 'Teléfono (opcional)',
+                    filled: true,
+                    fillColor: const Color(0xFFF2F2F7),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: context.colorPrimario),
+              onPressed: guardando
+                  ? null
+                  : () async {
+                      if (!claveFormulario.currentState!.validate()) return;
+                      setLocal(() => guardando = true);
+                      final ok = await context.read<ProveedorTenants>().editarPerfilAdmin(
+                            userId: cuenta.id,
+                            nombre: ctrlNombre.text.trim(),
+                            telefono:
+                                ctrlTelefono.text.trim().isEmpty ? null : ctrlTelefono.text.trim(),
+                          );
+                      if (ctx.mounted) Navigator.pop(ctx, ok);
+                    },
+              child: const Text('Guardar', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (!mounted) return;
+    final error = context.read<ProveedorTenants>().error;
+    mostrarToast(
+      context,
+      exito == true ? 'Cambios guardados' : (error ?? 'No se pudo guardar'),
+      tipo: exito == true ? TipoToast.exito : TipoToast.error,
+    );
+  }
+
+  Future<void> _confirmarEliminarCuentaAdmin(CuentaAdminTenant cuenta) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        title: const Text('Eliminar cuenta', style: TextStyle(color: Color(0xFF1C1C1E))),
+        content: Text(
+            '¿Eliminar por completo la cuenta de "${cuenta.email ?? cuenta.id}"? '
+            'Se borra su perfil de la app. Esta acción no se puede deshacer.',
+            style: const TextStyle(color: Color(0xFF6E6E73))),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+    final exito = await context.read<ProveedorTenants>().eliminarPerfilAdmin(cuenta.id);
+    if (!mounted) return;
+    final error = context.read<ProveedorTenants>().error;
+    mostrarToast(
+      context,
+      exito ? 'Cuenta eliminada' : (error ?? 'No se pudo eliminar la cuenta'),
+      tipo: exito ? TipoToast.exito : TipoToast.error,
+    );
+  }
+
   Future<void> _confirmarQuitarAcceso(Tenant tenant, CuentaAdminTenant cuenta) async {
     final ok = await showDialog<bool>(
       context: context,
@@ -508,11 +618,18 @@ class _PaginaNegociosState extends State<PaginaNegocios> {
                                                     style: const TextStyle(fontSize: 12, color: Color(0xFF1C1C1E)),
                                                     overflow: TextOverflow.ellipsis,
                                                   ),
-                                                  // Mismo rol, mismo correo, pero uno tiene botón de
-                                                  // quitar y el otro no si aparece en dos negocios —
-                                                  // sin esta etiqueta esa diferencia no se ve en la UI.
-                                                  if (!a.esMembresiaExtra)
-                                                    const Text('Negocio de origen (no se puede quitar aquí)',
+                                                  // Mismo rol, mismo correo, pero el botón de basura
+                                                  // hace cosas distintas según de dónde venga el
+                                                  // acceso — sin esta etiqueta esa diferencia no se
+                                                  // ve en la UI.
+                                                  if (a.email == kEmailSysadminPrincipal)
+                                                    const Text('Sysadmin principal (protegido)',
+                                                        style: TextStyle(fontSize: 10, color: kTextSub))
+                                                  else if (!a.esMembresiaExtra && a.rol == 'sysadmin')
+                                                    const Text('Negocio de origen (las cuentas sysadmin no se eliminan)',
+                                                        style: TextStyle(fontSize: 10, color: kTextSub))
+                                                  else if (!a.esMembresiaExtra)
+                                                    const Text('Negocio de origen (se puede eliminar la cuenta)',
                                                         style: TextStyle(fontSize: 10, color: kTextSub)),
                                                 ],
                                               ),
@@ -528,6 +645,17 @@ class _PaginaNegociosState extends State<PaginaNegocios> {
                                                 style: const TextStyle(fontSize: 10, color: kTextSub),
                                               ),
                                             ),
+                                            if (a.email != kEmailSysadminPrincipal) ...[
+                                              const SizedBox(width: 4),
+                                              IconButton(
+                                                icon: const Icon(Icons.edit_outlined,
+                                                    size: 16, color: kTextSub),
+                                                tooltip: 'Editar nombre/teléfono',
+                                                padding: EdgeInsets.zero,
+                                                constraints: const BoxConstraints(),
+                                                onPressed: () => _mostrarDialogoEditarAdmin(a),
+                                              ),
+                                            ],
                                             if (a.esMembresiaExtra &&
                                                 a.email != kEmailSysadminPrincipal) ...[
                                               const SizedBox(width: 4),
@@ -537,6 +665,19 @@ class _PaginaNegociosState extends State<PaginaNegocios> {
                                                 padding: EdgeInsets.zero,
                                                 constraints: const BoxConstraints(),
                                                 onPressed: () => _confirmarQuitarAcceso(t, a),
+                                              ),
+                                            ],
+                                            if (!a.esMembresiaExtra &&
+                                                a.rol != 'sysadmin' &&
+                                                a.email != kEmailSysadminPrincipal) ...[
+                                              const SizedBox(width: 4),
+                                              IconButton(
+                                                icon: const Icon(Icons.delete_outline,
+                                                    size: 16, color: Colors.red),
+                                                tooltip: 'Eliminar esta cuenta',
+                                                padding: EdgeInsets.zero,
+                                                constraints: const BoxConstraints(),
+                                                onPressed: () => _confirmarEliminarCuentaAdmin(a),
                                               ),
                                             ],
                                           ],

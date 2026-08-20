@@ -147,6 +147,7 @@ class _PaginaGestionServiciosState extends State<PaginaGestionServicios> {
       border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
       labelStyle: const TextStyle(color: Color(0xFF8E8E93)),
+      counterText: '',
     );
 
     final exito = await showDialog<bool>(
@@ -329,6 +330,7 @@ class _PaginaGestionServiciosState extends State<PaginaGestionServicios> {
                     controller: ctrlNombre,
                     style: const TextStyle(color: Color(0xFF1C1C1E)),
                     decoration: camposDecoracion.copyWith(labelText: 'Nombre *'),
+                    maxLength: 60,
                     validator: (v) =>
                         (v == null || v.isEmpty) ? 'Requerido' : null,
                   ),
@@ -338,6 +340,7 @@ class _PaginaGestionServiciosState extends State<PaginaGestionServicios> {
                     style: const TextStyle(color: Color(0xFF1C1C1E)),
                     decoration: camposDecoracion.copyWith(labelText: 'Descripción'),
                     maxLines: 2,
+                    maxLength: 300,
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
@@ -345,6 +348,7 @@ class _PaginaGestionServiciosState extends State<PaginaGestionServicios> {
                     style: const TextStyle(color: Color(0xFF1C1C1E)),
                     keyboardType: TextInputType.number,
                     decoration: camposDecoracion.copyWith(labelText: 'Precio *'),
+                    maxLength: 10,
                     validator: (v) {
                       if (v == null || v.isEmpty) return 'Requerido';
                       if (double.tryParse(v) == null) return 'Número inválido';
@@ -357,6 +361,7 @@ class _PaginaGestionServiciosState extends State<PaginaGestionServicios> {
                     style: const TextStyle(color: Color(0xFF1C1C1E)),
                     keyboardType: TextInputType.number,
                     decoration: camposDecoracion.copyWith(labelText: 'Duración (minutos) *'),
+                    maxLength: 4,
                     validator: (v) {
                       final n = int.tryParse(v ?? '');
                       if (n == null) return 'Número inválido';

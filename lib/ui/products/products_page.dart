@@ -150,6 +150,7 @@ class _PaginaProductosState extends State<PaginaProductos> {
                       controlador: ctrlNombre,
                       etiqueta: 'Nombre',
                       icono: Icons.label_outline,
+                      maxLongitud: 60,
                       validador: (v) =>
                           (v == null || v.isEmpty) ? 'Requerido' : null),
                   const SizedBox(height: 12),
@@ -157,13 +158,15 @@ class _PaginaProductosState extends State<PaginaProductos> {
                       controlador: ctrlDesc,
                       etiqueta: 'Descripción',
                       icono: Icons.notes,
-                      maxLineas: 2),
+                      maxLineas: 2,
+                      maxLongitud: 300),
                   const SizedBox(height: 12),
                   _CampoDialogo(
                       controlador: ctrlPrecio,
                       etiqueta: 'Precio (\$)',
                       icono: Icons.attach_money,
                       tipoTeclado: TextInputType.number,
+                      maxLongitud: 10,
                       validador: (v) {
                         if (v == null || v.isEmpty) return 'Requerido';
                         if (double.tryParse(v) == null) return 'Número inválido';
@@ -175,6 +178,7 @@ class _PaginaProductosState extends State<PaginaProductos> {
                       etiqueta: 'Precio oferta (\$) — opcional',
                       icono: Icons.local_offer_outlined,
                       tipoTeclado: TextInputType.number,
+                      maxLongitud: 10,
                       validador: (v) {
                         if (v == null || v.isEmpty) return null;
                         final val = double.tryParse(v);
@@ -189,6 +193,7 @@ class _PaginaProductosState extends State<PaginaProductos> {
                       etiqueta: 'Stock',
                       icono: Icons.inventory_2_outlined,
                       tipoTeclado: TextInputType.number,
+                      maxLongitud: 6,
                       validador: (v) =>
                           (int.tryParse(v ?? '') == null)
                               ? 'Número inválido'
@@ -809,6 +814,7 @@ class _PaginaProductosState extends State<PaginaProductos> {
                       controlador: ctrlNombre,
                       etiqueta: 'Nombre',
                       icono: Icons.label_outline,
+                      maxLongitud: 60,
                       validador: (v) =>
                           (v == null || v.isEmpty) ? 'Requerido' : null),
                   const SizedBox(height: 12),
@@ -816,13 +822,15 @@ class _PaginaProductosState extends State<PaginaProductos> {
                       controlador: ctrlDesc,
                       etiqueta: 'Descripción',
                       icono: Icons.notes,
-                      maxLineas: 2),
+                      maxLineas: 2,
+                      maxLongitud: 300),
                   const SizedBox(height: 12),
                   _CampoDialogo(
                       controlador: ctrlPrecio,
                       etiqueta: 'Precio (\$)',
                       icono: Icons.attach_money,
                       tipoTeclado: TextInputType.number,
+                      maxLongitud: 10,
                       validador: (v) {
                         if (v == null || v.isEmpty) return 'Requerido';
                         if (double.tryParse(v) == null) return 'Número inválido';
@@ -834,6 +842,7 @@ class _PaginaProductosState extends State<PaginaProductos> {
                       etiqueta: 'Precio oferta (\$) — opcional',
                       icono: Icons.local_offer_outlined,
                       tipoTeclado: TextInputType.number,
+                      maxLongitud: 10,
                       validador: (v) {
                         if (v == null || v.isEmpty) return null;
                         final val = double.tryParse(v);
@@ -848,6 +857,7 @@ class _PaginaProductosState extends State<PaginaProductos> {
                       etiqueta: 'Stock',
                       icono: Icons.inventory_2_outlined,
                       tipoTeclado: TextInputType.number,
+                      maxLongitud: 6,
                       validador: (v) =>
                           (int.tryParse(v ?? '') == null)
                               ? 'Número inválido'
@@ -973,12 +983,15 @@ class _CampoDialogo extends StatelessWidget {
   final TextInputType tipoTeclado;
   final String? Function(String?)? validador;
 
+  final int? maxLongitud;
+
   const _CampoDialogo({
     required this.controlador,
     required this.etiqueta,
     required this.icono,
     this.maxLineas = 1,
     this.tipoTeclado = TextInputType.text,
+    this.maxLongitud,
     this.validador,
   });
 
@@ -988,6 +1001,7 @@ class _CampoDialogo extends StatelessWidget {
       controller: controlador,
       style: const TextStyle(color: Color(0xFF1C1C1E)),
       maxLines: maxLineas,
+      maxLength: maxLongitud,
       keyboardType: tipoTeclado,
       validator: validador,
       decoration: InputDecoration(
@@ -997,6 +1011,7 @@ class _CampoDialogo extends StatelessWidget {
         fillColor: const Color(0xFFF2F2F7),
         border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+        counterText: '',
         enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
         labelStyle: const TextStyle(color: Color(0xFF8E8E93)),

@@ -477,13 +477,16 @@ class _DialogoProductoState extends State<_DialogoProducto> {
               ),
               const SizedBox(height: 14),
               _campo(c.nombre, 'Nombre', Icons.label_outline,
+                  maxLongitud: 60,
                   validador: (v) =>
                       (v == null || v.isEmpty) ? 'Requerido' : null),
               const SizedBox(height: 10),
-              _campo(c.desc, 'Descripción', Icons.notes, maxLineas: 2),
+              _campo(c.desc, 'Descripción', Icons.notes,
+                  maxLineas: 2, maxLongitud: 300),
               const SizedBox(height: 10),
               _campo(c.precio, 'Precio (\$)', Icons.attach_money,
                   tipo: TextInputType.number,
+                  maxLongitud: 10,
                   validador: (v) {
                     if (v == null || v.isEmpty) return 'Requerido';
                     if (double.tryParse(v) == null) return 'Número inválido';
@@ -493,6 +496,7 @@ class _DialogoProductoState extends State<_DialogoProducto> {
               _campo(c.oferta, 'Precio oferta (\$) — opcional',
                   Icons.local_offer_outlined,
                   tipo: TextInputType.number,
+                  maxLongitud: 10,
                   validador: (v) {
                     if (v == null || v.isEmpty) return null;
                     final val = double.tryParse(v);
@@ -504,6 +508,7 @@ class _DialogoProductoState extends State<_DialogoProducto> {
               const SizedBox(height: 10),
               _campo(c.stock, 'Stock', Icons.inventory_2_outlined,
                   tipo: TextInputType.number,
+                  maxLongitud: 6,
                   validador: (v) =>
                       (int.tryParse(v ?? '') == null) ? 'Número inválido' : null),
             ],
@@ -530,6 +535,7 @@ class _DialogoProductoState extends State<_DialogoProducto> {
     IconData icono, {
     TextInputType tipo = TextInputType.text,
     int maxLineas = 1,
+    int? maxLongitud,
     String? Function(String?)? validador,
   }) {
     return TextFormField(
@@ -537,6 +543,7 @@ class _DialogoProductoState extends State<_DialogoProducto> {
       style: const TextStyle(color: Color(0xFF1C1C1E)),
       keyboardType: tipo,
       maxLines: maxLineas,
+      maxLength: maxLongitud,
       validator: validador,
       decoration: InputDecoration(
         labelText: etiqueta,
@@ -545,6 +552,7 @@ class _DialogoProductoState extends State<_DialogoProducto> {
         fillColor: const Color(0xFFF2F2F7),
         border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+        counterText: '',
       ),
     );
   }

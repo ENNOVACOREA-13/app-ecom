@@ -82,6 +82,46 @@ class _PaginaGestionEmpleadosState extends State<PaginaGestionEmpleados>
     await _cargar();
   }
 
+  Future<void> _eliminarUsuario(Perfil usuario) async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        title: const Text('Eliminar cuenta',
+            style: TextStyle(color: Color(0xFF1C1C1E))),
+        content: Text(
+          'Esto borra la cuenta de "${usuario.nombreCompleto}" PARA SIEMPRE '
+          '(no se puede reactivar — para volver a entrar tendría que '
+          'registrarse de cero). Su historial de reservas/pedidos no se '
+          'borra, pero deja de estar asociado a un nombre.',
+          style: const TextStyle(color: Color(0xFF6E6E73)),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancelar')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Eliminar para siempre',
+                style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+    if (confirmar != true || !mounted) return;
+
+    try {
+      await _servicioAlta.eliminarUsuario(usuario.id);
+      await _cargar();
+      if (mounted) {
+        mostrarToast(context, 'Cuenta eliminada', tipo: TipoToast.exito);
+      }
+    } catch (e) {
+      if (mounted) {
+        mostrarToast(context, mapearErrorEliminacion(e.toString()), tipo: TipoToast.error);
+      }
+    }
+  }
+
   Future<void> _mostrarHorarios(Perfil empleado) async {
     final horarios = await _repo.obtenerHorarioEmpleado(empleado.id);
     if (!mounted) return;
@@ -243,6 +283,7 @@ class _PaginaGestionEmpleadosState extends State<PaginaGestionEmpleados>
                   usuarios: _empleados,
                   alCambiarRol: _cambiarRol,
                   alAlternar: _alternarActivo,
+                  alEliminar: _eliminarUsuario,
                   alVerHorarios: _mostrarHorarios,
                   alVerServicios: _mostrarServicios,
                   alVerDiasLibres: _mostrarDiasLibres,
@@ -251,6 +292,7 @@ class _PaginaGestionEmpleadosState extends State<PaginaGestionEmpleados>
                   usuarios: _clientes,
                   alCambiarRol: _cambiarRol,
                   alAlternar: _alternarActivo,
+                  alEliminar: _eliminarUsuario,
                 ),
               ],
             ),
@@ -745,6 +787,7 @@ class _ListaUsuarios extends StatelessWidget {
   final List<Perfil> usuarios;
   final Future<void> Function(Perfil, RolUsuario) alCambiarRol;
   final Future<void> Function(Perfil) alAlternar;
+  final Future<void> Function(Perfil)? alEliminar;
   final Future<void> Function(Perfil)? alVerHorarios;
   final Future<void> Function(Perfil)? alVerServicios;
   final Future<void> Function(Perfil)? alVerDiasLibres;
@@ -753,6 +796,7 @@ class _ListaUsuarios extends StatelessWidget {
     required this.usuarios,
     required this.alCambiarRol,
     required this.alAlternar,
+    this.alEliminar,
     this.alVerHorarios,
     this.alVerServicios,
     this.alVerDiasLibres,
@@ -902,6 +946,19 @@ class _ListaUsuarios extends StatelessWidget {
                     ),
                   ));
 
+                  if (alEliminar != null) {
+                    items.add(const PopupMenuItem<String>(
+                      value: 'eliminar',
+                      child: Row(
+                        children: [
+                          Icon(Icons.delete_forever_outlined, color: Colors.red, size: 18),
+                          SizedBox(width: 8),
+                          Text('Eliminar', style: TextStyle(color: Colors.red)),
+                        ],
+                      ),
+                    ));
+                  }
+
                   return items;
                 },
                 onSelected: (action) {
@@ -923,6 +980,9 @@ class _ListaUsuarios extends StatelessWidget {
                       break;
                     case 'toggle_active':
                       alAlternar(usuario);
+                      break;
+                    case 'eliminar':
+                      alEliminar?.call(usuario);
                       break;
                   }
                 },

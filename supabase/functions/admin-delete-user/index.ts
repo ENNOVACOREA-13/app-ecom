@@ -84,7 +84,23 @@ Deno.serve(async (req) => {
       if (targetRole === 'platform_admin') {
         return responder(403, { success: false, error: 'role_not_allowed' });
       }
-      if (target.tenant_id !== callerPerfil.tenant_id) {
+      // Igual que admin-create-user: profiles.tenant_id es el tenant "de
+      // casa" fijo de quien llama, pero una cuenta con membresía en varios
+      // negocios (20260819170000_multitenant_membership) puede administrar
+      // — y borrar cuentas de — cualquier negocio donde tenga membresía
+      // admin-nivel, no solo el de casa.
+      const targetTenantId = target.tenant_id as string;
+      let tieneAcceso = targetTenantId === callerPerfil.tenant_id;
+      if (!tieneAcceso) {
+        const { data: membresia } = await admin
+          .from('user_tenant_memberships')
+          .select('role')
+          .eq('user_id', caller.id)
+          .eq('tenant_id', targetTenantId)
+          .maybeSingle();
+        tieneAcceso = !!membresia && ['admin', 'super_admin', 'sysadmin'].includes(membresia.role as string);
+      }
+      if (!tieneAcceso) {
         return responder(403, { success: false, error: 'forbidden' });
       }
     } else {

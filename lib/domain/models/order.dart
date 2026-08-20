@@ -33,7 +33,7 @@ class ItemPedido {
 
 class Pedido {
   final String id;
-  final String clienteId;
+  final String? clienteId;
   final EstadoPedido estado;
   final double total;
   final String? notas;
@@ -47,7 +47,7 @@ class Pedido {
 
   const Pedido({
     required this.id,
-    required this.clienteId,
+    this.clienteId,
     required this.estado,
     required this.total,
     this.notas,
@@ -65,7 +65,7 @@ class Pedido {
     final profileData = map['profiles'] as Map<String, dynamic>?;
     return Pedido(
       id: map['id'] as String,
-      clienteId: map['client_id'] as String,
+      clienteId: map['client_id'] as String?,
       estado: EstadoPedidoX.fromString(map['status'] as String? ?? 'pending'),
       total: (map['total'] as num).toDouble(),
       notas: map['notes'] as String?,

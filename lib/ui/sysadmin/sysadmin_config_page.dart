@@ -284,7 +284,9 @@ class PaginaConfigSysadminState extends State<PaginaConfigSysadmin> {
         title: const Text('Eliminar usuario'),
         content: Text(
           '¿Seguro que quieres eliminar a "$nombre"?\n\n'
-          'Se eliminará su perfil de la app.',
+          'Se elimina su cuenta por completo (perfil y acceso) — si quiere '
+          'volver, tiene que registrarse de nuevo. Sus reservas/pedidos/'
+          'comisiones anteriores se conservan, sin ligar a ninguna cuenta.',
         ),
         actions: [
           TextButton(
@@ -300,7 +302,7 @@ class PaginaConfigSysadminState extends State<PaginaConfigSysadmin> {
 
     if (ok == true) {
       try {
-        await _client.from('profiles').delete().eq('id', u['id']);
+        await _servicioAlta.eliminarUsuario(u['id'] as String);
         ServicioActividad.instancia.registrarFeature('eliminar_usuario');
         if (mounted) {
           mostrarToast(context, 'Usuario "$nombre" eliminado', tipo: TipoToast.exito);
@@ -308,7 +310,7 @@ class PaginaConfigSysadminState extends State<PaginaConfigSysadmin> {
         }
       } catch (e) {
         if (mounted) {
-          mostrarToast(context, 'Error al eliminar: $e', tipo: TipoToast.error);
+          mostrarToast(context, mapearErrorEliminacion(e.toString()), tipo: TipoToast.error);
         }
       }
     }

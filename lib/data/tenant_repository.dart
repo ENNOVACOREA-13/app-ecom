@@ -1,8 +1,10 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../domain/models/tenant.dart';
+import 'user_provisioning_service.dart';
 
 class RepositorioTenants {
   SupabaseClient get _client => Supabase.instance.client;
+  final ServicioAltaUsuarios _servicioAlta = ServicioAltaUsuarios();
 
   Future<List<Tenant>> obtenerTenants() async {
     final datos = await _client
@@ -86,11 +88,13 @@ class RepositorioTenants {
     }).eq('id', userId);
   }
 
-  /// Elimina por completo el perfil "de casa" de un admin/super_admin de un
-  /// negocio (RLS: profiles_delete_platform_admin). Las cuentas sysadmin
-  /// nunca se pueden eliminar (bloqueado por trigger a nivel de base de
-  /// datos, no solo aquí).
+  /// Elimina por completo la cuenta "de casa" de un admin/super_admin de un
+  /// negocio — perfil Y cuenta de Supabase Auth (vía Edge Function
+  /// admin-delete-user), para que el correo quede libre para un registro
+  /// nuevo en vez de dejar una sesión de Auth "colgada" sin perfil. Las
+  /// cuentas sysadmin nunca se pueden eliminar (bloqueado también por
+  /// trigger a nivel de base de datos).
   Future<void> eliminarPerfilAdmin(String userId) async {
-    await _client.from('profiles').delete().eq('id', userId);
+    await _servicioAlta.eliminarUsuario(userId);
   }
 }

@@ -52,7 +52,7 @@ class AjustesComision {
 
 class EntradaComision {
   final String id;
-  final String empleadoId;
+  final String? empleadoId;
   final String reservaId;
   final String? servicioId;
   final String nombreServicio;
@@ -63,7 +63,7 @@ class EntradaComision {
 
   const EntradaComision({
     required this.id,
-    required this.empleadoId,
+    this.empleadoId,
     required this.reservaId,
     this.servicioId,
     required this.nombreServicio,
@@ -75,7 +75,7 @@ class EntradaComision {
 
   factory EntradaComision.fromMap(Map<String, dynamic> map) => EntradaComision(
         id: map['id'] as String,
-        empleadoId: map['employee_id'] as String,
+        empleadoId: map['employee_id'] as String?,
         reservaId: map['booking_id'] as String,
         servicioId: map['service_id'] as String?,
         nombreServicio: map['service_name'] as String? ?? 'Servicio',
@@ -88,7 +88,7 @@ class EntradaComision {
 
 class CorteComision {
   final String id;
-  final String empleadoId;
+  final String? empleadoId;
   final String? nombreEmpleado;
   final DateTime inicioSemana;
   final DateTime finSemana;
@@ -100,7 +100,7 @@ class CorteComision {
 
   const CorteComision({
     required this.id,
-    required this.empleadoId,
+    this.empleadoId,
     this.nombreEmpleado,
     required this.inicioSemana,
     required this.finSemana,
@@ -113,7 +113,7 @@ class CorteComision {
 
   factory CorteComision.fromMap(Map<String, dynamic> map) => CorteComision(
         id: map['id'] as String,
-        empleadoId: map['employee_id'] as String,
+        empleadoId: map['employee_id'] as String?,
         nombreEmpleado: map['full_name'] as String?,
         inicioSemana: DateTime.parse(map['week_start'] as String),
         finSemana: DateTime.parse(map['week_end'] as String),

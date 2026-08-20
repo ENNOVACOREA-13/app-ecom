@@ -371,7 +371,9 @@ class _PaginaNegociosState extends State<PaginaNegocios> {
         title: const Text('Eliminar cuenta', style: TextStyle(color: Color(0xFF1C1C1E))),
         content: Text(
             '¿Eliminar por completo la cuenta de "${cuenta.email ?? cuenta.id}"? '
-            'Se borra su perfil de la app. Esta acción no se puede deshacer.',
+            'Se borra su perfil y su acceso — si quiere volver, tiene que '
+            'registrarse de nuevo. Sus reservas/pedidos/comisiones anteriores '
+            'se conservan, sin ligar a ninguna cuenta. Esta acción no se puede deshacer.',
             style: const TextStyle(color: Color(0xFF6E6E73))),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),

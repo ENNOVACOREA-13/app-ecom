@@ -27,6 +27,27 @@ String mapearErrorInvitacion(String e) {
   }
 }
 
+/// Traduce los códigos de error de admin-delete-user a un mensaje legible.
+String mapearErrorEliminacion(String e) {
+  final codigo = e.replaceFirst('Exception: ', '').trim();
+  switch (codigo) {
+    case 'cannot_delete_sysadmin':
+      return 'Las cuentas sysadmin no se pueden eliminar.';
+    case 'cannot_delete_self':
+      return 'No puedes eliminar tu propia cuenta desde aquí.';
+    case 'role_not_allowed':
+    case 'forbidden':
+      return 'No tienes permiso para eliminar esta cuenta.';
+    case 'user_not_found':
+      return 'Esa cuenta ya no existe.';
+    case 'missing_auth':
+    case 'invalid_session':
+      return 'Tu sesión no tiene permiso para hacer esto.';
+    default:
+      return 'No se pudo eliminar la cuenta.';
+  }
+}
+
 /// Crea cuentas con rol elevado (empleado/admin/sysadmin) a través de la
 /// Edge Function `admin-create-user`: el permiso se valida server-side
 /// contra el rol real de quien llama, nunca confiando en lo que mande el
@@ -62,5 +83,29 @@ class ServicioAltaUsuarios {
       throw Exception(cuerpo['error'] ?? 'unknown_error');
     }
     return cuerpo['id'] as String;
+  }
+
+  /// Elimina una cuenta por completo (perfil + cuenta de Supabase Auth) a
+  /// través de la Edge Function `admin-delete-user` — así el correo queda
+  /// libre para un registro nuevo, en vez de dejar una cuenta de Auth
+  /// "colgada" sin perfil (ver RepositorioAuth.iniciarSesion). El permiso
+  /// se valida server-side igual que en invitarUsuario().
+  Future<void> eliminarUsuario(String userId) async {
+    final session = Supabase.instance.client.auth.currentSession;
+    if (session == null) throw Exception('missing_session');
+
+    final respuesta = await http.post(
+      Uri.parse('$kSupabaseUrl/functions/v1/admin-delete-user'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ${session.accessToken}',
+      },
+      body: jsonEncode({'user_id': userId}),
+    );
+
+    final cuerpo = jsonDecode(respuesta.body) as Map<String, dynamic>;
+    if (cuerpo['success'] != true) {
+      throw Exception(cuerpo['error'] ?? 'unknown_error');
+    }
   }
 }

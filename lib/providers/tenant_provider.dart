@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../data/tenant_repository.dart';
+import '../data/user_provisioning_service.dart';
 import '../domain/models/tenant.dart';
 
 class ProveedorTenants extends ChangeNotifier {
@@ -117,9 +118,7 @@ class ProveedorTenants extends ChangeNotifier {
       await cargarTenants();
       return true;
     } catch (e) {
-      _error = e.toString().contains('No se puede eliminar una cuenta sysadmin')
-          ? 'Las cuentas sysadmin no se pueden eliminar.'
-          : 'No se pudo eliminar esa cuenta.';
+      _error = mapearErrorEliminacion(e.toString());
       notifyListeners();
       return false;
     }

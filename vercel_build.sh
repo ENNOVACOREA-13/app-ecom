@@ -23,3 +23,14 @@ DEFINES=()
 # queden atorados en una versión vieja hasta que el service worker decida
 # actualizarse solo. Con esto, cada carga trae siempre el build más reciente.
 flutter build web --release --pwa-strategy=none "${DEFINES[@]}"
+
+# Páginas estáticas fuera de la app Flutter (enlaces de correo, políticas)
+# — sin esto, Vercel no tiene el archivo físico en build/web/ y el rewrite
+# catch-all de vercel.json ("/(.*)" -> "/index.html") sirve el shell de la
+# app en su lugar. Como el dominio raíz prettycore.xyz no tiene tenant
+# asignado, eso terminaba mandando a cualquiera que abriera estos enlaces
+# al login del control plane en vez de a la página que debía cargar.
+cp confirmar-cuenta.html build/web/confirmar-cuenta.html
+cp restablecer-contrasena.html build/web/restablecer-contrasena.html
+cp delete_account.html build/web/delete_account.html
+cp privacy_policy.html build/web/privacy_policy.html

@@ -214,9 +214,21 @@ class PaginaTableroEmpleadoState extends State<PaginaTableroEmpleado> {
                             fontWeight: FontWeight.bold,
                             color: Color(0xFF1C1C1E))),
                     const SizedBox(height: 12),
-                    ...comision.cortes.take(5).map(
-                          (c) => _FilaCorteEmpleado(corte: c),
-                        ),
+                    ...() {
+                      // El "mejor corte" se calcula sobre TODO el
+                      // historial, no solo los 5 que se muestran — para
+                      // que el destacado sea real aunque el corte más
+                      // grande ya no aparezca en la lista visible.
+                      final mejorId = comision.cortes.length > 1
+                          ? comision.cortes
+                              .reduce((a, b) => b.montoTotal > a.montoTotal ? b : a)
+                              .id
+                          : null;
+                      return comision.cortes.take(5).map(
+                            (c) => _FilaCorteEmpleado(
+                                corte: c, esMejor: c.id == mejorId),
+                          );
+                    }(),
                   ],
 
                   const SizedBox(height: 40),
@@ -334,17 +346,20 @@ class _TarjetaComisionSemana extends StatelessWidget {
 
 class _FilaCorteEmpleado extends StatelessWidget {
   final CorteComision corte;
-  const _FilaCorteEmpleado({required this.corte});
+  final bool esMejor;
+  const _FilaCorteEmpleado({required this.corte, this.esMejor = false});
 
   @override
   Widget build(BuildContext context) {
     final fmt = DateFormat('dd MMM', 'es_ES');
+    const dorado = Color(0xFFB8860B);
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: esMejor ? const Color(0xFFFFF8E1) : Colors.white,
         borderRadius: BorderRadius.circular(12),
+        border: esMejor ? Border.all(color: dorado.withOpacity(0.4)) : null,
         boxShadow: kNeumorphicShadowsSmall,
       ),
       child: Row(
@@ -360,9 +375,28 @@ class _FilaCorteEmpleado extends StatelessWidget {
           ),
           const SizedBox(width: 10),
           Expanded(
-            child: Text(
-              '${fmt.format(corte.inicioSemana)} – ${fmt.format(corte.finSemana)}',
-              style: const TextStyle(color: Color(0xFF1C1C1E), fontSize: 13),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (esMejor) ...[
+                  const Row(
+                    children: [
+                      Text('🏆', style: TextStyle(fontSize: 11)),
+                      SizedBox(width: 4),
+                      Text('Tu mejor corte',
+                          style: TextStyle(
+                              color: dorado,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700)),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                ],
+                Text(
+                  '${fmt.format(corte.inicioSemana)} – ${fmt.format(corte.finSemana)}',
+                  style: const TextStyle(color: Color(0xFF1C1C1E), fontSize: 13),
+                ),
+              ],
             ),
           ),
           Column(

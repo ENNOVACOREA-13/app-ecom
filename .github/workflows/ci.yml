@@ -58,3 +58,50 @@ jobs:
             echo "::error::Se agregó is_admin() en una migración nueva — casi seguro debería ser is_admin_or_sysadmin() (is_admin() excluye sysadmin y lo bloquea sin avisar)."
             exit 1
           fi
+
+  auditoria-aislamiento:
+    # Solo en push a main, después de que las migraciones ya se aplicaron
+    # a producción (este proyecto las aplica con `supabase db push`, no a
+    # través de este pipeline) — es una revisión POST-deploy contra la
+    # base real, no algo que tenga sentido correr por cada PR.
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Correr auditoría de aislamiento entre tenants contra producción
+        # Pedido explícito del usuario 2026-08-20: "que más podemos hacer
+        # para que jamás se filtren datos de un tenant a otro" — corre las
+        # 3 consultas de supabase/scripts/ en cada push a main y bloquea
+        # (con un aviso bien visible) si alguna regresa filas, en vez de
+        # esperar a que alguien lo note por accidente. Ver
+        # supabase/scripts/README.md para configurar el secreto.
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          PROJECT_REF: pzugebugnbrzgobruncg
+        run: |
+          if [ -z "$SUPABASE_ACCESS_TOKEN" ]; then
+            echo "::warning::SUPABASE_ACCESS_TOKEN no está configurado como secreto del repo — se omite la auditoría automática. Ver supabase/scripts/README.md."
+            exit 0
+          fi
+
+          FALLO=0
+          for archivo in supabase/scripts/auditoria_*.sql; do
+            echo "── $archivo ──"
+            CONSULTA=$(cat "$archivo")
+            PAYLOAD=$(jq -n --arg q "$CONSULTA" '{query: $q}')
+            RESPUESTA=$(curl -s -X POST "https://api.supabase.com/v1/projects/$PROJECT_REF/database/query" \
+              -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
+              -H "Content-Type: application/json" \
+              -d "$PAYLOAD")
+            echo "$RESPUESTA"
+            FILAS=$(echo "$RESPUESTA" | jq -r 'if type=="array" then length else -1 end')
+            if [ "$FILAS" != "0" ]; then
+              FALLO=1
+            fi
+          done
+
+          if [ "$FALLO" = "1" ]; then
+            echo "::error::La auditoría de aislamiento entre tenants encontró al menos un problema real (ver arriba) — revisar antes de seguir."
+            exit 1
+          fi

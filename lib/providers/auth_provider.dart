@@ -11,6 +11,7 @@ import '../domain/models/profile.dart';
 /// Traduce un error crudo de auth (Supabase/GoTrue) a un mensaje que el
 /// usuario entienda, sin exponer detalles internos del servidor.
 String parsearErrorAuth(String e) {
+  if (e.contains('profile_not_found')) return 'Esta cuenta ya no existe. Contacta al administrador';
   if (e.contains('account_deactivated')) return 'Tu cuenta ha sido desactivada. Contacta al administrador';
   if (e.contains('INVALID_TENANT')) return 'No se pudo identificar el negocio desde este dominio. Intenta de nuevo o contacta soporte';
   if (e.contains('Invalid login')) return 'Email o contraseña incorrectos';

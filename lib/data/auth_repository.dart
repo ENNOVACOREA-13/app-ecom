@@ -12,7 +12,16 @@ class RepositorioAuth {
     final resultado = await _client.auth.signInWithPassword(email: correo, password: contrasena);
     if (resultado.user == null) throw Exception('Credenciales incorrectas');
 
-    final perfil = await _obtenerPerfilConReintento(resultado.user!.id);
+    final Perfil perfil;
+    try {
+      perfil = await _obtenerPerfilConReintento(resultado.user!.id);
+    } catch (e) {
+      // Credenciales válidas en Supabase Auth pero sin fila en profiles
+      // (ej. un platform_admin eliminó la cuenta desde el panel) — sin este
+      // signOut() la sesión queda "colgada": autenticada pero sin perfil.
+      await _client.auth.signOut();
+      throw Exception('profile_not_found');
+    }
     // Cuenta real, contraseña real, pero de OTRO negocio: se rechaza con el
     // mismo mensaje/estado que unas credenciales inválidas — nunca debe
     // distinguirse de un login fallido, o se estaría confirmando que ese

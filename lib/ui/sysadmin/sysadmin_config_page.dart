@@ -542,16 +542,12 @@ class _Campo extends StatelessWidget {
   final String etiqueta;
   final IconData icono;
   final TextInputType tipo;
-  final bool ocultar;
-  final Widget? sufijo;
 
   const _Campo({
     required this.ctrl,
     required this.etiqueta,
     required this.icono,
     this.tipo = TextInputType.text,
-    this.ocultar = false,
-    this.sufijo,
   });
 
   @override
@@ -559,11 +555,9 @@ class _Campo extends StatelessWidget {
     return TextField(
       controller: ctrl,
       keyboardType: tipo,
-      obscureText: ocultar,
       decoration: InputDecoration(
         labelText: etiqueta,
         prefixIcon: Icon(icono, color: kTextSub, size: 20),
-        suffixIcon: sufijo,
         filled: true,
         fillColor: const Color(0xFFF2F2F7),
         border: OutlineInputBorder(

@@ -9,6 +9,7 @@ import '../../providers/booking_provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/entrada_animada.dart';
 import '../common/app_widgets.dart';
+import '../common/skeleton.dart';
 import '../employee/scan_qr_page.dart';
 
 class PaginaTodasReservas extends StatefulWidget {
@@ -105,7 +106,7 @@ class _PaginaTodasReservasState extends State<PaginaTodasReservas> {
 
           Expanded(
             child: proveedor.cargandoReservas
-                ? const Center(child: CircularProgressIndicator())
+                ? const ListaEsqueleto()
                 : filtradas.isEmpty
                     ? const EstadoVacio(
                         icono: Icons.calendar_today_outlined,

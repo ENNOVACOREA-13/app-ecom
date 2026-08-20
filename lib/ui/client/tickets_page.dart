@@ -8,6 +8,7 @@ import '../../providers/booking_provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/entrada_animada.dart';
 import '../common/app_widgets.dart';
+import '../common/skeleton.dart';
 import 'booking_detail_page.dart';
 
 class PaginaTickets extends StatefulWidget {
@@ -41,7 +42,7 @@ class _PaginaTicketsState extends State<PaginaTickets> {
       appBar: AppBar(title: const Text('Tickets')),
       body: EnvolturaResponsiva(
         child: proveedor.cargandoReservas
-            ? const Center(child: CircularProgressIndicator())
+            ? const ListaEsqueleto()
             : tickets.isEmpty
                 ? const EstadoVacio(
                     icono: Icons.receipt_long_outlined,

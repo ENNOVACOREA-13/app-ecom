@@ -6,6 +6,7 @@ import '../../data/ftp_upload_service.dart';
 import '../../domain/models/product.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/product_provider.dart';
+import '../common/skeleton.dart';
 import '../common/toast.dart';
 
 class PaginaInventario extends StatefulWidget {
@@ -139,7 +140,7 @@ class _PaginaInventarioState extends State<PaginaInventario> {
       ),
       body: EnvolturaResponsiva(
         child: prov.cargando
-          ? const Center(child: CircularProgressIndicator())
+          ? const ListaEsqueleto()
           : prov.productos.isEmpty
               ? Center(
                   child: Column(

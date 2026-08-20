@@ -7,6 +7,7 @@ import '../../providers/auth_provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/entrada_animada.dart';
 import '../common/app_widgets.dart';
+import '../common/skeleton.dart';
 
 class PaginaLealtad extends StatefulWidget {
   const PaginaLealtad({super.key});
@@ -48,7 +49,7 @@ class _PaginaLealtadState extends State<PaginaLealtad> {
       appBar: AppBar(title: const Text('Programa de lealtad')),
       body: EnvolturaResponsiva(
         child: _cargando
-            ? const Center(child: CircularProgressIndicator())
+            ? const ListaEsqueleto()
             : !( _config?.activo ?? false)
                 ? const EstadoVacio(
                     icono: Icons.card_giftcard_outlined,

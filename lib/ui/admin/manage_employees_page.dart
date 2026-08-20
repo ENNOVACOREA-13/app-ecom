@@ -8,6 +8,7 @@ import '../../domain/models/service_model.dart';
 import '../../core/entrada_animada.dart';
 import '../../core/theme/app_theme.dart';
 import '../common/app_widgets.dart';
+import '../common/skeleton.dart';
 import '../common/toast.dart';
 
 // ─── Modelo interno de día ────────────────────────────────────────────────────
@@ -229,7 +230,7 @@ class _PaginaGestionEmpleadosState extends State<PaginaGestionEmpleados>
       ),
       body: EnvolturaResponsiva(
         child: _cargando
-          ? const Center(child: CircularProgressIndicator())
+          ? const ListaEsqueleto()
           : TabBarView(
               controller: _pestanas,
               children: [

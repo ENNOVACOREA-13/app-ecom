@@ -6,6 +6,7 @@ import '../../providers/order_provider.dart';
 import '../../core/entrada_animada.dart';
 import '../../core/theme/app_theme.dart';
 import '../common/app_widgets.dart';
+import '../common/skeleton.dart';
 import '../common/toast.dart';
 
 class PaginaPedidosAdmin extends StatefulWidget {
@@ -95,7 +96,7 @@ class _PaginaPedidosAdminState extends State<PaginaPedidosAdmin> {
             // ── Lista ────────────────────────────────────────────
             Expanded(
               child: proveedor.cargando
-                  ? const Center(child: CircularProgressIndicator())
+                  ? const ListaEsqueleto()
                   : filtrados.isEmpty
                       ? Center(
                           child: Column(

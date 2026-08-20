@@ -9,6 +9,7 @@ import '../../data/booking_repository.dart';
 import '../../providers/notification_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../common/app_widgets.dart';
+import '../common/skeleton.dart';
 import '../client/booking_detail_page.dart';
 import '../admin/all_bookings_page.dart';
 import '../admin/admin_orders_page.dart';
@@ -67,7 +68,7 @@ class _PaginaNotificacionesState extends State<PaginaNotificaciones> {
         child: RefreshIndicator(
           onRefresh: () => context.read<ProveedorNotificaciones>().cargar(),
           child: prov.cargando && notificaciones.isEmpty
-              ? const Center(child: CircularProgressIndicator())
+              ? const ListaEsqueleto()
               : notificaciones.isEmpty
                   ? ListView(
                       children: const [

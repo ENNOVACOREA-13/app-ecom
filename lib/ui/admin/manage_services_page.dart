@@ -8,6 +8,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/service_icons.dart';
 import '../../data/ftp_upload_service.dart';
 import '../common/app_widgets.dart';
+import '../common/skeleton.dart';
 import '../common/toast.dart';
 
 class PaginaGestionServicios extends StatefulWidget {
@@ -435,7 +436,7 @@ class _PaginaGestionServiciosState extends State<PaginaGestionServicios> {
       ),
       body: EnvolturaResponsiva(
         child: proveedor.cargando
-          ? const Center(child: CircularProgressIndicator())
+          ? const ListaEsqueleto()
           : proveedor.servicios.isEmpty
               ? const EstadoVacio(
                   icono: Icons.design_services_outlined,

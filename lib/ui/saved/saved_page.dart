@@ -9,6 +9,7 @@ import '../../providers/saved_provider.dart';
 import '../../providers/cart_provider.dart';
 import '../cart/cart_page.dart';
 import '../common/app_widgets.dart';
+import '../common/skeleton.dart';
 import '../products/product_detail_page.dart';
 
 class PaginaGuardados extends StatefulWidget {
@@ -87,9 +88,7 @@ class _PaginaGuardadosState extends State<PaginaGuardados> {
 
             // Contenido
             if (guardadosProv.cargando || productosProv.cargando)
-              const SliverFillRemaining(
-                child: Center(child: CircularProgressIndicator()),
-              )
+              const SliverToBoxAdapter(child: ListaEsqueleto())
             else if (productosGuardados.isEmpty)
               SliverFillRemaining(
                 child: Center(

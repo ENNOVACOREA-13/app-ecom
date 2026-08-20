@@ -7,6 +7,7 @@ import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../data/activity_service.dart';
 import '../common/app_widgets.dart';
+import '../common/skeleton.dart';
 
 /// Ver construirPayloadProducto() en product_repository.dart — mismo motivo.
 Map<String, dynamic> construirPayloadCrearInsumo({
@@ -292,7 +293,7 @@ class _PaginaInsumosState extends State<PaginaInsumos> {
             // Lista
             Expanded(
               child: _cargando
-                  ? const Center(child: CircularProgressIndicator())
+                  ? const ListaEsqueleto()
                   : _filtrados.isEmpty
                       ? Center(
                           child: Column(

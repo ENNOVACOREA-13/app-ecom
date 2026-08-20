@@ -8,6 +8,7 @@ import '../../providers/booking_provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/entrada_animada.dart';
 import '../common/app_widgets.dart';
+import '../common/skeleton.dart';
 import 'booking_detail_page.dart';
 
 class PaginaMisReservas extends StatefulWidget {
@@ -48,7 +49,7 @@ class _PaginaMisReservasState extends State<PaginaMisReservas> {
         children: [
           Expanded(
             child: proveedor.cargandoReservas
-                ? const Center(child: CircularProgressIndicator())
+                ? const ListaEsqueleto()
                 : proveedor.reservas.isEmpty
               ? const EstadoVacio(
                   icono: Icons.calendar_today_outlined,

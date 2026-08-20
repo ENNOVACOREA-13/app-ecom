@@ -72,7 +72,28 @@ Deno.serve(async (req) => {
       allowedRoles = callerRole === 'sysadmin'
         ? ['client', 'employee', 'admin', 'super_admin', 'sysadmin']
         : ['client', 'employee', 'admin'];
+
+      // Por default, el tenant "de casa" de quien llama. Pero si mandan un
+      // tenant_id explícito (el negocio del dominio donde está parada la
+      // sesión, kTenantIdActivo del cliente) y es distinto, solo se confía
+      // si existe una membresía admin-nivel real en ese tenant — si no,
+      // cualquier admin podría crear cuentas en un negocio ajeno con solo
+      // mandar su id. Cuentas con membresía en varios negocios (ver
+      // 20260819170000_multitenant_membership) necesitan esto: su
+      // profiles.tenant_id fijo no refleja en qué negocio están paradas.
+      const requestedTenantId = String(body.tenant_id ?? '');
       targetTenantId = callerPerfil.tenant_id as string;
+      if (requestedTenantId && requestedTenantId !== targetTenantId) {
+        const { data: membresia } = await admin
+          .from('user_tenant_memberships')
+          .select('role')
+          .eq('user_id', caller.id)
+          .eq('tenant_id', requestedTenantId)
+          .maybeSingle();
+        if (membresia && ['admin', 'super_admin', 'sysadmin'].includes(membresia.role as string)) {
+          targetTenantId = requestedTenantId;
+        }
+      }
     } else {
       return responder(403, { success: false, error: 'forbidden' });
     }

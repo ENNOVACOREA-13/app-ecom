@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/constants.dart';
 import '../../core/entrada_animada.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
@@ -167,6 +168,7 @@ class PaginaConfigSysadminState extends State<PaginaConfigSysadmin> {
     try {
       final idUsuario = await _servicioAlta.invitarUsuario(
         email: email, fullName: nombre, role: rol,
+        tenantId: kTenantIdActivo,
       );
 
       if (telefono.isNotEmpty) {

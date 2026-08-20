@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/constants.dart';
 import '../../data/employee_repository.dart';
 import '../../data/service_repository.dart';
 import '../../data/user_provisioning_service.dart';
@@ -194,6 +195,7 @@ class _PaginaGestionEmpleadosState extends State<PaginaGestionEmpleados>
         email: ctrlEmail.text.trim(),
         fullName: ctrlNombre.text.trim(),
         role: 'employee',
+        tenantId: kTenantIdActivo,
       );
       await _cargar();
       if (mounted) {

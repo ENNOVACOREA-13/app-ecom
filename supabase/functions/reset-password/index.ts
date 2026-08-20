@@ -22,7 +22,7 @@ Deno.serve(async (req) => {
 
     const { data: fila, error } = await admin
       .from('password_reset_tokens')
-      .select('user_id, expires_at, used')
+      .select('user_id, tenant_id, expires_at, used')
       .eq('token', token)
       .maybeSingle();
 
@@ -37,7 +37,25 @@ Deno.serve(async (req) => {
 
     await admin.from('password_reset_tokens').update({ used: true }).eq('token', token);
 
-    return new Response(JSON.stringify({ success: true }), {
+    // El correo/contraseña ya quedaron bien, pero si la persona intenta
+    // iniciar sesión en un dominio que no es el de SU negocio, la app la
+    // rechaza con el mismo mensaje que una contraseña incorrecta (a
+    // propósito, para no filtrar en qué negocio existe una cuenta — ver
+    // RepositorioAuth.iniciarSesion). Sin decirle a qué dominio ir, parece
+    // que el cambio de contraseña no funcionó. Se manda el dominio de su
+    // negocio para que la página de éxito pueda enlazarlo directamente.
+    let dominio: string | null = null;
+    if (fila.tenant_id) {
+      const { data: filaDominio } = await admin
+        .from('tenant_domains')
+        .select('domain')
+        .eq('tenant_id', fila.tenant_id as string)
+        .limit(1)
+        .maybeSingle();
+      dominio = (filaDominio?.domain as string | undefined) ?? null;
+    }
+
+    return new Response(JSON.stringify({ success: true, domain: dominio }), {
       headers: { ...cors, 'Content-Type': 'application/json' },
     });
   } catch (error) {

@@ -76,11 +76,15 @@
     var msg = document.getElementById('msg');
     var btn = document.getElementById('btn');
 
-    function render(icon, title, texto, cls) {
+    function render(icon, title, texto, cls, dominio) {
+      var boton = dominio
+        ? '<button type="button" onclick="window.location.href=\'https://' + dominio + '\'">Ir a iniciar sesión</button>'
+        : '';
       card.innerHTML =
         '<div class="icon">' + icon + '</div>' +
         '<h1 class="' + cls + '">' + title + '</h1>' +
-        '<p>' + texto + '</p>';
+        '<p>' + texto + '</p>' +
+        boton;
     }
 
     if (!token) {
@@ -112,7 +116,10 @@
           .then(function (r) { return r.json(); })
           .then(function (data) {
             if (data.success) {
-              render('✅', '¡Contraseña actualizada!', 'Ya puedes volver a la app e iniciar sesión con tu nueva contraseña.', 'ok');
+              var texto = data.domain
+                ? 'Ya puedes iniciar sesión con tu nueva contraseña. Usa el botón de abajo — el enlace directo a tu negocio, no cualquier otra página, o la app pensará que la contraseña está mal.'
+                : 'Ya puedes volver a la app e iniciar sesión con tu nueva contraseña.';
+              render('✅', '¡Contraseña actualizada!', texto, 'ok', data.domain);
             } else {
               var mensajes = {
                 token_expired: 'Este enlace ya expiró. Solicita uno nuevo desde la app.',

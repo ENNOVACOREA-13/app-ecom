@@ -11,6 +11,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Historial completo (no solo el último commit) — el paso de
+          # abajo necesita comparar contra la base para ver solo líneas
+          # NUEVAS, ya que supabase/migrations/ es un historial acumulativo
+          # donde migraciones viejas (ya superadas por otras más nuevas)
+          # siguen conteniendo texto de políticas que ya no reflejan el
+          # estado real de la base.
+          fetch-depth: 0
 
       - uses: subosito/flutter-action@v2
         with:
@@ -25,3 +33,28 @@ jobs:
 
       - name: Test
         run: flutter test
+
+      - name: Revisar políticas RLS nuevas (is_admin() vs is_admin_or_sysadmin())
+        # is_admin() excluye 'sysadmin' — en este proyecto NUNCA es lo que
+        # se quiere en una política RLS (bloquea sysadmin en silencio, ver
+        # feedback_rls_silent_failure). Si de verdad se necesita excluir
+        # sysadmin alguna vez, usar mi_rol_en_tenant_actual() = 'admin'
+        # directo en vez del helper is_admin(), para no disparar esto.
+        #
+        # Solo revisa líneas AGREGADAS por este PR/push, no todo el
+        # historial, e ignora comentarios SQL (--) — migraciones viejas ya
+        # superadas por otras más nuevas siguen conteniendo is_admin() en
+        # su texto original (o en comentarios que explican el bug), aunque
+        # el estado real de la base ya esté corregido.
+        run: |
+          BASE="${{ github.event.pull_request.base.sha || github.event.before }}"
+          if [ -z "$BASE" ] || ! git cat-file -e "$BASE" 2>/dev/null; then
+            echo "Sin base válida para comparar (primer push a la rama), se omite."
+            exit 0
+          fi
+          AGREGADAS=$(git diff "$BASE" HEAD -- supabase/migrations/ | grep -E "^\+[^+]" | sed 's/^+//' | grep -v "^[[:space:]]*--" | grep "is_admin()" || true)
+          if [ -n "$AGREGADAS" ]; then
+            echo "$AGREGADAS"
+            echo "::error::Se agregó is_admin() en una migración nueva — casi seguro debería ser is_admin_or_sysadmin() (is_admin() excluye sysadmin y lo bloquea sin avisar)."
+            exit 1
+          fi

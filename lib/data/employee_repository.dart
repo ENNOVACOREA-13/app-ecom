@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../core/constants.dart';
 import '../domain/models/profile.dart';
 import '../domain/enums/user_role.dart';
 import '../utils/date_utils.dart';
@@ -74,6 +75,7 @@ class RepositorioEmpleado {
   }) async {
     await _client.from('work_schedules').upsert({
       'employee_id': idEmpleado,
+      'tenant_id': kTenantIdActivo,
       'day_of_week': diaSemana,
       'start_time': horaInicio,
       'end_time': horaFin,
@@ -85,6 +87,7 @@ class RepositorioEmpleado {
     await _client.from('employee_services').upsert({
       'employee_id': idEmpleado,
       'service_id': idServicio,
+      'tenant_id': kTenantIdActivo,
     });
   }
 
@@ -106,6 +109,7 @@ class RepositorioEmpleado {
     final fechaTexto = formatearFechaISO(fecha);
     await _client.from('employee_time_off').upsert({
       'employee_id': idEmpleado,
+      'tenant_id': kTenantIdActivo,
       'date': fechaTexto,
       'reason': motivo,
     }, onConflict: 'employee_id,date');

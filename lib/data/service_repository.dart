@@ -60,6 +60,7 @@ class RepositorioServicio {
     await _client.from('employee_services').upsert({
       'employee_id': idEmpleado,
       'service_id': idServicio,
+      'tenant_id': kTenantIdActivo,
     });
   }
 

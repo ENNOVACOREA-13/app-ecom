@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../core/constants.dart';
 import '../domain/models/commission_model.dart';
 
 /// Agrupa filas crudas de `commission_entries` por empleado, sumando monto y
@@ -38,8 +39,12 @@ class RepositorioComision {
   }
 
   Future<void> guardarConfiguracion(String servicioId, double monto) async {
+    // tenant_id es NOT NULL sin default — sin mandarlo aquí, la PRIMERA vez
+    // que se configura la comisión de un servicio (sin fila previa) truena
+    // por la restricción de la columna antes de siquiera llegar a RLS.
     await _client.from('commission_configs').upsert({
       'service_id': servicioId,
+      'tenant_id': kTenantIdActivo,
       'amount': monto,
       'updated_at': DateTime.now().toUtc().toIso8601String(),
     }, onConflict: 'service_id');

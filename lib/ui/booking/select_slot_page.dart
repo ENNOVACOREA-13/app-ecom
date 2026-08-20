@@ -236,7 +236,7 @@ class _PaginaSeleccionarTurnoState extends State<PaginaSeleccionarTurno> {
                             final seleccionado = proveedor.turnoSeleccionado?.inicio == turno.inicio;
                             return EntradaAnimada(
                               index: i,
-                              child: GestureDetector(
+                              child: TarjetaPresionable(
                                 onTap: () => proveedor.seleccionarTurno(turno),
                                 child: AnimatedContainer(
                                   duration: const Duration(milliseconds: 150),
@@ -286,7 +286,7 @@ class _PaginaSeleccionarTurnoState extends State<PaginaSeleccionarTurno> {
                           itemBuilder: (context, i) {
                             final emp = _empleados[i];
                             final seleccionado = proveedor.empleadoSeleccionado?.id == emp.id;
-                            return GestureDetector(
+                            return TarjetaPresionable(
                               onTap: () => _elegirEmpleado(emp),
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,

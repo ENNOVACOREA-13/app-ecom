@@ -6,6 +6,7 @@ import '../../core/entrada_animada.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../data/activity_service.dart';
+import '../common/app_widgets.dart';
 
 /// Ver construirPayloadProducto() en product_repository.dart — mismo motivo.
 Map<String, dynamic> construirPayloadCrearInsumo({
@@ -350,7 +351,7 @@ class _TarjetaInsumo extends StatelessWidget {
     final unidad = insumo['unit'] as String? ?? 'unidad';
     final total = precio * cantidad;
 
-    return GestureDetector(
+    return TarjetaPresionable(
       onTap: onEditar,
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),

@@ -407,7 +407,7 @@ class _TarjetaPedido extends StatelessWidget {
               runSpacing: 8,
               children: EstadoPedido.values
                   .where((e) => e != pedido.estado)
-                  .map((e) => GestureDetector(
+                  .map((e) => TarjetaPresionable(
                         onTap: () async {
                           try {
                             await context

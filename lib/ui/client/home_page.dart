@@ -1017,7 +1017,7 @@ class _ChipServicio extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const tamanoIcono = 22.0;
-    return GestureDetector(
+    return TarjetaPresionable(
       onTap: alTap,
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -1063,7 +1063,7 @@ class _ChipServicioCuadrado extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = colorDesdeHex(servicio.iconoColor) ?? context.colorPrimario;
     final tamanoIcono = context.watch<ProveedorConfig>().categoriasIconoTamanoEfectivo + 6;
-    return GestureDetector(
+    return TarjetaPresionable(
       onTap: alTap,
       child: Container(
         padding: const EdgeInsets.all(14),
@@ -1129,7 +1129,7 @@ class _TarjetaProductoH extends StatelessWidget {
       badgeTextColor = Colors.red.shade700;
     }
 
-    return GestureDetector(
+    return TarjetaPresionable(
       behavior: HitTestBehavior.opaque,
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute(builder: (_) => PaginaDetalleProducto(producto: producto)),
@@ -1289,7 +1289,7 @@ class _IconoCarrito extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final carrito = context.watch<ProveedorCarrito>();
-    return GestureDetector(
+    return TarjetaPresionable(
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute(builder: (_) => const PaginaCarrito()),
       ),

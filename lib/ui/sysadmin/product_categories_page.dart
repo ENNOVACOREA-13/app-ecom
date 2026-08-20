@@ -7,6 +7,7 @@ import '../../data/ftp_upload_service.dart';
 import '../../domain/models/product_category.dart';
 import '../../providers/product_category_provider.dart';
 import '../../providers/product_provider.dart';
+import '../common/app_widgets.dart';
 
 class PaginaCategoriasProducto extends StatefulWidget {
   const PaginaCategoriasProducto({super.key});
@@ -490,7 +491,7 @@ class _PaginaProductosDeCategoriaState extends State<_PaginaProductosDeCategoria
                       final seleccionado = _seleccionados.contains(p.id);
                       return EntradaAnimada(
                         index: i,
-                        child: GestureDetector(
+                        child: TarjetaPresionable(
                         onTap: () => setState(() {
                           if (seleccionado) {
                             _seleccionados.remove(p.id);

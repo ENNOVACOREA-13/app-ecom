@@ -55,7 +55,7 @@ class _PaginaSeleccionarServicioState extends State<PaginaSeleccionarServicio> {
                             seleccionados.any((sel) => sel.id == s.id);
                         return EntradaAnimada(
                           index: i,
-                          child: GestureDetector(
+                          child: TarjetaPresionable(
                           onTap: () {
                             context.read<ProveedorReserva>().seleccionarServicio(s);
                           },

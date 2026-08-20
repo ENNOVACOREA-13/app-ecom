@@ -349,6 +349,41 @@ class IconoNotificaciones extends StatelessWidget {
   }
 }
 
+// ── Tarjeta presionable: envuelve cualquier widget tocable con feedback
+// de escala (0.97) al presionar, siguiendo la skill de Emil Kowalski —
+// "buttons must feel responsive". No usar onTap del AnimatedScale
+// directamente para no interferir con el hijo.
+class TarjetaPresionable extends StatefulWidget {
+  final Widget child;
+  final VoidCallback? onTap;
+  final HitTestBehavior? behavior;
+  const TarjetaPresionable({super.key, required this.child, this.onTap, this.behavior});
+
+  @override
+  State<TarjetaPresionable> createState() => _TarjetaPresionableState();
+}
+
+class _TarjetaPresionableState extends State<TarjetaPresionable> {
+  bool _presionado = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: widget.onTap,
+      behavior: widget.behavior,
+      onTapDown: (_) => setState(() => _presionado = true),
+      onTapUp: (_) => setState(() => _presionado = false),
+      onTapCancel: () => setState(() => _presionado = false),
+      child: AnimatedScale(
+        scale: _presionado ? 0.97 : 1.0,
+        duration: const Duration(milliseconds: 140),
+        curve: Curves.easeOut,
+        child: widget.child,
+      ),
+    );
+  }
+}
+
 // ── Fila de opción: ícono en círculo + título/subtítulo + flecha ──────
 class FilaOpcion extends StatelessWidget {
   final IconData icono;
@@ -366,7 +401,7 @@ class FilaOpcion extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return TarjetaPresionable(
       onTap: onTap,
       child: Container(
         width: double.infinity,
@@ -504,7 +539,7 @@ class PildoraPrecioCarrito extends StatelessWidget {
                 style: const TextStyle(
                     color: Color(0xFF1C1C1E), fontSize: 15, fontWeight: FontWeight.w800)),
             const SizedBox(width: 14),
-            GestureDetector(
+            TarjetaPresionable(
               onTap: onTap,
               child: Container(
                 width: 28,

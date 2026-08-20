@@ -511,14 +511,29 @@ class _PaginaNegociosState extends State<PaginaNegocios> {
     }
   }
 
+  // Panel del control plane deliberadamente negro, con la marca de
+  // PrettyCore — pedido explícito del usuario: se ve distinto de cualquier
+  // negocio individual para que quede claro que esto no es "una tienda
+  // más", sino la administración de la plataforma completa.
+  static const _fondoOscuro = Colors.black;
+  static const _tarjetaOscura = Color(0xFF1C1C1E);
+  static const _bordeOscuro = Color(0xFF2C2C2E);
+  static const _chipOscuro = Color(0xFF2C2C2E);
+  static const _textoMutedOscuro = Colors.white54;
+
   @override
   Widget build(BuildContext context) {
     final prov = context.watch<ProveedorTenants>();
     final tenants = prov.tenants;
 
     return Scaffold(
-      backgroundColor: kBackground,
-      appBar: AppBar(title: const Text('Negocios')),
+      backgroundColor: _fondoOscuro,
+      appBar: AppBar(
+        backgroundColor: _fondoOscuro,
+        elevation: 0,
+        title: Image.asset(kLogoPrettycoreAsset, height: 28, fit: BoxFit.contain),
+        centerTitle: false,
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: _mostrarDialogoNuevoNegocio,
         backgroundColor: context.colorPrimario,
@@ -536,7 +551,7 @@ class _PaginaNegociosState extends State<PaginaNegocios> {
                         children: const [
                           Center(
                             child: Text('Sin negocios todavía — crea el primero con el botón +',
-                                style: TextStyle(color: kTextSub)),
+                                style: TextStyle(color: _textoMutedOscuro)),
                           ),
                         ],
                       )
@@ -551,9 +566,9 @@ class _PaginaNegociosState extends State<PaginaNegocios> {
                             margin: const EdgeInsets.only(bottom: 12),
                             padding: const EdgeInsets.all(14),
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: _tarjetaOscura,
                               borderRadius: BorderRadius.circular(14),
-                              border: Border.all(color: const Color(0xFFE5E5EA)),
+                              border: Border.all(color: _bordeOscuro),
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -568,10 +583,10 @@ class _PaginaNegociosState extends State<PaginaNegocios> {
                                               style: const TextStyle(
                                                   fontWeight: FontWeight.w700,
                                                   fontSize: 15,
-                                                  color: Color(0xFF1C1C1E))),
+                                                  color: Colors.white)),
                                           Text(t.slug,
                                               style: const TextStyle(
-                                                  fontSize: 12, color: kTextSub)),
+                                                  fontSize: 12, color: _textoMutedOscuro)),
                                         ],
                                       ),
                                     ),
@@ -589,7 +604,8 @@ class _PaginaNegociosState extends State<PaginaNegocios> {
                                               fontWeight: FontWeight.w600)),
                                     ),
                                     PopupMenuButton<String>(
-                                      icon: const Icon(Icons.more_vert, color: Color(0xFF8E8E93)),
+                                      color: _tarjetaOscura,
+                                      icon: const Icon(Icons.more_vert, color: _textoMutedOscuro),
                                       onSelected: (accion) {
                                         if (accion == 'dominio') _mostrarDialogoDominio(t);
                                         if (accion == 'status') _alternarStatus(t);
@@ -605,23 +621,25 @@ class _PaginaNegociosState extends State<PaginaNegocios> {
                                         const PopupMenuItem(
                                             value: 'dominio',
                                             child: Row(children: [
-                                              Icon(Icons.language, size: 18),
+                                              Icon(Icons.language, size: 18, color: Colors.white),
                                               SizedBox(width: 8),
-                                              Text('Agregar dominio'),
+                                              Text('Agregar dominio', style: TextStyle(color: Colors.white)),
                                             ])),
                                         const PopupMenuItem(
                                             value: 'admin',
                                             child: Row(children: [
-                                              Icon(Icons.admin_panel_settings_outlined, size: 18),
+                                              Icon(Icons.admin_panel_settings_outlined,
+                                                  size: 18, color: Colors.white),
                                               SizedBox(width: 8),
-                                              Text('Invitar administrador'),
+                                              Text('Invitar administrador',
+                                                  style: TextStyle(color: Colors.white)),
                                             ])),
                                         const PopupMenuItem(
                                             value: 'sysadmin',
                                             child: Row(children: [
-                                              Icon(Icons.shield_outlined, size: 18),
+                                              Icon(Icons.shield_outlined, size: 18, color: Colors.white),
                                               SizedBox(width: 8),
-                                              Text('Invitar sysadmin'),
+                                              Text('Invitar sysadmin', style: TextStyle(color: Colors.white)),
                                             ])),
                                         PopupMenuItem(
                                             value: 'status',
@@ -630,9 +648,11 @@ class _PaginaNegociosState extends State<PaginaNegocios> {
                                                   t.estaActivo
                                                       ? Icons.pause_circle_outline
                                                       : Icons.play_circle_outline,
+                                                  color: Colors.white,
                                                   size: 18),
                                               const SizedBox(width: 8),
-                                              Text(t.estaActivo ? 'Suspender' : 'Reactivar'),
+                                              Text(t.estaActivo ? 'Suspender' : 'Reactivar',
+                                                  style: const TextStyle(color: Colors.white)),
                                             ])),
                                         const PopupMenuItem(
                                             value: 'eliminar',
@@ -654,8 +674,10 @@ class _PaginaNegociosState extends State<PaginaNegocios> {
                                     runSpacing: 8,
                                     children: t.dominios
                                         .map((d) => InputChip(
-                                              label: Text(d.domain, style: const TextStyle(fontSize: 12)),
-                                              backgroundColor: const Color(0xFFF2F2F7),
+                                              label: Text(d.domain,
+                                                  style: const TextStyle(fontSize: 12, color: Colors.white)),
+                                              backgroundColor: _chipOscuro,
+                                              deleteIconColor: _textoMutedOscuro,
                                               onDeleted: () => _confirmarQuitarDominio(d),
                                             ))
                                         .toList(),
@@ -663,13 +685,13 @@ class _PaginaNegociosState extends State<PaginaNegocios> {
                                 ],
                                 if (t.admins.isNotEmpty) ...[
                                   const SizedBox(height: 10),
-                                  const Divider(height: 1, color: Color(0xFFE5E5EA)),
+                                  const Divider(height: 1, color: _bordeOscuro),
                                   const SizedBox(height: 10),
                                   const Text('Cuentas administrativas',
                                       style: TextStyle(
                                           fontSize: 11,
                                           fontWeight: FontWeight.w600,
-                                          color: kTextSub)),
+                                          color: _textoMutedOscuro)),
                                   const SizedBox(height: 6),
                                   ...t.admins.map((a) => Padding(
                                         padding: const EdgeInsets.symmetric(vertical: 3),
@@ -680,7 +702,7 @@ class _PaginaNegociosState extends State<PaginaNegocios> {
                                                     ? Icons.shield_outlined
                                                     : Icons.admin_panel_settings_outlined,
                                                 size: 14,
-                                                color: kTextSub),
+                                                color: _textoMutedOscuro),
                                             const SizedBox(width: 6),
                                             Expanded(
                                               child: Column(
@@ -690,7 +712,7 @@ class _PaginaNegociosState extends State<PaginaNegocios> {
                                                     a.nombreCompleto?.isNotEmpty == true
                                                         ? '${a.nombreCompleto} · ${a.email ?? ''}'
                                                         : (a.email ?? a.id),
-                                                    style: const TextStyle(fontSize: 12, color: Color(0xFF1C1C1E)),
+                                                    style: const TextStyle(fontSize: 12, color: Colors.white),
                                                     overflow: TextOverflow.ellipsis,
                                                   ),
                                                   // Mismo rol, mismo correo, pero el botón de basura
@@ -699,32 +721,32 @@ class _PaginaNegociosState extends State<PaginaNegocios> {
                                                   // ve en la UI.
                                                   if (a.email == kEmailSysadminPrincipal)
                                                     const Text('Sysadmin principal (protegido)',
-                                                        style: TextStyle(fontSize: 10, color: kTextSub))
+                                                        style: TextStyle(fontSize: 10, color: _textoMutedOscuro))
                                                   else if (!a.esMembresiaExtra && a.rol == 'sysadmin')
                                                     const Text('Negocio de origen (las cuentas sysadmin no se eliminan)',
-                                                        style: TextStyle(fontSize: 10, color: kTextSub))
+                                                        style: TextStyle(fontSize: 10, color: _textoMutedOscuro))
                                                   else if (!a.esMembresiaExtra)
                                                     const Text('Negocio de origen (se puede eliminar la cuenta)',
-                                                        style: TextStyle(fontSize: 10, color: kTextSub)),
+                                                        style: TextStyle(fontSize: 10, color: _textoMutedOscuro)),
                                                 ],
                                               ),
                                             ),
                                             Container(
                                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                               decoration: BoxDecoration(
-                                                color: const Color(0xFFF2F2F7),
+                                                color: _chipOscuro,
                                                 borderRadius: BorderRadius.circular(20),
                                               ),
                                               child: Text(
                                                 a.rol == 'sysadmin' ? 'sysadmin' : 'admin',
-                                                style: const TextStyle(fontSize: 10, color: kTextSub),
+                                                style: const TextStyle(fontSize: 10, color: _textoMutedOscuro),
                                               ),
                                             ),
                                             if (a.email != kEmailSysadminPrincipal) ...[
                                               const SizedBox(width: 4),
                                               IconButton(
                                                 icon: const Icon(Icons.edit_outlined,
-                                                    size: 16, color: kTextSub),
+                                                    size: 16, color: _textoMutedOscuro),
                                                 tooltip: 'Editar nombre/teléfono',
                                                 padding: EdgeInsets.zero,
                                                 constraints: const BoxConstraints(),
@@ -735,7 +757,8 @@ class _PaginaNegociosState extends State<PaginaNegocios> {
                                                 a.email != kEmailSysadminPrincipal) ...[
                                               const SizedBox(width: 4),
                                               IconButton(
-                                                icon: const Icon(Icons.close, size: 16, color: kTextSub),
+                                                icon: const Icon(Icons.close,
+                                                    size: 16, color: _textoMutedOscuro),
                                                 tooltip: 'Quitar acceso a este negocio',
                                                 padding: EdgeInsets.zero,
                                                 constraints: const BoxConstraints(),

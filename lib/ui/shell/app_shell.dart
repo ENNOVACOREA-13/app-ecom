@@ -142,6 +142,15 @@ class _CarcasaAppState extends State<CarcasaApp> with SingleTickerProviderStateM
       );
     }
 
+    // platform_admin es la única cuenta con algo que hacer en el control
+    // plane, y tiene una sola pantalla — el sidebar blanco compartido con
+    // el resto de los roles no aporta nada aquí (nada entre qué navegar) y
+    // rompería el tema negro deliberadamente distinto de ese panel. Se
+    // renderiza directo, sin el chrome del shell normal.
+    if (perfil.rol == RolUsuario.platformAdmin) {
+      return const PaginaNegocios();
+    }
+
     final pestanas = _pestanasPorRol(perfil.rol, tiendaHabilitada, editorVistasAdmin);
     final indiceSafe = _indiceActual.clamp(0, pestanas.length - 1);
     final esEscritorio = MediaQuery.of(context).size.width >= kAnchoEscritorio;

@@ -39,9 +39,15 @@ class _PaginaLoginState extends State<PaginaLogin> {
   Widget build(BuildContext context) {
     final auth = context.watch<ProveedorAuth>();
     final logoUrl = context.watch<ProveedorConfig>().logoUrl;
+    // Dominio sin tenant (app-mc.vercel.app) = login del control plane:
+    // solo cuentas platform_admin ya existentes tienen algo que hacer aquí,
+    // así que se ve deliberadamente distinto (negro, marca de PrettyCore,
+    // sin Google ni registro) para que quede claro que no es "una tienda
+    // más" a la que cualquiera pueda entrar o registrarse.
+    final esControlPlane = kTenantIdActivo == null;
 
     return Scaffold(
-      backgroundColor: kBackground,
+      backgroundColor: esControlPlane ? Colors.black : kBackground,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -55,36 +61,42 @@ class _PaginaLoginState extends State<PaginaLogin> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Logo — dark card with glow
                     Center(
-                      child: Container(
-                        width: 80,
-                        height: 80,
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.all(Radius.circular(24)),
-                          boxShadow: kNeumorphicShadows,
-                        ),
-                        child: ClipRRect(
-                          borderRadius: const BorderRadius.all(Radius.circular(24)),
-                          child: Padding(
-                            padding: const EdgeInsets.all(10),
-                            child: logoUrl != null && logoUrl.isNotEmpty
-                                ? Image.network(logoUrl, fit: BoxFit.contain)
-                                : Image.asset(kLogoBarberiaAsset, fit: BoxFit.contain),
-                          ),
-                        ),
-                      ),
+                      child: esControlPlane
+                          ? Image.asset(kLogoPrettycoreAsset, height: 56, fit: BoxFit.contain)
+                          : Container(
+                              width: 80,
+                              height: 80,
+                              decoration: const BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.all(Radius.circular(24)),
+                                boxShadow: kNeumorphicShadows,
+                              ),
+                              child: ClipRRect(
+                                borderRadius: const BorderRadius.all(Radius.circular(24)),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(10),
+                                  child: logoUrl != null && logoUrl.isNotEmpty
+                                      ? Image.network(logoUrl, fit: BoxFit.contain)
+                                      : Image.asset(kLogoBarberiaAsset, fit: BoxFit.contain),
+                                ),
+                              ),
+                            ),
                     ),
                     const SizedBox(height: 32),
-                    const Text(
-                      'Bienvenido',
-                      style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFF1C1C1E)),
+                    Text(
+                      esControlPlane ? 'Panel de control' : 'Bienvenido',
+                      style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: esControlPlane ? Colors.white : const Color(0xFF1C1C1E)),
                     ),
                     const SizedBox(height: 8),
-                    const Text(
-                      'Inicia sesión en tu cuenta',
-                      style: TextStyle(color: Color(0xFF6E6E73)),
+                    Text(
+                      esControlPlane
+                          ? 'Acceso restringido a administradores de la plataforma'
+                          : 'Inicia sesión en tu cuenta',
+                      style: TextStyle(color: esControlPlane ? Colors.white60 : const Color(0xFF6E6E73)),
                     ),
                   ],
                 ),
@@ -115,44 +127,79 @@ class _PaginaLoginState extends State<PaginaLogin> {
                 key: _claveFormulario,
                 child: Column(
                   children: [
-                    CampoTexto(
-                      etiqueta: 'Email',
-                      controlador: _correo,
-                      tipoTeclado: TextInputType.emailAddress,
-                      prefijo: const Icon(Icons.email_outlined, color: kTextSub),
-                      accionTeclado: TextInputAction.next,
-                      validador: (v) {
-                        if (v == null || v.isEmpty) return 'Ingresa tu email';
-                        if (!RegExp(r'^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$')
-                            .hasMatch(v.trim())) return 'Email inválido';
-                        return null;
-                      },
-                    ),
+                    esControlPlane
+                        ? _CampoOscuro(
+                            etiqueta: 'Email',
+                            controlador: _correo,
+                            tipoTeclado: TextInputType.emailAddress,
+                            prefijo: const Icon(Icons.email_outlined, color: Colors.white60),
+                            accionTeclado: TextInputAction.next,
+                            validador: (v) {
+                              if (v == null || v.isEmpty) return 'Ingresa tu email';
+                              if (!RegExp(r'^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$')
+                                  .hasMatch(v.trim())) return 'Email inválido';
+                              return null;
+                            },
+                          )
+                        : CampoTexto(
+                            etiqueta: 'Email',
+                            controlador: _correo,
+                            tipoTeclado: TextInputType.emailAddress,
+                            prefijo: const Icon(Icons.email_outlined, color: kTextSub),
+                            accionTeclado: TextInputAction.next,
+                            validador: (v) {
+                              if (v == null || v.isEmpty) return 'Ingresa tu email';
+                              if (!RegExp(r'^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$')
+                                  .hasMatch(v.trim())) return 'Email inválido';
+                              return null;
+                            },
+                          ),
                     const SizedBox(height: 16),
-                    CampoTexto(
-                      etiqueta: 'Contraseña',
-                      controlador: _contrasena,
-                      ocultar: _ocultar,
-                      prefijo: const Icon(Icons.lock_outline, color: kTextSub),
-                      sufijo: IconButton(
-                        icon: Icon(
-                          _ocultar ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                          color: kTextSub,
-                        ),
-                        onPressed: () => setState(() => _ocultar = !_ocultar),
-                      ),
-                      accionTeclado: TextInputAction.done,
-                      alEnviar: (_) => _enviar(),
-                      validador: (v) {
-                        if (v == null || v.isEmpty) return 'Ingresa tu contraseña';
-                        return null;
-                      },
-                    ),
+                    esControlPlane
+                        ? _CampoOscuro(
+                            etiqueta: 'Contraseña',
+                            controlador: _contrasena,
+                            ocultar: _ocultar,
+                            prefijo: const Icon(Icons.lock_outline, color: Colors.white60),
+                            sufijo: IconButton(
+                              icon: Icon(
+                                _ocultar ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                                color: Colors.white60,
+                              ),
+                              onPressed: () => setState(() => _ocultar = !_ocultar),
+                            ),
+                            accionTeclado: TextInputAction.done,
+                            alEnviar: (_) => _enviar(),
+                            validador: (v) {
+                              if (v == null || v.isEmpty) return 'Ingresa tu contraseña';
+                              return null;
+                            },
+                          )
+                        : CampoTexto(
+                            etiqueta: 'Contraseña',
+                            controlador: _contrasena,
+                            ocultar: _ocultar,
+                            prefijo: const Icon(Icons.lock_outline, color: kTextSub),
+                            sufijo: IconButton(
+                              icon: Icon(
+                                _ocultar ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                                color: kTextSub,
+                              ),
+                              onPressed: () => setState(() => _ocultar = !_ocultar),
+                            ),
+                            accionTeclado: TextInputAction.done,
+                            alEnviar: (_) => _enviar(),
+                            validador: (v) {
+                              if (v == null || v.isEmpty) return 'Ingresa tu contraseña';
+                              return null;
+                            },
+                          ),
                     Align(
                       alignment: Alignment.centerRight,
                       child: TextButton(
                         onPressed: () => context.go('/forgot-password'),
-                        child: const Text('¿Olvidaste tu contraseña?'),
+                        child: Text('¿Olvidaste tu contraseña?',
+                            style: TextStyle(color: esControlPlane ? Colors.white70 : null)),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -165,53 +212,99 @@ class _PaginaLoginState extends State<PaginaLogin> {
                 ),
               ),
 
-              const SizedBox(height: 24),
-
-              // ── Separador ──────────────────────────────────
-              Row(
-                children: [
-                  const Expanded(child: Divider(color: Color(0xFFD1D1D6))),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 12),
-                    child: Text('o continúa con',
-                        style: TextStyle(color: Color(0xFF6E6E73), fontSize: 12)),
-                  ),
-                  const Expanded(child: Divider(color: Color(0xFFD1D1D6))),
-                ],
-              ),
-              const SizedBox(height: 16),
-
-              // ── Botón Google ────────────────────────────────
-              _BotonSocial(
-                onPressed: () => context.read<ProveedorAuth>().iniciarSesionConGoogle(),
-                logo: _LogoGoogle(),
-                etiqueta: 'Continuar con Google',
-                colorBorde: const Color(0xFFD1D1D6),
-              ),
-              // ── Botón Facebook (deshabilitado temporalmente: OAuth de
-              // Facebook aún no está configurado en el backend) ─────────
-              // _BotonSocial(
-              //   onPressed: () => context.read<ProveedorAuth>().iniciarSesionConFacebook(),
-              //   logo: _LogoFacebook(),
-              //   etiqueta: 'Continuar con Facebook',
-              //   colorBorde: const Color(0xFF1877F2),
-              // ),
-
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text('¿No tienes cuenta? ', style: TextStyle(color: Color(0xFF6E6E73))),
-                  TextButton(
-                    onPressed: () => context.go('/register'),
-                    child: const Text('Regístrate'),
-                  ),
-                ],
-              ),
+              // El resto (Google, registro) no aplica al control plane: ahí
+              // solo entran cuentas platform_admin ya creadas de antemano,
+              // nunca por autorregistro ni por "cualquier cuenta de Google".
+              if (!esControlPlane) ...[
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    const Expanded(child: Divider(color: Color(0xFFD1D1D6))),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 12),
+                      child: Text('o continúa con',
+                          style: TextStyle(color: Color(0xFF6E6E73), fontSize: 12)),
+                    ),
+                    const Expanded(child: Divider(color: Color(0xFFD1D1D6))),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                _BotonSocial(
+                  onPressed: () => context.read<ProveedorAuth>().iniciarSesionConGoogle(),
+                  logo: _LogoGoogle(),
+                  etiqueta: 'Continuar con Google',
+                  colorBorde: const Color(0xFFD1D1D6),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text('¿No tienes cuenta? ', style: TextStyle(color: Color(0xFF6E6E73))),
+                    TextButton(
+                      onPressed: () => context.go('/register'),
+                      child: const Text('Regístrate'),
+                    ),
+                  ],
+                ),
+              ],
             ],
           ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ── Campo de texto oscuro (login del control plane) ────────────
+class _CampoOscuro extends StatelessWidget {
+  final String etiqueta;
+  final TextEditingController controlador;
+  final bool ocultar;
+  final TextInputType? tipoTeclado;
+  final String? Function(String?)? validador;
+  final Widget? prefijo;
+  final Widget? sufijo;
+  final TextInputAction? accionTeclado;
+  final void Function(String)? alEnviar;
+
+  const _CampoOscuro({
+    required this.etiqueta,
+    required this.controlador,
+    this.ocultar = false,
+    this.tipoTeclado,
+    this.validador,
+    this.prefijo,
+    this.sufijo,
+    this.accionTeclado,
+    this.alEnviar,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TextFormField(
+      controller: controlador,
+      obscureText: ocultar,
+      keyboardType: tipoTeclado,
+      validator: validador,
+      textInputAction: accionTeclado,
+      onFieldSubmitted: alEnviar,
+      style: const TextStyle(color: Colors.white),
+      decoration: InputDecoration(
+        labelText: etiqueta,
+        labelStyle: const TextStyle(color: Colors.white60),
+        prefixIcon: prefijo,
+        suffixIcon: sufijo,
+        filled: true,
+        fillColor: const Color(0xFF1C1C1E),
+        border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+        enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFF2C2C2E))),
+        focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Theme.of(context).colorScheme.primary)),
       ),
     );
   }

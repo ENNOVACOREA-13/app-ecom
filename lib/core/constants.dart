@@ -46,3 +46,8 @@ const kProductsBucket = 'products';
 // el Hetzner viejo de MC-BARBER que servía este logo ya no responde
 // (dado de baja), así que usamos un asset local en vez de una URL muerta.
 const kLogoBarberiaAsset = 'IMG/LOGOp.png';
+
+// Wordmark "PRETTYCORE" (fondo negro incluido en el PNG) — marca de la
+// plataforma, para el login y el panel del control plane, nunca para un
+// negocio individual.
+const kLogoPrettycoreAsset = 'IMG/LOGO_MENU.png';

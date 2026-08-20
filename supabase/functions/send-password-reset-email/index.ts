@@ -28,7 +28,7 @@ Deno.serve(async (req) => {
     });
 
   try {
-    const { email } = await req.json();
+    const { email, tenant_id: tenantIdSolicitado } = await req.json();
     if (!email) return responderExito();
 
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
@@ -43,10 +43,28 @@ Deno.serve(async (req) => {
       .maybeSingle();
     if (!perfil) return responderExito();
 
+    // Una cuenta con acceso a varios negocios (ej. admin invitado a un
+    // segundo negocio) tiene profiles.tenant_id fijo en su negocio "de
+    // casa" — si pidió el cambio desde OTRO negocio donde también tiene
+    // acceso (vía membresía), se usa ESE, para que el enlace final la
+    // regrese adonde realmente estaba. Nunca se confía ciegamente en el
+    // tenant_id que manda el cliente: se verifica que sea su tenant de
+    // casa o una membresía real antes de usarlo.
+    let tenantId = perfil.tenant_id as string;
+    if (tenantIdSolicitado && tenantIdSolicitado !== tenantId) {
+      const { data: membresia } = await admin
+        .from('user_tenant_memberships')
+        .select('tenant_id')
+        .eq('user_id', userId)
+        .eq('tenant_id', tenantIdSolicitado)
+        .maybeSingle();
+      if (membresia) tenantId = tenantIdSolicitado as string;
+    }
+
     const { data: tenant } = await admin
       .from('tenants')
       .select('business_name')
-      .eq('id', perfil.tenant_id)
+      .eq('id', tenantId)
       .maybeSingle();
     const negocio = (tenant?.business_name as string | undefined) || 'tu negocio';
 
@@ -55,7 +73,7 @@ Deno.serve(async (req) => {
 
     const { error: insertError } = await admin.from('password_reset_tokens').insert({
       user_id: userId,
-      tenant_id: perfil.tenant_id,
+      tenant_id: tenantId,
       token,
       expires_at: expiresAt,
     });

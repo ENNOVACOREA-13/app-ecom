@@ -103,12 +103,20 @@ class RepositorioAuth {
 
   /// Envía el correo de recuperación (vía nuestro SMTP) si el correo existe.
   /// Siempre "tiene éxito" desde el punto de vista de la UI, para no revelar
-  /// si una cuenta existe o no.
+  /// si una cuenta existe o no. Manda el tenant del dominio actual para que
+  /// el enlace de "ir a iniciar sesión" en la página de éxito apunte al
+  /// negocio desde el que se pidió — sin esto, una cuenta con acceso a
+  /// varios negocios (ej. admin invitado a un segundo negocio) siempre
+  /// recibía el enlace de su negocio "de casa" fijo, sin importar desde
+  /// cuál pidió el cambio.
   Future<void> solicitarRecuperacionContrasena(String correo) async {
     await http.post(
       Uri.parse('$kSupabaseUrl/functions/v1/send-password-reset-email'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'email': correo}),
+      body: jsonEncode({
+        'email': correo,
+        if (kTenantIdActivo != null) 'tenant_id': kTenantIdActivo,
+      }),
     );
   }
 

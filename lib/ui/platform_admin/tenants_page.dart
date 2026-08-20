@@ -499,12 +499,23 @@ class _PaginaNegociosState extends State<PaginaNegocios> {
                                                 color: kTextSub),
                                             const SizedBox(width: 6),
                                             Expanded(
-                                              child: Text(
-                                                a.nombreCompleto?.isNotEmpty == true
-                                                    ? '${a.nombreCompleto} · ${a.email ?? ''}'
-                                                    : (a.email ?? a.id),
-                                                style: const TextStyle(fontSize: 12, color: Color(0xFF1C1C1E)),
-                                                overflow: TextOverflow.ellipsis,
+                                              child: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    a.nombreCompleto?.isNotEmpty == true
+                                                        ? '${a.nombreCompleto} · ${a.email ?? ''}'
+                                                        : (a.email ?? a.id),
+                                                    style: const TextStyle(fontSize: 12, color: Color(0xFF1C1C1E)),
+                                                    overflow: TextOverflow.ellipsis,
+                                                  ),
+                                                  // Mismo rol, mismo correo, pero uno tiene botón de
+                                                  // quitar y el otro no si aparece en dos negocios —
+                                                  // sin esta etiqueta esa diferencia no se ve en la UI.
+                                                  if (!a.esMembresiaExtra)
+                                                    const Text('Negocio de origen (no se puede quitar aquí)',
+                                                        style: TextStyle(fontSize: 10, color: kTextSub)),
+                                                ],
                                               ),
                                             ),
                                             Container(

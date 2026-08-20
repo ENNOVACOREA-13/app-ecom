@@ -15,6 +15,7 @@ import '../../providers/cart_provider.dart';
 import '../../data/ftp_upload_service.dart';
 import '../auth/guest_wall_page.dart';
 import '../common/app_widgets.dart';
+import '../common/toast.dart';
 import '../cart/cart_page.dart';
 import 'product_detail_page.dart';
 
@@ -96,9 +97,7 @@ class _PaginaProductosState extends State<PaginaProductos> {
                               nombreArchivo: ctrlNombre.text.trim(),
                               onError: (e) {
                                 if (ctx.mounted) {
-                                  ScaffoldMessenger.of(ctx).showSnackBar(
-                                    SnackBar(content: Text(e)),
-                                  );
+                                  mostrarToast(ctx, e, tipo: TipoToast.error);
                                 }
                               },
                             );
@@ -229,12 +228,8 @@ class _PaginaProductosState extends State<PaginaProductos> {
         urlImagen: urlImagen,
       );
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          exitoCrear
-              ? const SnackBar(content: Text('Producto creado'))
-              : SnackBar(
-                  content: Text(proveedor.error ?? 'Error desconocido')),
-        );
+        mostrarToast(context, exitoCrear ? 'Producto creado' : (proveedor.error ?? 'Error desconocido'),
+            tipo: exitoCrear ? TipoToast.exito : TipoToast.error);
       }
     }
 
@@ -735,9 +730,7 @@ class _PaginaProductosState extends State<PaginaProductos> {
                               nombreArchivo: ctrlNombre.text.trim(),
                               onError: (e) {
                                 if (ctx.mounted) {
-                                  ScaffoldMessenger.of(ctx).showSnackBar(
-                                    SnackBar(content: Text(e)),
-                                  );
+                                  mostrarToast(ctx, e, tipo: TipoToast.error);
                                 }
                               },
                             );

@@ -18,6 +18,7 @@ import '../../providers/saved_provider.dart';
 import '../../providers/config_provider.dart';
 import '../cart/cart_page.dart';
 import '../common/app_widgets.dart';
+import '../common/toast.dart';
 import '../auth/guest_wall_page.dart';
 import '../../providers/product_category_provider.dart';
 import '../products/product_detail_page.dart';
@@ -168,11 +169,11 @@ class _PaginaInicioState extends State<PaginaInicio> {
                         tamanoIcono: tamanoIconoLocal,
                       );
                       if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content:
-                              Text(exito ? 'Cambio guardado en el borrador' : 'Error al guardar'),
-                          backgroundColor: exito ? Colors.green : Colors.red,
-                        ));
+                        mostrarToast(
+                          context,
+                          exito ? 'Cambio guardado en el borrador' : 'Error al guardar',
+                          tipo: exito ? TipoToast.exito : TipoToast.error,
+                        );
                       }
                     },
                     child: const Text('Guardar cambios',
@@ -244,11 +245,11 @@ class _PaginaInicioState extends State<PaginaInicio> {
                           : ctrlTitulo.text.trim(),
                     );
                     if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                        content:
-                            Text(exito ? 'Cambio guardado en el borrador' : 'Error al guardar'),
-                        backgroundColor: exito ? Colors.green : Colors.red,
-                      ));
+                      mostrarToast(
+                        context,
+                        exito ? 'Cambio guardado en el borrador' : 'Error al guardar',
+                        tipo: exito ? TipoToast.exito : TipoToast.error,
+                      );
                     }
                   },
                   child: const Text('Guardar cambios',

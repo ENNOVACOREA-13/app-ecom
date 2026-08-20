@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'data/auth_repository.dart';
+import 'ui/common/toast.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -51,13 +52,7 @@ class _LoginPageState extends State<LoginPage> {
       }
       setState(() => _error = mensajeError);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(mensajeError),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 5),
-          ),
-        );
+        mostrarToast(context, mensajeError, tipo: TipoToast.error);
       }
     } finally {
       if (mounted) setState(() => _cargando = false);
@@ -81,9 +76,7 @@ class _LoginPageState extends State<LoginPage> {
           contrasena: _pass.text,
           nombreCompleto: _usuario.text.trim());
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Cuenta creada.')),
-      );
+      mostrarToast(context, 'Cuenta creada.', tipo: TipoToast.exito);
       context.go('/');
     } catch (e) {
       setState(() => _error = e.toString());

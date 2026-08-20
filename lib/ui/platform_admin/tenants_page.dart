@@ -6,6 +6,7 @@ import '../../core/theme/app_theme.dart';
 import '../../data/user_provisioning_service.dart';
 import '../../domain/models/tenant.dart';
 import '../../providers/tenant_provider.dart';
+import '../common/toast.dart';
 
 class PaginaNegocios extends StatefulWidget {
   const PaginaNegocios({super.key});
@@ -101,11 +102,10 @@ class _PaginaNegociosState extends State<PaginaNegocios> {
 
     if (!mounted) return;
     final error = context.read<ProveedorTenants>().error;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(exito == true ? 'Negocio creado' : (error ?? 'No se pudo crear el negocio')),
-        backgroundColor: exito == true ? Colors.green : Colors.red,
-      ),
+    mostrarToast(
+      context,
+      exito == true ? 'Negocio creado' : (error ?? 'No se pudo crear el negocio'),
+      tipo: exito == true ? TipoToast.exito : TipoToast.error,
     );
   }
 
@@ -160,11 +160,10 @@ class _PaginaNegociosState extends State<PaginaNegocios> {
 
     if (!mounted) return;
     final error = context.read<ProveedorTenants>().error;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(exito == true ? 'Dominio agregado' : (error ?? 'No se pudo agregar el dominio')),
-        backgroundColor: exito == true ? Colors.green : Colors.red,
-      ),
+    mostrarToast(
+      context,
+      exito == true ? 'Dominio agregado' : (error ?? 'No se pudo agregar el dominio'),
+      tipo: exito == true ? TipoToast.exito : TipoToast.error,
     );
   }
 
@@ -255,13 +254,10 @@ class _PaginaNegociosState extends State<PaginaNegocios> {
     );
 
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(exito == true
-            ? 'Invitación enviada'
-            : (errorInvitacion ?? 'No se pudo enviar la invitación')),
-        backgroundColor: exito == true ? Colors.green : Colors.red,
-      ),
+    mostrarToast(
+      context,
+      exito == true ? 'Invitación enviada' : (errorInvitacion ?? 'No se pudo enviar la invitación'),
+      tipo: exito == true ? TipoToast.exito : TipoToast.error,
     );
   }
 

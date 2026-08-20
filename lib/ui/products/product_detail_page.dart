@@ -9,6 +9,7 @@ import '../../providers/cart_provider.dart';
 import '../../providers/saved_provider.dart';
 import '../auth/guest_wall_page.dart';
 import '../cart/cart_page.dart';
+import '../common/toast.dart';
 
 class PaginaDetalleProducto extends StatefulWidget {
   final Producto producto;
@@ -40,16 +41,12 @@ class _PaginaDetalleProductoState extends State<PaginaDetalleProducto> {
         imagenUrl: widget.producto.urlImagen,
       );
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(agregado
-            ? '${widget.producto.nombre} agregado al carrito'
-            : 'Ya tienes en el carrito todo el stock disponible de "${widget.producto.nombre}"'),
-        backgroundColor: agregado ? Colors.green : Colors.orange,
-        behavior: SnackBarBehavior.floating,
-        margin: EdgeInsets.fromLTRB(
-            20, 0, 20, MediaQuery.of(context).padding.bottom + 92),
-      ),
+    mostrarToast(
+      context,
+      agregado
+          ? '${widget.producto.nombre} agregado al carrito'
+          : 'Ya tienes en el carrito todo el stock disponible de "${widget.producto.nombre}"',
+      tipo: agregado ? TipoToast.exito : TipoToast.info,
     );
   }
 

@@ -4,6 +4,7 @@ import '../../core/entrada_animada.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/activity_service.dart';
 import '../common/app_widgets.dart';
+import '../common/toast.dart';
 
 class PaginaLogs extends StatefulWidget {
   const PaginaLogs({super.key});
@@ -48,9 +49,7 @@ class _PaginaLogsState extends State<PaginaLogs>
   Future<void> _borrarSesionesCerradas() async {
     final cantidad = _totalCerradas;
     if (cantidad == 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No hay sesiones cerradas para borrar')),
-      );
+      mostrarToast(context, 'No hay sesiones cerradas para borrar', tipo: TipoToast.info);
       return;
     }
 
@@ -100,23 +99,13 @@ class _PaginaLogsState extends State<PaginaLogs>
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('$cantidad sesiones cerradas eliminadas'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        mostrarToast(context, '$cantidad sesiones cerradas eliminadas', tipo: TipoToast.exito);
       }
       _cargarSesiones();
       _cargarActividad();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error al borrar: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        mostrarToast(context, 'Error al borrar: $e', tipo: TipoToast.error);
       }
     }
   }
@@ -129,19 +118,12 @@ class _PaginaLogsState extends State<PaginaLogs>
       }).eq('id', sessionId);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Sesión cerrada'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        mostrarToast(context, 'Sesión cerrada', tipo: TipoToast.exito);
       }
       _cargarSesiones();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
-        );
+        mostrarToast(context, 'Error: $e', tipo: TipoToast.error);
       }
     }
   }
@@ -175,22 +157,12 @@ class _PaginaLogsState extends State<PaginaLogs>
       }).eq('is_active', true);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Todas las sesiones han sido cerradas'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        mostrarToast(context, 'Todas las sesiones han sido cerradas', tipo: TipoToast.exito);
       }
       _cargarSesiones();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        mostrarToast(context, 'Error: $e', tipo: TipoToast.error);
       }
     }
   }

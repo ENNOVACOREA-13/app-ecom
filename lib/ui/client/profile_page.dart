@@ -8,6 +8,7 @@ import '../../core/constants.dart';
 import '../../core/entrada_animada.dart';
 import '../../core/theme/app_theme.dart';
 import '../common/app_widgets.dart';
+import '../common/toast.dart';
 import 'tickets_page.dart';
 import 'loyalty_page.dart';
 
@@ -136,9 +137,7 @@ class _PaginaPerfilState extends State<PaginaPerfil> {
     if (elegido != null && mounted) {
       await context.read<ProveedorAuth>().actualizarPerfil({'avatar_url': elegido});
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Avatar actualizado')),
-        );
+        mostrarToast(context, 'Avatar actualizado', tipo: TipoToast.exito);
       }
     }
   }

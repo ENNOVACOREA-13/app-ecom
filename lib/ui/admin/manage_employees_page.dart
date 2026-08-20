@@ -8,6 +8,7 @@ import '../../domain/models/service_model.dart';
 import '../../core/entrada_animada.dart';
 import '../../core/theme/app_theme.dart';
 import '../common/app_widgets.dart';
+import '../common/toast.dart';
 
 // ─── Modelo interno de día ────────────────────────────────────────────────────
 class _DiaHorario {
@@ -192,19 +193,11 @@ class _PaginaGestionEmpleadosState extends State<PaginaGestionEmpleados>
       );
       await _cargar();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Invitación enviada correctamente'),
-              backgroundColor: Colors.green),
-        );
+        mostrarToast(context, 'Invitación enviada correctamente', tipo: TipoToast.exito);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text(mapearErrorInvitacion(e.toString())),
-              backgroundColor: Colors.red),
-        );
+        mostrarToast(context, mapearErrorInvitacion(e.toString()), tipo: TipoToast.error);
       }
     }
 
@@ -352,16 +345,11 @@ class _DialogoHorariosState extends State<_DialogoHorarios> {
       }
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Horarios guardados'), backgroundColor: Colors.green),
-        );
+        mostrarToast(context, 'Horarios guardados', tipo: TipoToast.exito);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
-        );
+        mostrarToast(context, 'Error: $e', tipo: TipoToast.error);
       }
     }
     if (mounted) setState(() => _guardando = false);
@@ -494,9 +482,7 @@ class _DialogoDiasLibresState extends State<_DialogoDiasLibres> {
       await _cargar();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
-        );
+        mostrarToast(context, 'Error: $e', tipo: TipoToast.error);
       }
     }
   }
@@ -507,9 +493,7 @@ class _DialogoDiasLibresState extends State<_DialogoDiasLibres> {
       await _cargar();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
-        );
+        mostrarToast(context, 'Error: $e', tipo: TipoToast.error);
       }
     }
   }
@@ -629,16 +613,11 @@ class _DialogoServiciosState extends State<_DialogoServicios> {
 
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Servicios actualizados'), backgroundColor: Colors.green),
-        );
+        mostrarToast(context, 'Servicios actualizados', tipo: TipoToast.exito);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
-        );
+        mostrarToast(context, 'Error: $e', tipo: TipoToast.error);
       }
     }
     if (mounted) setState(() => _guardando = false);

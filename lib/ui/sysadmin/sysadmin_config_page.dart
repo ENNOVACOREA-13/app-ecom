@@ -7,6 +7,7 @@ import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../data/activity_service.dart';
 import '../../data/user_provisioning_service.dart';
+import '../common/toast.dart';
 
 class PaginaConfigSysadmin extends StatefulWidget {
   const PaginaConfigSysadmin({super.key});
@@ -45,9 +46,7 @@ class PaginaConfigSysadminState extends State<PaginaConfigSysadmin> {
           .toList());
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al cargar usuarios: $e')),
-        );
+        mostrarToast(context, 'Error al cargar usuarios: $e', tipo: TipoToast.error);
       }
     } finally {
       setState(() => _cargando = false);
@@ -138,10 +137,7 @@ class PaginaConfigSysadminState extends State<PaginaConfigSysadmin> {
                       final tel = telCtrl.text.trim();
 
                       if (nombre.isEmpty || email.isEmpty || !email.contains('@')) {
-                        ScaffoldMessenger.of(ctx).showSnackBar(
-                          const SnackBar(content: Text(
-                              'Nombre y email son requeridos')),
-                        );
+                        mostrarToast(ctx, 'Nombre y email son requeridos', tipo: TipoToast.error);
                         return;
                       }
 
@@ -179,19 +175,12 @@ class PaginaConfigSysadminState extends State<PaginaConfigSysadmin> {
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Invitación enviada correctamente'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        mostrarToast(context, 'Invitación enviada correctamente', tipo: TipoToast.exito);
         _cargar();
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(mapearErrorInvitacion(e.toString()))),
-        );
+        mostrarToast(context, mapearErrorInvitacion(e.toString()), tipo: TipoToast.error);
       }
     }
   }
@@ -267,9 +256,7 @@ class PaginaConfigSysadminState extends State<PaginaConfigSysadmin> {
                         _cargar();
                       } catch (e) {
                         if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Error al guardar: $e')),
-                          );
+                          mostrarToast(context, 'Error al guardar: $e', tipo: TipoToast.error);
                         }
                       }
                     },
@@ -316,17 +303,12 @@ class PaginaConfigSysadminState extends State<PaginaConfigSysadmin> {
         await _client.from('profiles').delete().eq('id', u['id']);
         ServicioActividad.instancia.registrarFeature('eliminar_usuario');
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Usuario "$nombre" eliminado'),
-                backgroundColor: Colors.red.shade400),
-          );
+          mostrarToast(context, 'Usuario "$nombre" eliminado', tipo: TipoToast.exito);
           _cargar();
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error al eliminar: $e')),
-          );
+          mostrarToast(context, 'Error al eliminar: $e', tipo: TipoToast.error);
         }
       }
     }

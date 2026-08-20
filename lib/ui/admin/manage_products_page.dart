@@ -6,6 +6,7 @@ import '../../data/ftp_upload_service.dart';
 import '../../domain/models/product.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/product_provider.dart';
+import '../common/toast.dart';
 
 class PaginaInventario extends StatefulWidget {
   const PaginaInventario({super.key});
@@ -53,10 +54,8 @@ class _PaginaInventarioState extends State<PaginaInventario> {
         urlImagen: urlImagen,
       );
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(ok ? 'Producto creado' : (prov.error ?? 'Error')),
-          backgroundColor: ok ? Colors.green : Colors.red,
-        ));
+        mostrarToast(context, ok ? 'Producto creado' : (prov.error ?? 'Error'),
+            tipo: ok ? TipoToast.exito : TipoToast.error);
       }
     }
     ctrl.dispose();
@@ -413,8 +412,7 @@ class _DialogoProductoState extends State<_DialogoProducto> {
                           nombreArchivo: c.nombre.text.trim(),
                           onError: (e) {
                             if (mounted) {
-                              ScaffoldMessenger.of(context)
-                                  .showSnackBar(SnackBar(content: Text(e)));
+                              mostrarToast(context, e, tipo: TipoToast.error);
                             }
                           },
                         );

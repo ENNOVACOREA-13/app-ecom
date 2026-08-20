@@ -7,6 +7,7 @@ import '../../providers/booking_provider.dart';
 import '../../core/entrada_animada.dart';
 import '../../core/theme/app_theme.dart';
 import '../common/app_widgets.dart';
+import '../common/toast.dart';
 
 class PaginaConfirmarReserva extends StatelessWidget {
   const PaginaConfirmarReserva({super.key});
@@ -44,16 +45,10 @@ class PaginaConfirmarReserva extends StatelessWidget {
             onPressed: () async {
               final exito = await proveedor.crearReserva(perfil!.id);
               if (exito && context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('¡Reserva creada exitosamente!'),
-                  ),
-                );
+                mostrarToast(context, '¡Reserva creada exitosamente!', tipo: TipoToast.exito);
                 context.go('/');
               } else if (context.mounted && proveedor.error != null) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(proveedor.error!)),
-                );
+                mostrarToast(context, proveedor.error!, tipo: TipoToast.error);
               }
             },
           ),

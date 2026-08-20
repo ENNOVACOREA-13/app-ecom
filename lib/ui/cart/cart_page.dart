@@ -10,6 +10,7 @@ import '../../data/stripe_service.dart';
 import '../../data/stripe_web_service.dart' if (dart.library.io) '../../data/stripe_web_stub.dart';
 import '../../core/entrada_animada.dart';
 import '../../core/theme/app_theme.dart';
+import '../common/toast.dart';
 
 class PaginaCarrito extends StatelessWidget {
   const PaginaCarrito({super.key});
@@ -212,10 +213,10 @@ class _TarjetaItem extends StatelessWidget {
                             : () {
                                 final agregado = carrito.agregar(item.producto);
                                 if (!agregado) {
-                                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                                      content: Text(
-                                          'Ya tienes el máximo disponible de "${item.producto.nombre}"'),
-                                      backgroundColor: Colors.orange));
+                                  mostrarToast(
+                                      context,
+                                      'Ya tienes el máximo disponible de "${item.producto.nombre}"',
+                                      tipo: TipoToast.info);
                                 }
                               },
                         filled: true,
@@ -430,13 +431,10 @@ class _ResumenPedidoState extends State<_ResumenPedido> {
       }
     } on StripeException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(e.error.localizedMessage ?? 'Pago cancelado'),
-          backgroundColor: Colors.red));
+      mostrarToast(context, e.error.localizedMessage ?? 'Pago cancelado', tipo: TipoToast.error);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red));
+      mostrarToast(context, 'Error: $e', tipo: TipoToast.error);
     }
   }
 
@@ -470,17 +468,16 @@ class _ResumenPedidoState extends State<_ResumenPedido> {
     if (!mounted) return;
     if (exito) {
       widget.carrito.limpiar();
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(metodoPago == 'card'
-            ? '¡Pago exitoso! Pedido confirmado.'
-            : '¡Pedido realizado!'),
-        backgroundColor: const Color(0xFF4ECDC4),
-      ));
+      mostrarToast(
+          context,
+          metodoPago == 'card' ? '¡Pago exitoso! Pedido confirmado.' : '¡Pedido realizado!',
+          tipo: TipoToast.exito);
       Navigator.pop(context);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(
-              context.read<ProveedorPedido>().error ?? 'Error al realizar pedido')));
+      mostrarToast(
+          context,
+          context.read<ProveedorPedido>().error ?? 'Error al realizar pedido',
+          tipo: TipoToast.error);
     }
   }
 

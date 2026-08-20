@@ -13,6 +13,7 @@ import '../../providers/booking_provider.dart';
 import '../../core/entrada_animada.dart';
 import '../../core/theme/app_theme.dart';
 import '../common/app_widgets.dart';
+import '../common/toast.dart';
 
 class PaginaDetalleReserva extends StatefulWidget {
   final Reserva reserva;
@@ -41,9 +42,7 @@ class _PaginaDetalleReservaState extends State<PaginaDetalleReserva> {
       );
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('No se pudo compartir: $e')),
-        );
+        mostrarToast(context, 'No se pudo compartir: $e', tipo: TipoToast.error);
       }
     }
   }
@@ -93,9 +92,7 @@ class _PaginaDetalleReservaState extends State<PaginaDetalleReserva> {
     if (confirmar == true && context.mounted) {
       await context.read<ProveedorReserva>().solicitarCancelacion(reserva.id);
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Solicitud enviada, en espera de aprobación')),
-        );
+        mostrarToast(context, 'Solicitud enviada, en espera de aprobación', tipo: TipoToast.info);
         Navigator.pop(context);
       }
     }

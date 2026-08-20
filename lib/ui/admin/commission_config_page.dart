@@ -8,6 +8,7 @@ import '../../domain/models/service_model.dart';
 import '../../domain/models/commission_model.dart';
 import '../../providers/commission_provider.dart';
 import '../../providers/service_provider.dart';
+import '../common/toast.dart';
 
 class PaginaConfigComisiones extends StatefulWidget {
   const PaginaConfigComisiones({super.key});
@@ -333,21 +334,11 @@ class _TabConfiguracion extends StatelessWidget {
           await prov.guardarConfiguracion(servicio.id, valor);
         }
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('Comisión guardada'),
-              backgroundColor: context.colorPrimario,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-            ),
-          );
+          mostrarToast(context, 'Comisión guardada', tipo: TipoToast.exito);
         }
       } catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: $e')),
-          );
+          mostrarToast(context, 'Error: $e', tipo: TipoToast.error);
         }
       }
     }
@@ -758,20 +749,11 @@ class _TabCortes extends StatelessWidget {
                 ? null
                 : ctrlNotas.text.trim());
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('Pago registrado'),
-              backgroundColor: const Color(0xFF34C759),
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-            ),
-          );
+          mostrarToast(context, 'Pago registrado', tipo: TipoToast.exito);
         }
       } catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text('Error: $e')));
+          mostrarToast(context, 'Error: $e', tipo: TipoToast.error);
         }
       }
     }
@@ -907,20 +889,11 @@ class _BotonProcesarCorte extends StatelessWidget {
       try {
         await prov.procesarCorte(hoy);
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('Corte procesado correctamente'),
-              backgroundColor: context.colorPrimario,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-            ),
-          );
+          mostrarToast(context, 'Corte procesado correctamente', tipo: TipoToast.exito);
         }
       } catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text('Error: $e')));
+          mostrarToast(context, 'Error: $e', tipo: TipoToast.error);
         }
       }
     }
@@ -1386,20 +1359,11 @@ class _TabAjustesState extends State<_TabAjustes> {
         minutoCierre: _minSel!,
       );
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Ajustes guardados'),
-            backgroundColor: context.colorPrimario,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12)),
-          ),
-        );
+        mostrarToast(context, 'Ajustes guardados', tipo: TipoToast.exito);
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Error: $e')));
+        mostrarToast(context, 'Error: $e', tipo: TipoToast.error);
       }
     }
   }

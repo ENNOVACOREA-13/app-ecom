@@ -6,6 +6,7 @@ import '../../providers/auth_provider.dart';
 import '../../core/entrada_animada.dart';
 import '../../core/theme/app_theme.dart';
 import '../common/app_widgets.dart';
+import '../common/toast.dart';
 
 class PaginaDiasLibres extends StatefulWidget {
   const PaginaDiasLibres({super.key});
@@ -85,15 +86,12 @@ class _PaginaDiasLibresState extends State<PaginaDiasLibres> {
         motivo: ctrlMotivo.text.trim().isEmpty ? null : ctrlMotivo.text.trim(),
       );
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Día libre agregado'), backgroundColor: Colors.green));
+        mostrarToast(context, 'Día libre agregado', tipo: TipoToast.exito);
         _cargar();
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
-        );
+        mostrarToast(context, 'Error: $e', tipo: TipoToast.error);
       }
     }
   }
@@ -104,9 +102,7 @@ class _PaginaDiasLibresState extends State<PaginaDiasLibres> {
       _cargar();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
-        );
+        mostrarToast(context, 'Error: $e', tipo: TipoToast.error);
       }
     }
   }

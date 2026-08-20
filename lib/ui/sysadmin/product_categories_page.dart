@@ -8,6 +8,7 @@ import '../../domain/models/product_category.dart';
 import '../../providers/product_category_provider.dart';
 import '../../providers/product_provider.dart';
 import '../common/app_widgets.dart';
+import '../common/toast.dart';
 
 class PaginaCategoriasProducto extends StatefulWidget {
   const PaginaCategoriasProducto({super.key});
@@ -169,8 +170,7 @@ class _PaginaCategoriasProductoState extends State<PaginaCategoriasProducto> {
                               nombreArchivo: 'categoria-${ctrlNombre.text.trim()}',
                               onError: (e) {
                                 if (ctx.mounted) {
-                                  ScaffoldMessenger.of(ctx)
-                                      .showSnackBar(SnackBar(content: Text(e)));
+                                  mostrarToast(ctx, e, tipo: TipoToast.error);
                                 }
                               },
                             );
@@ -251,9 +251,7 @@ class _PaginaCategoriasProductoState extends State<PaginaCategoriasProducto> {
     );
 
     if (exito == true && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Categoría guardada')),
-      );
+      mostrarToast(context, 'Categoría guardada', tipo: TipoToast.exito);
     }
   }
 
@@ -450,10 +448,8 @@ class _PaginaProductosDeCategoriaState extends State<_PaginaProductosDeCategoria
     }
     if (!mounted) return;
     setState(() => _guardando = false);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Productos de "${widget.categoria.nombre}" actualizados'),
-          backgroundColor: Colors.green),
-    );
+    mostrarToast(context, 'Productos de "${widget.categoria.nombre}" actualizados',
+        tipo: TipoToast.exito);
     Navigator.of(context).pop();
   }
 

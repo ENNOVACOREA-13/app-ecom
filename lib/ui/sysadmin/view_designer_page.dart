@@ -11,6 +11,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/config_provider.dart';
 import '../client/home_page.dart';
 import '../common/app_widgets.dart';
+import '../common/toast.dart';
 import 'section_order_page.dart';
 import 'product_categories_page.dart';
 
@@ -21,12 +22,13 @@ class PaginaDisenadorVista extends StatelessWidget {
     final cfg = context.read<ProveedorConfig>();
     final exito = await cfg.actualizarTiendaHabilitada(valor);
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(exito
+      mostrarToast(
+        context,
+        exito
             ? (valor ? 'Tienda en línea activada' : 'Tienda en línea desactivada')
-            : 'Error al guardar el cambio'),
-        backgroundColor: exito ? Colors.green : Colors.red,
-      ));
+            : 'Error al guardar el cambio',
+        tipo: exito ? TipoToast.exito : TipoToast.error,
+      );
     }
   }
 
@@ -35,7 +37,7 @@ class PaginaDisenadorVista extends StatelessWidget {
       nombreArchivo: 'logo',
       onError: (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e)));
+          mostrarToast(context, e, tipo: TipoToast.error);
         }
       },
     );
@@ -43,10 +45,8 @@ class PaginaDisenadorVista extends StatelessWidget {
 
     final exito = await context.read<ProveedorConfig>().actualizarLogoUrl(url);
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(exito ? 'Logo actualizado' : 'Error al guardar el logo'),
-        backgroundColor: exito ? Colors.green : Colors.red,
-      ));
+      mostrarToast(context, exito ? 'Logo actualizado' : 'Error al guardar el logo',
+          tipo: exito ? TipoToast.exito : TipoToast.error);
     }
   }
 
@@ -54,14 +54,15 @@ class PaginaDisenadorVista extends StatelessWidget {
     final cfg = context.read<ProveedorConfig>();
     final exito = await cfg.actualizarEditorVistasAdmin(valor);
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(exito
+      mostrarToast(
+        context,
+        exito
             ? (valor
                 ? 'Admin ahora puede editar la vista'
                 : 'Editor de vistas restringido de nuevo a sysadmin')
-            : 'Error al guardar el cambio'),
-        backgroundColor: exito ? Colors.green : Colors.red,
-      ));
+            : 'Error al guardar el cambio',
+        tipo: exito ? TipoToast.exito : TipoToast.error,
+      );
     }
   }
 
@@ -453,11 +454,11 @@ class PaginaDisenadorVista extends StatelessWidget {
                         sombraContenedor: sombraLocal,
                       );
                       if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content:
-                              Text(exito ? 'Cambio guardado en el borrador' : 'Error al guardar'),
-                          backgroundColor: exito ? Colors.green : Colors.red,
-                        ));
+                        mostrarToast(
+                          context,
+                          exito ? 'Cambio guardado en el borrador' : 'Error al guardar',
+                          tipo: exito ? TipoToast.exito : TipoToast.error,
+                        );
                       }
                     },
                     child: const Text('Guardar cambios',
@@ -562,8 +563,7 @@ class PaginaDisenadorVista extends StatelessWidget {
                                     nombreArchivo: 'banner-promo-${imagenesLocal.length}',
                                     onError: (e) {
                                       if (context.mounted) {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(SnackBar(content: Text(e)));
+                                        mostrarToast(context, e, tipo: TipoToast.error);
                                       }
                                     },
                                   );
@@ -703,11 +703,11 @@ class PaginaDisenadorVista extends StatelessWidget {
                                 ? null : botonLinkCtrl.text.trim(),
                           );
                       if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content: Text(
-                              exito ? 'Cambio guardado en el borrador' : 'Error al guardar el banner'),
-                          backgroundColor: exito ? Colors.green : Colors.red,
-                        ));
+                        mostrarToast(
+                          context,
+                          exito ? 'Cambio guardado en el borrador' : 'Error al guardar el banner',
+                          tipo: exito ? TipoToast.exito : TipoToast.error,
+                        );
                       }
                     },
                     child: const Text('Guardar cambios',
@@ -727,10 +727,8 @@ class PaginaDisenadorVista extends StatelessWidget {
     final cfg = context.read<ProveedorConfig>();
     final exito = await cfg.publicarBorrador();
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(exito ? 'Cambios publicados' : 'Error al publicar'),
-        backgroundColor: exito ? Colors.green : Colors.red,
-      ));
+      mostrarToast(context, exito ? 'Cambios publicados' : 'Error al publicar',
+          tipo: exito ? TipoToast.exito : TipoToast.error);
     }
   }
 
@@ -754,10 +752,8 @@ class PaginaDisenadorVista extends StatelessWidget {
     if (confirmar != true || !context.mounted) return;
     final exito = await context.read<ProveedorConfig>().descartarBorrador();
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(exito ? 'Cambios descartados' : 'Error al descartar'),
-        backgroundColor: exito ? Colors.green : Colors.red,
-      ));
+      mostrarToast(context, exito ? 'Cambios descartados' : 'Error al descartar',
+          tipo: exito ? TipoToast.exito : TipoToast.error);
     }
   }
 

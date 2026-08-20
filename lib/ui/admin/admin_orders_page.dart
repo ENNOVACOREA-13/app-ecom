@@ -6,6 +6,7 @@ import '../../providers/order_provider.dart';
 import '../../core/entrada_animada.dart';
 import '../../core/theme/app_theme.dart';
 import '../common/app_widgets.dart';
+import '../common/toast.dart';
 
 class PaginaPedidosAdmin extends StatefulWidget {
   const PaginaPedidosAdmin({super.key});
@@ -415,9 +416,8 @@ class _TarjetaPedido extends StatelessWidget {
                                 .actualizarEstado(pedido.id, e.toDbString());
                           } catch (err) {
                             if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('No se pudo actualizar el pedido: $err')),
-                              );
+                              mostrarToast(context, 'No se pudo actualizar el pedido: $err',
+                                  tipo: TipoToast.error);
                             }
                           }
                         },

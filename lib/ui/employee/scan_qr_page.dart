@@ -6,6 +6,7 @@ import '../../domain/enums/booking_status.dart';
 import '../../domain/models/booking.dart';
 import '../../providers/booking_provider.dart';
 import '../../core/theme/app_theme.dart';
+import '../common/toast.dart';
 
 class PaginaEscanearQR extends StatefulWidget {
   const PaginaEscanearQR({super.key});
@@ -107,9 +108,7 @@ class _PaginaEscanearQRState extends State<PaginaEscanearQR> {
     if (confirmar == true && mounted) {
       await context.read<ProveedorReserva>().actualizarEstado(reserva.id, EstadoReserva.completed);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Reserva marcada como pagada'), backgroundColor: Colors.green),
-        );
+        mostrarToast(context, 'Reserva marcada como pagada', tipo: TipoToast.exito);
       }
     }
   }

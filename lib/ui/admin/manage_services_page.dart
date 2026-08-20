@@ -8,6 +8,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/service_icons.dart';
 import '../../data/ftp_upload_service.dart';
 import '../common/app_widgets.dart';
+import '../common/toast.dart';
 
 class PaginaGestionServicios extends StatefulWidget {
   const PaginaGestionServicios({super.key});
@@ -171,9 +172,7 @@ class _PaginaGestionServiciosState extends State<PaginaGestionServicios> {
                               nombreArchivo: ctrlNombre.text.trim(),
                               onError: (e) {
                                 if (ctx.mounted) {
-                                  ScaffoldMessenger.of(ctx).showSnackBar(
-                                    SnackBar(content: Text(e)),
-                                  );
+                                  mostrarToast(ctx, e, tipo: TipoToast.error);
                                 }
                               },
                             );

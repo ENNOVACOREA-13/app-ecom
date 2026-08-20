@@ -4,6 +4,7 @@ import '../../core/entrada_animada.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/loyalty_repository.dart';
 import '../../domain/models/loyalty.dart';
+import '../common/toast.dart';
 
 class PaginaConfigLealtad extends StatefulWidget {
   const PaginaConfigLealtad({super.key});
@@ -56,9 +57,8 @@ class _PaginaConfigLealtadState extends State<PaginaConfigLealtad> {
     final monto = double.tryParse(_ctrlMontoPorPunto.text);
     final canje = double.tryParse(_ctrlPuntosPorPesoCanje.text);
     if (monto == null || monto <= 0 || canje == null || canje <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Revisa que los números sean válidos y mayores a 0')),
-      );
+      mostrarToast(context, 'Revisa que los números sean válidos y mayores a 0',
+          tipo: TipoToast.error);
       return;
     }
     setState(() => _guardando = true);
@@ -74,18 +74,11 @@ class _PaginaConfigLealtadState extends State<PaginaConfigLealtad> {
         ganaPorPedidos: _ganaPorPedidos,
       ));
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Configuración guardada'),
-            backgroundColor: context.colorPrimario,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-        );
+        mostrarToast(context, 'Configuración guardada', tipo: TipoToast.exito);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+        mostrarToast(context, 'Error: $e', tipo: TipoToast.error);
       }
     } finally {
       if (mounted) setState(() => _guardando = false);

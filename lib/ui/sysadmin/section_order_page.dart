@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../core/entrada_animada.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/config_provider.dart';
+import '../common/toast.dart';
 
 const Map<String, ({String etiqueta, IconData icono})> _kEtiquetasSeccion = {
   'chips_categorias': (etiqueta: 'Chips de categorías (tienda)', icono: Icons.apps_rounded),
@@ -38,10 +39,8 @@ class _PaginaOrdenSeccionesState extends State<PaginaOrdenSecciones> {
     final exito = await context.read<ProveedorConfig>().actualizarBorradorSecciones(_secciones);
     if (mounted) {
       setState(() => _guardando = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(exito ? 'Orden guardado en el borrador' : 'Error al guardar'),
-        backgroundColor: exito ? Colors.green : Colors.red,
-      ));
+      mostrarToast(context, exito ? 'Orden guardado en el borrador' : 'Error al guardar',
+          tipo: exito ? TipoToast.exito : TipoToast.error);
     }
   }
 

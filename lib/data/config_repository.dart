@@ -96,6 +96,21 @@ class RepositorioConfig {
   Future<bool> actualizarTiendaHabilitada(bool habilitada) =>
       _upsert({'store_enabled': habilitada});
 
+  Future<bool> obtenerReservasHabilitadas() async {
+    try {
+      final data = await _db
+          .from('app_config')
+          .select('bookings_enabled')
+          .single();
+      return data['bookings_enabled'] as bool? ?? true;
+    } catch (_) {
+      return true;
+    }
+  }
+
+  Future<bool> actualizarReservasHabilitadas(bool habilitada) =>
+      _upsert({'bookings_enabled': habilitada});
+
   Future<String?> obtenerLogoUrl() async {
     try {
       final data = await _db

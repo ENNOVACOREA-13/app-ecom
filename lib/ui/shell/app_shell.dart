@@ -106,6 +106,7 @@ class _CarcasaAppState extends State<CarcasaApp> with SingleTickerProviderStateM
     final auth = context.watch<ProveedorAuth>();
     final tiendaHabilitada = context.watch<ProveedorConfig>().tiendaHabilitada;
     final editorVistasAdmin = context.watch<ProveedorConfig>().editorVistasAdmin;
+    final reservasHabilitadas = context.watch<ProveedorConfig>().reservasHabilitadas;
 
     // Esperando restaurar sesión
     if (auth.inicializando) {
@@ -137,6 +138,7 @@ class _CarcasaAppState extends State<CarcasaApp> with SingleTickerProviderStateM
       return _ShellInvitado(
         indiceActual: _indiceActual,
         tiendaHabilitada: tiendaHabilitada,
+        reservasHabilitadas: reservasHabilitadas,
         fadeController: _fadeController,
         onTap: _cambiarTab,
       );
@@ -151,7 +153,8 @@ class _CarcasaAppState extends State<CarcasaApp> with SingleTickerProviderStateM
       return const PaginaNegocios();
     }
 
-    final pestanas = _pestanasPorRol(perfil.rol, tiendaHabilitada, editorVistasAdmin);
+    final pestanas = _pestanasPorRol(
+        perfil.rol, tiendaHabilitada, editorVistasAdmin, reservasHabilitadas);
     final indiceSafe = _indiceActual.clamp(0, pestanas.length - 1);
     final esEscritorio = MediaQuery.of(context).size.width >= kAnchoEscritorio;
 
@@ -197,7 +200,8 @@ class _CarcasaAppState extends State<CarcasaApp> with SingleTickerProviderStateM
     if (perfil == null) return;
     final reserva = context.read<ProveedorReserva>();
     final cfg = context.read<ProveedorConfig>();
-    final tabs = _pestanasPorRol(rol, cfg.tiendaHabilitada, cfg.editorVistasAdmin);
+    final tabs = _pestanasPorRol(
+        rol, cfg.tiendaHabilitada, cfg.editorVistasAdmin, cfg.reservasHabilitadas);
     if (indice >= tabs.length) return;
     final id = tabs[indice].id;
     ServicioActividad.instancia.registrarPantalla(tabs[indice].etiqueta);
@@ -224,8 +228,8 @@ class _CarcasaAppState extends State<CarcasaApp> with SingleTickerProviderStateM
     }
   }
 
-  List<_Pestana> _pestanasPorRol(
-      RolUsuario role, bool tiendaHabilitada, bool editorVistasAdmin) {
+  List<_Pestana> _pestanasPorRol(RolUsuario role, bool tiendaHabilitada,
+      bool editorVistasAdmin, bool reservasHabilitadas) {
     switch (role) {
       case RolUsuario.platformAdmin:
         return [
@@ -253,9 +257,10 @@ class _CarcasaAppState extends State<CarcasaApp> with SingleTickerProviderStateM
           _Pestana(Icons.dashboard_outlined, 'Dashboard',
               PaginaTableroAdmin(key: _keyDashboardAdmin),
               imagen: 'IMG/DASHBOARD.png', id: 'admin_dashboard'),
-          _Pestana(Icons.calendar_today_outlined, 'Reservas',
-              const PaginaTodasReservas(),
-              imagen: 'IMG/RESERVAS.png', id: 'admin_reservas'),
+          if (reservasHabilitadas)
+            _Pestana(Icons.calendar_today_outlined, 'Reservas',
+                const PaginaTodasReservas(),
+                imagen: 'IMG/RESERVAS.png', id: 'admin_reservas'),
           if (tiendaHabilitada)
             _Pestana(Icons.receipt_long_outlined, 'Pedidos',
                 const PaginaPedidosAdmin(),
@@ -274,9 +279,10 @@ class _CarcasaAppState extends State<CarcasaApp> with SingleTickerProviderStateM
           _Pestana(Icons.dashboard_outlined, 'Mi Panel',
               PaginaTableroEmpleado(key: _keyDashboardEmpleado),
               imagen: 'IMG/INICIO.png', id: 'employee_dashboard'),
-          _Pestana(Icons.calendar_today_outlined, 'Mis Reservas',
-              const PaginaReservasEmpleado(),
-              imagen: 'IMG/RESERVAS.png', id: 'employee_reservas'),
+          if (reservasHabilitadas)
+            _Pestana(Icons.calendar_today_outlined, 'Mis Reservas',
+                const PaginaReservasEmpleado(),
+                imagen: 'IMG/RESERVAS.png', id: 'employee_reservas'),
           _Pestana(Icons.person_outline, 'Perfil', const PaginaPerfil(),
               imagen: 'IMG/PERFIL.png', id: 'employee_perfil'),
         ];
@@ -284,9 +290,10 @@ class _CarcasaAppState extends State<CarcasaApp> with SingleTickerProviderStateM
         return [
           _Pestana(Icons.home_outlined, 'Inicio', const PaginaInicio(),
               imagen: 'IMG/INICIO.png', id: 'client_inicio'),
-          _Pestana(Icons.calendar_today_outlined, 'Mis Reservas',
-              const PaginaMisReservas(),
-              imagen: 'IMG/RESERVAS.png', id: 'client_reservas'),
+          if (reservasHabilitadas)
+            _Pestana(Icons.calendar_today_outlined, 'Mis Reservas',
+                const PaginaMisReservas(),
+                imagen: 'IMG/RESERVAS.png', id: 'client_reservas'),
           if (tiendaHabilitada)
             _Pestana(Icons.favorite_border_rounded, 'Favoritos',
                 const PaginaGuardados(),
@@ -427,12 +434,14 @@ class _Pestana {
 class _ShellInvitado extends StatelessWidget {
   final int indiceActual;
   final bool tiendaHabilitada;
+  final bool reservasHabilitadas;
   final AnimationController fadeController;
   final ValueChanged<int> onTap;
 
   const _ShellInvitado({
     required this.indiceActual,
     required this.tiendaHabilitada,
+    required this.reservasHabilitadas,
     required this.fadeController,
     required this.onTap,
   });
@@ -440,6 +449,9 @@ class _ShellInvitado extends StatelessWidget {
   static const _pestanasBase = [
     _Pestana(Icons.home_outlined, 'Inicio', PaginaInicio(),
         imagen: 'IMG/INICIO.png'),
+  ];
+
+  static const _pestanasReservas = [
     _Pestana(Icons.calendar_today_outlined, 'Mis Reservas',
         PaginaMuroInvitado(mensaje: 'Inicia sesión para ver tus reservas'),
         imagen: 'IMG/RESERVAS.png'),
@@ -461,6 +473,7 @@ class _ShellInvitado extends StatelessWidget {
   Widget build(BuildContext context) {
     final pestanas = [
       ..._pestanasBase,
+      if (reservasHabilitadas) ..._pestanasReservas,
       if (tiendaHabilitada) ..._pestanasTienda,
       ..._pestanasFinal,
     ];

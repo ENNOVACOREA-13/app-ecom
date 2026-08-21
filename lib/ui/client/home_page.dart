@@ -477,6 +477,7 @@ class _PaginaInicioState extends State<PaginaInicio> {
     final provProducto = context.watch<ProveedorProducto>();
     final provConfig = context.watch<ProveedorConfig>();
     final tiendaHabilitada = provConfig.tiendaHabilitada;
+    final reservasHabilitadas = provConfig.reservasHabilitadas;
     final servicios = provServicio.servicios;
     final todosProductos = tiendaHabilitada ? provProducto.productos : <Producto>[];
     final productos = todosProductos.where((p) {
@@ -600,12 +601,16 @@ class _PaginaInicioState extends State<PaginaInicio> {
                           ),
                         ]
                       : const [],
-                  'banner_hero': const [SliverToBoxAdapter(child: _BannerReferencia())],
-                  'categorias': _slivsCategorias(
-                    provServicio: provServicio,
-                    provConfig: provConfig,
-                    servicios: servicios,
-                  ),
+                  'banner_hero': reservasHabilitadas
+                      ? const [SliverToBoxAdapter(child: _BannerReferencia())]
+                      : const [],
+                  'categorias': reservasHabilitadas
+                      ? _slivsCategorias(
+                          provServicio: provServicio,
+                          provConfig: provConfig,
+                          servicios: servicios,
+                        )
+                      : const [],
                   'banner_promo': const [SliverToBoxAdapter(child: _BannerPromo())],
                   'productos': _slivsProductos(
                     provConfig: provConfig,

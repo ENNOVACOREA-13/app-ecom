@@ -32,6 +32,20 @@ class PaginaDisenadorVista extends StatelessWidget {
     }
   }
 
+  Future<void> _toggleReservas(BuildContext context, bool valor) async {
+    final cfg = context.read<ProveedorConfig>();
+    final exito = await cfg.actualizarReservasHabilitadas(valor);
+    if (context.mounted) {
+      mostrarToast(
+        context,
+        exito
+            ? (valor ? 'Reservas activadas' : 'Reservas desactivadas')
+            : 'Error al guardar el cambio',
+        tipo: exito ? TipoToast.exito : TipoToast.error,
+      );
+    }
+  }
+
   Future<void> _cambiarLogo(BuildContext context) async {
     final url = await ServicioFTP.seleccionarYSubirImagen(
       nombreArchivo: 'logo',
@@ -761,6 +775,7 @@ class PaginaDisenadorVista extends StatelessWidget {
   Widget build(BuildContext context) {
     final cfg = context.watch<ProveedorConfig>();
     final tiendaHabilitada = cfg.tiendaHabilitada;
+    final reservasHabilitadas = cfg.reservasHabilitadas;
     final editorVistasAdmin = cfg.editorVistasAdmin;
     final esSysadmin = context.watch<ProveedorAuth>().perfil?.rol == RolUsuario.sysadmin;
 
@@ -947,6 +962,69 @@ class PaginaDisenadorVista extends StatelessWidget {
                       child: Text(
                         'La tienda está desactivada: clientes, empleados, admins y sysadmin '
                         'no verán productos, buscador, carrito ni pedidos.',
+                        style: TextStyle(fontSize: 12, color: Color(0xFF8E8E93)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            const SizedBox(height: 12),
+            TarjetaSeccion(
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: context.colorPrimario.withOpacity(0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.calendar_today_outlined, color: context.colorPrimario),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Reservas',
+                            style: TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 14,
+                                color: Color(0xFF1C1C1E))),
+                        const SizedBox(height: 2),
+                        Text(
+                          reservasHabilitadas
+                              ? 'Agendar citas visible en toda la app'
+                              : 'Agendar citas oculto en toda la app',
+                          style: const TextStyle(fontSize: 11, color: Color(0xFF8E8E93)),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Switch(
+                    value: reservasHabilitadas,
+                    activeColor: context.colorPrimario,
+                    onChanged: (v) => _toggleReservas(context, v),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            if (!reservasHabilitadas)
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.info_outline, color: Colors.orange, size: 18),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'Las reservas están desactivadas: clientes, empleados y admins '
+                        'no verán la pestaña de reservas ni el aviso de "Reservar ahora".',
                         style: TextStyle(fontSize: 12, color: Color(0xFF8E8E93)),
                       ),
                     ),

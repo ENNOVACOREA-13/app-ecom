@@ -19,6 +19,7 @@ class ProveedorConfig extends ChangeNotifier {
   String? _bannerBotonLink;
   String? _logoUrl;
   bool _tiendaHabilitada = true;
+  bool _reservasHabilitadas = true;
   bool _editorVistasAdmin = false;
   String _categoriasTitulo = 'Categorías de Servicios';
   String _categoriasForma = 'circulo';
@@ -60,6 +61,7 @@ class ProveedorConfig extends ChangeNotifier {
   String? get bannerBotonTexto => _bannerBotonTexto;
   String? get bannerBotonLink => _bannerBotonLink;
   bool get tiendaHabilitada => _tiendaHabilitada;
+  bool get reservasHabilitadas => _reservasHabilitadas;
   bool get editorVistasAdmin => _editorVistasAdmin;
   String get categoriasTitulo => _categoriasTitulo;
   String get categoriasForma => _categoriasForma;
@@ -148,6 +150,7 @@ class ProveedorConfig extends ChangeNotifier {
     final colorSecundario = await _repo.obtenerColorSecundario();
     final banner = await _repo.obtenerBannerConfig();
     final tienda = await _repo.obtenerTiendaHabilitada();
+    final reservas = await _repo.obtenerReservasHabilitadas();
     final editorVistasAdmin = await _repo.obtenerEditorVistasAdmin();
     final categorias = await _repo.obtenerSeccionCategorias();
     final estilo = await _repo.obtenerEstiloApp();
@@ -166,6 +169,7 @@ class ProveedorConfig extends ChangeNotifier {
     _bannerBotonTexto = banner.botonTexto;
     _bannerBotonLink = banner.botonLink;
     _tiendaHabilitada = tienda;
+    _reservasHabilitadas = reservas;
     _editorVistasAdmin = editorVistasAdmin;
     _categoriasTitulo = categorias.titulo;
     _categoriasForma = categorias.forma;
@@ -354,6 +358,15 @@ class ProveedorConfig extends ChangeNotifier {
     final exito = await _repo.actualizarTiendaHabilitada(habilitada);
     if (exito) {
       _tiendaHabilitada = habilitada;
+      notifyListeners();
+    }
+    return exito;
+  }
+
+  Future<bool> actualizarReservasHabilitadas(bool habilitada) async {
+    final exito = await _repo.actualizarReservasHabilitadas(habilitada);
+    if (exito) {
+      _reservasHabilitadas = habilitada;
       notifyListeners();
     }
     return exito;

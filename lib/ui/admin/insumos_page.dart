@@ -6,6 +6,7 @@ import '../../core/entrada_animada.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../data/activity_service.dart';
+import '../../data/caja_repository.dart';
 import '../common/app_widgets.dart';
 import '../common/skeleton.dart';
 
@@ -40,15 +41,14 @@ class PaginaInsumos extends StatefulWidget {
 
 class _PaginaInsumosState extends State<PaginaInsumos> {
   final _client = Supabase.instance.client;
+  final _repoCaja = RepositorioCaja();
   List<Map<String, dynamic>> _insumos = [];
   bool _cargando = true;
   String _busqueda = '';
-
-  double get _totalComprado => _insumos.fold<double>(0, (s, i) {
-        final precio = (i['price'] as num?)?.toDouble() ?? 0;
-        final cantidad = (i['stock'] as num?)?.toDouble() ?? 0;
-        return s + (precio * cantidad);
-      });
+  // Insumos comprados del periodo actual (desde el último corte de caja) —
+  // ya no "precio × stock actual" (eso es el valor del inventario, no el
+  // gasto real). Ver supply_purchases y RepositorioCaja.
+  double _totalCompradoPeriodo = 0;
 
   @override
   void initState() {
@@ -65,6 +65,8 @@ class _PaginaInsumosState extends State<PaginaInsumos> {
           .select()
           .order('created_at', ascending: false);
       setState(() => _insumos = List<Map<String, dynamic>>.from(datos));
+      final resumen = await _repoCaja.obtenerResumenActual();
+      if (mounted) setState(() => _totalCompradoPeriodo = resumen.insumosComprados);
     } catch (_) {} finally {
       setState(() => _cargando = false);
     }
@@ -145,24 +147,31 @@ class _PaginaInsumosState extends State<PaginaInsumos> {
                 onPressed: () async {
                   Navigator.pop(ctx);
                   final descripcion = descCtrl.text.trim().isEmpty ? null : descCtrl.text.trim();
+                  final nuevoStock = int.tryParse(cantidadCtrl.text) ?? 0;
+                  final precio = double.tryParse(precioCtrl.text) ?? 0;
+                  final stockAnterior = (insumo?['stock'] as num?)?.toInt() ?? 0;
+                  String? idInsumo = insumo?['id'] as String?;
+
                   if (insumo == null) {
                     final datos = construirPayloadCrearInsumo(
                       tenantId: kTenantIdActivo,
                       creadoPor: perfil!.id,
                       nombre: nombreCtrl.text.trim(),
                       descripcion: descripcion,
-                      cantidad: int.tryParse(cantidadCtrl.text) ?? 0,
-                      precio: double.tryParse(precioCtrl.text) ?? 0,
+                      cantidad: nuevoStock,
+                      precio: precio,
                       unidad: unidadCtrl.text.trim(),
                     );
-                    await _client.from('supplies').insert(datos);
+                    final creado = await _client
+                        .from('supplies').insert(datos).select('id').single();
+                    idInsumo = creado['id'] as String;
                     ServicioActividad.instancia.registrarFeature('crear_insumo');
                   } else {
                     final datos = {
                       'name': nombreCtrl.text.trim(),
                       'description': descripcion,
-                      'stock': int.tryParse(cantidadCtrl.text) ?? 0,
-                      'price': double.tryParse(precioCtrl.text) ?? 0,
+                      'stock': nuevoStock,
+                      'price': precio,
                       'unit': unidadCtrl.text.trim(),
                       'status': 'active',
                     };
@@ -170,6 +179,21 @@ class _PaginaInsumosState extends State<PaginaInsumos> {
                         .update(datos).eq('id', insumo['id']);
                     ServicioActividad.instancia.registrarFeature('editar_insumo');
                   }
+
+                  // Cualquier aumento de stock cuenta como una compra nueva
+                  // — antes no había ningún registro histórico de compras,
+                  // solo el stock actual, así que "insumos comprados" en
+                  // el corte de caja no podía ser un número real.
+                  final cantidadComprada = nuevoStock - stockAnterior;
+                  if (cantidadComprada > 0 && idInsumo != null) {
+                    await _client.from('supply_purchases').insert({
+                      'supply_id': idInsumo,
+                      'quantity': cantidadComprada,
+                      'total_cost': precio * cantidadComprada,
+                      'tenant_id': kTenantIdActivo,
+                    });
+                  }
+
                   _cargar();
                 },
                 child: Text(insumo == null ? 'Registrar' : 'Guardar cambios'),
@@ -267,7 +291,7 @@ class _PaginaInsumosState extends State<PaginaInsumos> {
                 child: Row(children: [
                   Icon(Icons.receipt_long_outlined, size: 16, color: color),
                   const SizedBox(width: 8),
-                  Text('Total comprado: \$${_totalComprado.toStringAsFixed(2)}',
+                  Text('Total comprado (periodo actual): \$${_totalCompradoPeriodo.toStringAsFixed(2)}',
                       style: TextStyle(
                           color: color, fontSize: 12, fontWeight: FontWeight.w600)),
                 ]),

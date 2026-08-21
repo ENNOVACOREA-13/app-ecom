@@ -409,7 +409,7 @@ class _PaginaDetalleCorteState extends State<PaginaDetalleCorte> {
                                         color: Color(0xFF1C1C1E),
                                         fontWeight: FontWeight.w600,
                                         fontSize: 13)),
-                                Text('${e.serviciosCompletados} servicios · comisión pagada \$${e.comisiones.toStringAsFixed(0)}',
+                                Text('${e.serviciosCompletados} servicios · comisión ganada \$${e.comisiones.toStringAsFixed(0)}',
                                     style: const TextStyle(color: Color(0xFF8E8E93), fontSize: 11)),
                               ],
                             ),

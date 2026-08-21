@@ -340,7 +340,7 @@ class _PaginaDetalleCorteState extends State<PaginaDetalleCorte> {
               if (_cargando)
                 const ListaEsqueleto()
               else if (_empleados.isNotEmpty) ...[
-                const Text('Por empleado',
+                const Text('Ingresos por empleado',
                     style: TextStyle(
                         fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF1C1C1E))),
                 const SizedBox(height: 12),
@@ -365,7 +365,7 @@ class _PaginaDetalleCorteState extends State<PaginaDetalleCorte> {
                                         color: Color(0xFF1C1C1E),
                                         fontWeight: FontWeight.w600,
                                         fontSize: 13)),
-                                Text('${e.serviciosCompletados} servicios · comisión \$${e.comisiones.toStringAsFixed(0)}',
+                                Text('${e.serviciosCompletados} servicios · comisión pagada \$${e.comisiones.toStringAsFixed(0)}',
                                     style: const TextStyle(color: Color(0xFF8E8E93), fontSize: 11)),
                               ],
                             ),

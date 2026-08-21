@@ -432,7 +432,7 @@ class PaginaTableroAdminState extends State<PaginaTableroAdmin> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const _SeccionTitulo('Rendimiento por empleado'),
+                                  const _SeccionTitulo('Ingresos por empleado'),
                                   const SizedBox(height: 12),
                                   ..._resumenEmpleados.map(
                                         (e) => _FilaEmpleado(data: e),

@@ -48,11 +48,13 @@ class _PaginaReportesState extends State<PaginaReportes> {
 
   Future<void> _generarCorte() async {
     var liquidarComisiones = false;
+    final color = context.colorPrimario;
     final confirmar = await showDialog<bool>(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
           backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: const Text('Generar corte de caja',
               style: TextStyle(color: Color(0xFF1C1C1E))),
           content: Column(
@@ -65,21 +67,33 @@ class _PaginaReportesState extends State<PaginaReportes> {
                 'dashboard vuelva a empezar en 0. No se borra ni se modifica '
                 'ningún dato real — reservas, pedidos, comisiones y compras '
                 'siguen intactos, este reporte solo queda guardado aquí.',
-                style: TextStyle(color: Color(0xFF6E6E73)),
+                style: TextStyle(color: Color(0xFF6E6E73), height: 1.4),
               ),
-              const SizedBox(height: 12),
-              CheckboxListTile(
-                value: liquidarComisiones,
-                onChanged: (v) =>
-                    setDialogState(() => liquidarComisiones = v ?? false),
-                contentPadding: EdgeInsets.zero,
-                controlAffinity: ListTileControlAffinity.leading,
-                title: const Text('También liquidar comisiones pendientes',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-                subtitle: const Text(
-                  'Paga de una vez todo lo pendiente de todos los empleados '
-                  '(igual que "Procesar corte" en Comisiones)',
-                  style: TextStyle(fontSize: 11, color: Color(0xFF8E8E93)),
+              const SizedBox(height: 14),
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 160),
+                curve: Curves.easeOut,
+                decoration: BoxDecoration(
+                  color: liquidarComisiones ? color.withOpacity(0.08) : const Color(0xFFF7F7F8),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: liquidarComisiones ? color.withOpacity(0.4) : Colors.transparent,
+                  ),
+                ),
+                child: CheckboxListTile(
+                  value: liquidarComisiones,
+                  onChanged: (v) =>
+                      setDialogState(() => liquidarComisiones = v ?? false),
+                  activeColor: color,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  controlAffinity: ListTileControlAffinity.leading,
+                  title: const Text('También liquidar comisiones pendientes',
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                  subtitle: const Text(
+                    'Paga de una vez todo lo pendiente de todos los empleados '
+                    '(igual que "Procesar corte" en Comisiones)',
+                    style: TextStyle(fontSize: 11, color: Color(0xFF8E8E93)),
+                  ),
                 ),
               ),
             ],
@@ -142,52 +156,48 @@ class _PaginaReportesState extends State<PaginaReportes> {
               children: [
                 EntradaAnimada(
                   index: 0,
-                  child: Material(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(16),
-                      onTap: _generando ? null : _generarCorte,
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: kNeumorphicShadowsSmall,
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color: color.withOpacity(0.12),
-                                shape: BoxShape.circle,
-                              ),
-                              child: _generando
-                                  ? SizedBox(
-                                      width: 20, height: 20,
-                                      child: CircularProgressIndicator(
-                                          strokeWidth: 2, color: color))
-                                  : Icon(Icons.content_cut, color: color),
+                  child: TarjetaPresionable(
+                    onTap: _generando ? null : _generarCorte,
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: kNeumorphicShadowsSmall,
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: color.withOpacity(0.12),
+                              shape: BoxShape.circle,
                             ),
-                            const SizedBox(width: 14),
-                            const Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('Generar corte',
-                                      style: TextStyle(
-                                          color: Color(0xFF1C1C1E),
-                                          fontWeight: FontWeight.w700,
-                                          fontSize: 15)),
-                                  Text('Guarda el periodo actual y reinicia el dashboard',
-                                      style: TextStyle(color: Color(0xFF8E8E93), fontSize: 12)),
-                                ],
-                              ),
+                            child: _generando
+                                ? SizedBox(
+                                    width: 20, height: 20,
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 2, color: color))
+                                : Icon(Icons.content_cut, color: color),
+                          ),
+                          const SizedBox(width: 14),
+                          const Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Generar corte',
+                                    style: TextStyle(
+                                        color: Color(0xFF1C1C1E),
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 15)),
+                                Text('Guarda el periodo actual y reinicia el dashboard',
+                                    style: TextStyle(color: Color(0xFF8E8E93), fontSize: 12)),
+                              ],
                             ),
-                            const Icon(Icons.arrow_forward_ios_rounded,
-                                size: 14, color: Color(0xFF8E8E93)),
-                          ],
-                        ),
+                          ),
+                          const Icon(Icons.arrow_forward_ios_rounded,
+                              size: 14, color: Color(0xFF8E8E93)),
+                        ],
                       ),
                     ),
                   ),
@@ -230,49 +240,47 @@ class _FilaCorte extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
-      child: Material(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(14),
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => PaginaDetalleCorte(corte: corte)),
+      child: TarjetaPresionable(
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => PaginaDetalleCorte(corte: corte)),
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            boxShadow: kNeumorphicShadowsSmall,
           ),
-          child: Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
-              boxShadow: kNeumorphicShadowsSmall,
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${_fmtInicioPeriodo(corte.periodoDesde)} — ${_fmtFecha.format(corte.periodoHasta.toLocal())}',
-                        style: const TextStyle(
-                            color: Color(0xFF1C1C1E), fontWeight: FontWeight.w600, fontSize: 13),
-                      ),
-                      const SizedBox(height: 2),
-                      Text('${corte.serviciosCompletados} servicios · ${corte.pedidosTotal} pedidos',
-                          style: const TextStyle(color: Color(0xFF8E8E93), fontSize: 11)),
-                    ],
-                  ),
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('\$${_fmtDinero.format(corte.ingresosTotales)}',
-                        style: TextStyle(
-                            color: context.colorPrimario, fontWeight: FontWeight.w800, fontSize: 14)),
-                    Text('ganancia \$${_fmtDinero.format(corte.gananciasNetas)}',
-                        style: const TextStyle(color: Color(0xFF34C759), fontSize: 11)),
+                    Text(
+                      '${_fmtInicioPeriodo(corte.periodoDesde)} — ${_fmtFecha.format(corte.periodoHasta.toLocal())}',
+                      style: const TextStyle(
+                          color: Color(0xFF1C1C1E), fontWeight: FontWeight.w600, fontSize: 13),
+                    ),
+                    const SizedBox(height: 2),
+                    Text('${corte.serviciosCompletados} servicios · ${corte.pedidosTotal} pedidos',
+                        style: const TextStyle(color: Color(0xFF8E8E93), fontSize: 11)),
                   ],
                 ),
-              ],
-            ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text('\$${_fmtDinero.format(corte.ingresosTotales)}',
+                      style: TextStyle(
+                          color: context.colorPrimario, fontWeight: FontWeight.w800, fontSize: 14)),
+                  Text('ganancia \$${_fmtDinero.format(corte.gananciasNetas)}',
+                      style: const TextStyle(color: Color(0xFF34C759), fontSize: 11)),
+                ],
+              ),
+              const SizedBox(width: 6),
+              const Icon(Icons.chevron_right_rounded, size: 18, color: Color(0xFFC7C7CC)),
+            ],
           ),
         ),
       ),

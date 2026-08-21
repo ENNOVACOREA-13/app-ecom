@@ -22,6 +22,15 @@ const kStripePublishableKey = String.fromEnvironment(
   defaultValue: 'pk_test_XXXXXXXXXXXXXXXXXXXXXXXX',
 );
 
+// Sentry — captura errores no manejados en producción. Un DSN no es un
+// secreto (está diseñado para ir embebido en clientes), así que es
+// seguro tenerlo como default aquí igual que la anon key de Supabase.
+const kSentryDsn = String.fromEnvironment(
+  'SENTRY_DSN',
+  defaultValue:
+      'https://ce3314564da153d437ee943154c2d87b@o4511946542874624.ingest.us.sentry.io/4511946551656448',
+);
+
 /// tenant_id resuelto para el dominio actual (ver tenant_resolver.dart).
 /// `main.dart` lo fija justo antes de `Supabase.initialize` y lo manda
 /// como header x-tenant-id — auth_repository.dart lo usa también para

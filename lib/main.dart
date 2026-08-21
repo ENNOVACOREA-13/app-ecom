@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'data/stripe_web_service.dart'
     if (dart.library.io) 'data/stripe_web_stub.dart';
 import 'data/favicon_updater.dart'
@@ -31,6 +32,17 @@ import 'routing/app_router.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  await SentryFlutter.init(
+    (options) {
+      options.dsn = kSentryDsn;
+      options.tracesSampleRate = 0.2;
+      options.attachScreenshot = true;
+    },
+    appRunner: _iniciarApp,
+  );
+}
+
+Future<void> _iniciarApp() async {
   await initializeDateFormatting('es_ES', null);
 
   final tenant = await resolverTenant();

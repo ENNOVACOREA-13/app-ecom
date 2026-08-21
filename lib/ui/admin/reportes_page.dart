@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../data/caja_repository.dart';
+import '../../data/commission_repository.dart';
 import '../../domain/models/caja_model.dart';
 import '../../core/entrada_animada.dart';
 import '../../core/theme/app_theme.dart';
@@ -26,6 +27,7 @@ class PaginaReportes extends StatefulWidget {
 
 class _PaginaReportesState extends State<PaginaReportes> {
   final _repo = RepositorioCaja();
+  final _repoComision = RepositorioComision();
   List<CorteCaja> _cortes = [];
   bool _cargando = true;
   bool _generando = false;
@@ -45,33 +47,67 @@ class _PaginaReportesState extends State<PaginaReportes> {
   }
 
   Future<void> _generarCorte() async {
+    var liquidarComisiones = false;
     final confirmar = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
-        title: const Text('Generar corte de caja',
-            style: TextStyle(color: Color(0xFF1C1C1E))),
-        content: const Text(
-          'Esto guarda un reporte de todo lo acumulado desde el último '
-          'corte (o desde siempre, si es el primero) y hace que el '
-          'dashboard vuelva a empezar en 0. No se borra ni se modifica '
-          'ningún dato real — reservas, pedidos, comisiones y compras '
-          'siguen intactos, este reporte solo queda guardado aquí.',
-          style: TextStyle(color: Color(0xFF6E6E73)),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancelar')),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Generar corte'),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          backgroundColor: Colors.white,
+          title: const Text('Generar corte de caja',
+              style: TextStyle(color: Color(0xFF1C1C1E))),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Esto guarda un reporte de todo lo acumulado desde el último '
+                'corte (o desde siempre, si es el primero) y hace que el '
+                'dashboard vuelva a empezar en 0. No se borra ni se modifica '
+                'ningún dato real — reservas, pedidos, comisiones y compras '
+                'siguen intactos, este reporte solo queda guardado aquí.',
+                style: TextStyle(color: Color(0xFF6E6E73)),
+              ),
+              const SizedBox(height: 12),
+              CheckboxListTile(
+                value: liquidarComisiones,
+                onChanged: (v) =>
+                    setDialogState(() => liquidarComisiones = v ?? false),
+                contentPadding: EdgeInsets.zero,
+                controlAffinity: ListTileControlAffinity.leading,
+                title: const Text('También liquidar comisiones pendientes',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                subtitle: const Text(
+                  'Paga de una vez todo lo pendiente de todos los empleados '
+                  '(igual que "Procesar corte" en Comisiones)',
+                  style: TextStyle(fontSize: 11, color: Color(0xFF8E8E93)),
+                ),
+              ),
+            ],
           ),
-        ],
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Cancelar')),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Generar corte'),
+            ),
+          ],
+        ),
       ),
     );
     if (confirmar != true || !mounted) return;
 
     setState(() => _generando = true);
+    if (liquidarComisiones) {
+      try {
+        await _repoComision.procesarCorte(DateTime.now());
+      } catch (e) {
+        if (mounted) {
+          mostrarToast(context, 'No se pudieron liquidar las comisiones: $e',
+              tipo: TipoToast.error);
+        }
+      }
+    }
     try {
       await _repo.generarCorte();
       if (mounted) {

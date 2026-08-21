@@ -85,10 +85,17 @@ class _PaginaReportesState extends State<PaginaReportes> {
                   onChanged: (v) =>
                       setDialogState(() => liquidarComisiones = v ?? false),
                   activeColor: color,
+                  checkColor: Colors.white,
+                  side: const BorderSide(color: Color(0xFFAEAEB2), width: 1.5),
+                  tileColor: Colors.transparent,
+                  selectedTileColor: Colors.transparent,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   controlAffinity: ListTileControlAffinity.leading,
                   title: const Text('También liquidar comisiones pendientes',
-                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                      style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF1C1C1E))),
                   subtitle: const Text(
                     'Paga de una vez todo lo pendiente de todos los empleados '
                     '(igual que "Procesar corte" en Comisiones)',

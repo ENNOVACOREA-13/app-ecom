@@ -20,6 +20,10 @@ class ProveedorConfig extends ChangeNotifier {
   String? _logoUrl;
   bool _tiendaHabilitada = true;
   bool _reservasHabilitadas = true;
+  bool _bandaHabilitada = false;
+  String _bandaTexto = '';
+  Color _bandaColorFondo = const Color(0xFFFF3B30);
+  Color _bandaColorTexto = Colors.white;
   bool _editorVistasAdmin = false;
   String _categoriasTitulo = 'Categorías de Servicios';
   String _categoriasForma = 'circulo';
@@ -62,6 +66,10 @@ class ProveedorConfig extends ChangeNotifier {
   String? get bannerBotonLink => _bannerBotonLink;
   bool get tiendaHabilitada => _tiendaHabilitada;
   bool get reservasHabilitadas => _reservasHabilitadas;
+  bool get bandaHabilitada => _bandaHabilitada;
+  String get bandaTexto => _bandaTexto;
+  Color get bandaColorFondo => _bandaColorFondo;
+  Color get bandaColorTexto => _bandaColorTexto;
   bool get editorVistasAdmin => _editorVistasAdmin;
   String get categoriasTitulo => _categoriasTitulo;
   String get categoriasForma => _categoriasForma;
@@ -151,6 +159,7 @@ class ProveedorConfig extends ChangeNotifier {
     final banner = await _repo.obtenerBannerConfig();
     final tienda = await _repo.obtenerTiendaHabilitada();
     final reservas = await _repo.obtenerReservasHabilitadas();
+    final banda = await _repo.obtenerBandaAnuncio();
     final editorVistasAdmin = await _repo.obtenerEditorVistasAdmin();
     final categorias = await _repo.obtenerSeccionCategorias();
     final estilo = await _repo.obtenerEstiloApp();
@@ -170,6 +179,10 @@ class ProveedorConfig extends ChangeNotifier {
     _bannerBotonLink = banner.botonLink;
     _tiendaHabilitada = tienda;
     _reservasHabilitadas = reservas;
+    _bandaHabilitada = banda.habilitada;
+    _bandaTexto = banda.texto;
+    _bandaColorFondo = banda.colorFondo;
+    _bandaColorTexto = banda.colorTexto;
     _editorVistasAdmin = editorVistasAdmin;
     _categoriasTitulo = categorias.titulo;
     _categoriasForma = categorias.forma;
@@ -367,6 +380,28 @@ class ProveedorConfig extends ChangeNotifier {
     final exito = await _repo.actualizarReservasHabilitadas(habilitada);
     if (exito) {
       _reservasHabilitadas = habilitada;
+      notifyListeners();
+    }
+    return exito;
+  }
+
+  Future<bool> actualizarBandaAnuncio({
+    required bool habilitada,
+    required String texto,
+    required Color colorFondo,
+    required Color colorTexto,
+  }) async {
+    final exito = await _repo.actualizarBandaAnuncio(
+      habilitada: habilitada,
+      texto: texto,
+      colorFondo: colorFondo,
+      colorTexto: colorTexto,
+    );
+    if (exito) {
+      _bandaHabilitada = habilitada;
+      _bandaTexto = texto;
+      _bandaColorFondo = colorFondo;
+      _bandaColorTexto = colorTexto;
       notifyListeners();
     }
     return exito;

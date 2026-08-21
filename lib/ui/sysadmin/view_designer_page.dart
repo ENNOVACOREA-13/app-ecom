@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:marquee/marquee.dart';
 import 'package:provider/provider.dart';
 import '../../core/app_fonts.dart';
 import '../../core/entrada_animada.dart';
@@ -44,6 +45,143 @@ class PaginaDisenadorVista extends StatelessWidget {
         tipo: exito ? TipoToast.exito : TipoToast.error,
       );
     }
+  }
+
+  Future<void> _toggleBanda(BuildContext context, bool valor) async {
+    final cfg = context.read<ProveedorConfig>();
+    final exito = await cfg.actualizarBandaAnuncio(
+      habilitada: valor,
+      texto: cfg.bandaTexto,
+      colorFondo: cfg.bandaColorFondo,
+      colorTexto: cfg.bandaColorTexto,
+    );
+    if (context.mounted) {
+      mostrarToast(
+        context,
+        exito
+            ? (valor ? 'Banda activada' : 'Banda desactivada')
+            : 'Error al guardar el cambio',
+        tipo: exito ? TipoToast.exito : TipoToast.error,
+      );
+    }
+  }
+
+  Future<void> _mostrarEditorBanda(BuildContext context) async {
+    final cfg = context.read<ProveedorConfig>();
+    final ctrlTexto = TextEditingController(text: cfg.bandaTexto);
+    Color colorFondo = cfg.bandaColorFondo;
+    Color colorTexto = cfg.bandaColorTexto;
+    bool guardando = false;
+
+    await showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setLocal) => AlertDialog(
+          backgroundColor: Colors.white,
+          title: const Text('Editar banda de anuncio',
+              style: TextStyle(color: Color(0xFF1C1C1E))),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextField(
+                  controller: ctrlTexto,
+                  maxLength: 200,
+                  maxLines: 2,
+                  onChanged: (_) => setLocal(() {}),
+                  style: const TextStyle(color: Color(0xFF1C1C1E)),
+                  decoration: InputDecoration(
+                    labelText: 'Mensaje',
+                    hintText: 'Ej: ¡2x1 en cortes todo agosto!',
+                    filled: true,
+                    fillColor: const Color(0xFFF2F2F7),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                    counterText: '',
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _SwatchColor(
+                        etiqueta: 'Fondo',
+                        color: colorFondo,
+                        onTap: () async {
+                          final elegido = await _elegirColorPersonalizado(context, colorFondo);
+                          if (elegido != null) setLocal(() => colorFondo = elegido);
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _SwatchColor(
+                        etiqueta: 'Texto',
+                        color: colorTexto,
+                        onTap: () async {
+                          final elegido = await _elegirColorPersonalizado(context, colorTexto);
+                          if (elegido != null) setLocal(() => colorTexto = elegido);
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                const Text('Vista previa',
+                    style: TextStyle(fontSize: 12, color: Color(0xFF8E8E93))),
+                const SizedBox(height: 6),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: SizedBox(
+                    height: 32,
+                    child: ctrlTexto.text.trim().isEmpty
+                        ? Container(color: colorFondo)
+                        : Container(
+                            color: colorFondo,
+                            child: Marquee(
+                              key: ValueKey('${ctrlTexto.text}-${colorFondo.value}-${colorTexto.value}'),
+                              text: ctrlTexto.text,
+                              style: TextStyle(
+                                  color: colorTexto, fontSize: 13, fontWeight: FontWeight.w600),
+                              blankSpace: 60,
+                              velocity: 40,
+                            ),
+                          ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(ctx), child: const Text('Cancelar')),
+            ElevatedButton(
+              onPressed: guardando
+                  ? null
+                  : () async {
+                      setLocal(() => guardando = true);
+                      final exito = await cfg.actualizarBandaAnuncio(
+                        habilitada: cfg.bandaHabilitada,
+                        texto: ctrlTexto.text.trim(),
+                        colorFondo: colorFondo,
+                        colorTexto: colorTexto,
+                      );
+                      if (ctx.mounted) Navigator.pop(ctx);
+                      if (context.mounted) {
+                        mostrarToast(
+                          context,
+                          exito ? 'Banda actualizada' : 'Error al guardar el cambio',
+                          tipo: exito ? TipoToast.exito : TipoToast.error,
+                        );
+                      }
+                    },
+              child: const Text('Guardar'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _cambiarLogo(BuildContext context) async {
@@ -776,6 +914,7 @@ class PaginaDisenadorVista extends StatelessWidget {
     final cfg = context.watch<ProveedorConfig>();
     final tiendaHabilitada = cfg.tiendaHabilitada;
     final reservasHabilitadas = cfg.reservasHabilitadas;
+    final bandaHabilitada = cfg.bandaHabilitada;
     final editorVistasAdmin = cfg.editorVistasAdmin;
     final esSysadmin = context.watch<ProveedorAuth>().perfil?.rol == RolUsuario.sysadmin;
 
@@ -1031,6 +1170,62 @@ class PaginaDisenadorVista extends StatelessWidget {
                   ],
                 ),
               ),
+            const SizedBox(height: 12),
+            TarjetaSeccion(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: context.colorPrimario.withOpacity(0.12),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(Icons.campaign_outlined, color: context.colorPrimario),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Banda de anuncio',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 14,
+                                    color: Color(0xFF1C1C1E))),
+                            const SizedBox(height: 2),
+                            Text(
+                              cfg.bandaTexto.trim().isEmpty
+                                  ? 'Sin mensaje configurado todavía'
+                                  : cfg.bandaTexto,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(fontSize: 11, color: Color(0xFF8E8E93)),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Switch(
+                        value: bandaHabilitada,
+                        activeColor: context.colorPrimario,
+                        onChanged: (v) => _toggleBanda(context, v),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () => _mostrarEditorBanda(context),
+                      icon: const Icon(Icons.edit_outlined, size: 16),
+                      label: const Text('Editar mensaje y colores'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
             if (esSysadmin) ...[
               const SizedBox(height: 12),
               EntradaAnimada(
@@ -1529,6 +1724,49 @@ class _BotonAlineacion extends StatelessWidget {
                       fontSize: 10,
                       color: seleccionado ? color : kTextSub,
                       fontWeight: seleccionado ? FontWeight.w700 : FontWeight.w500)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Swatch de color tocable (usado en el editor de la banda) ────────
+class _SwatchColor extends StatelessWidget {
+  final String etiqueta;
+  final Color color;
+  final VoidCallback onTap;
+  const _SwatchColor({required this.etiqueta, required this.color, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFFE5E5EA)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  color: color,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: const Color(0xFFE5E5EA)),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Text(etiqueta,
+                  style: const TextStyle(fontSize: 12, color: Color(0xFF1C1C1E))),
             ],
           ),
         ),

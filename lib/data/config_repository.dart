@@ -111,6 +111,45 @@ class RepositorioConfig {
   Future<bool> actualizarReservasHabilitadas(bool habilitada) =>
       _upsert({'bookings_enabled': habilitada});
 
+  Future<({bool habilitada, String texto, Color colorFondo, Color colorTexto})>
+      obtenerBandaAnuncio() async {
+    try {
+      final data = await _db
+          .from('app_config')
+          .select('marquee_enabled, marquee_text, marquee_bg_color, marquee_text_color')
+          .single();
+      return (
+        habilitada: data['marquee_enabled'] as bool? ?? false,
+        texto: data['marquee_text'] as String? ?? '',
+        colorFondo: _hexAColor(data['marquee_bg_color'] as String? ?? '#FF3B30'),
+        colorTexto: _hexAColor(data['marquee_text_color'] as String? ?? '#FFFFFF'),
+      );
+    } catch (_) {
+      return (
+        habilitada: false,
+        texto: '',
+        colorFondo: const Color(0xFFFF3B30),
+        colorTexto: Colors.white,
+      );
+    }
+  }
+
+  String _colorAHex(Color color) =>
+      '#${color.value.toRadixString(16).substring(2).toUpperCase()}';
+
+  Future<bool> actualizarBandaAnuncio({
+    required bool habilitada,
+    required String texto,
+    required Color colorFondo,
+    required Color colorTexto,
+  }) =>
+      _upsert({
+        'marquee_enabled': habilitada,
+        'marquee_text': texto,
+        'marquee_bg_color': _colorAHex(colorFondo),
+        'marquee_text_color': _colorAHex(colorTexto),
+      });
+
   Future<String?> obtenerLogoUrl() async {
     try {
       final data = await _db

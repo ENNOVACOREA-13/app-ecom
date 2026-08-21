@@ -15,6 +15,7 @@ import 'core/constants.dart';
 import 'core/theme/app_theme.dart';
 import 'data/tenant_resolver.dart';
 import 'ui/tenant_unavailable_page.dart';
+import 'ui/common/banda_anuncio.dart';
 import 'providers/auth_provider.dart';
 import 'providers/booking_provider.dart';
 import 'providers/service_provider.dart';
@@ -169,7 +170,14 @@ class _BarberAppState extends State<BarberApp> {
               sombraContenedor: config.sombraContenedorEfectiva,
             ),
             routerConfig: construirEnrutador(navigatorKey: rootNavigatorKey),
-            builder: (context, child) => _SesionExpiradaListener(child: child!),
+            builder: (context, child) => _SesionExpiradaListener(
+              child: Column(
+                children: [
+                  const SafeArea(bottom: false, child: BandaAnuncio()),
+                  Expanded(child: child!),
+                ],
+              ),
+            ),
           );
         },
       ),

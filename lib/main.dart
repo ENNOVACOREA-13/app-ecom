@@ -62,6 +62,17 @@ Future<void> _iniciarApp() async {
     url: kSupabaseUrl,
     anonKey: kSupabaseAnonKey,
     headers: tenant.tenantId != null ? {'x-tenant-id': tenant.tenantId!} : null,
+    // PKCE (el default) guarda el "code verifier" en localStorage antes de
+    // salir a Google y lo necesita de vuelta al regresar — en Safari/Chrome
+    // iOS, la protección de rastreo entre sitios de Apple puede bloquear o
+    // limpiar ese localStorage durante el viaje redondo por accounts.google.com,
+    // así que el login con Google fallaba en móvil aunque el dominio de
+    // retorno ya fuera el correcto (bug real visto en Sentry 2026-08-20,
+    // "Chrome Mobile iOS"). El flujo implicit no depende de nada guardado
+    // localmente: los tokens regresan directo en la URL.
+    authOptions: const FlutterAuthClientOptions(
+      authFlowType: AuthFlowType.implicit,
+    ),
   );
 
   if (kIsWeb) {

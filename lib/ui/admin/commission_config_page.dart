@@ -273,6 +273,9 @@ class _TabConfiguracion extends StatelessWidget {
                     final n = double.tryParse(v ?? '');
                     if (n == null) return 'Número inválido';
                     if (n < 0) return 'No puede ser negativo';
+                    if (n > servicio.precio) {
+                      return 'No puede ser mayor al precio del servicio (\$${servicio.precio.toStringAsFixed(0)})';
+                    }
                     return null;
                   },
                 ),

@@ -151,6 +151,17 @@ class ProveedorReserva extends ChangeNotifier {
       );
       _creando = false;
       reiniciarFlujo(); // ya llama notifyListeners
+      // "Mis Reservas" vive en un IndexedStack (pestaña ya construida) y
+      // solo carga su lista una vez en initState — sin este refresh acá,
+      // la reserva nueva quedaba invisible hasta reiniciar el navegador,
+      // aunque ya estuviera guardada de verdad (bug real 2026-08-21). La
+      // reserva YA se creó con éxito en este punto, así que si el refresh
+      // en sí falla no debe convertirse en un error para el usuario —
+      // cargarReservasCliente ya atrapa sus propios errores, solo se
+      // limpia _error por si acaso para no arrastrar ese fallo aparte.
+      await cargarReservasCliente(idCliente);
+      _error = null;
+      notifyListeners();
       return true;
     } catch (e) {
       _error = mapearErrorReserva(e.toString());

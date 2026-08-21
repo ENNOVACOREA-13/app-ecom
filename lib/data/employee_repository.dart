@@ -58,12 +58,15 @@ class RepositorioEmpleado {
         .eq('id', idUsuario);
   }
 
+  // Trae TODOS los días (activos e inactivos): el único consumidor es el
+  // diálogo de edición del admin, que necesita saber cuáles quedaron
+  // desactivados para mostrarlos así al reabrir — filtrar solo activos
+  // hacía indistinguible "nunca configurado" de "desactivado a propósito".
   Future<List<Map<String, dynamic>>> obtenerHorarioEmpleado(String idEmpleado) async {
     final datos = await _client
         .from('work_schedules')
         .select()
-        .eq('employee_id', idEmpleado)
-        .eq('is_active', true);
+        .eq('employee_id', idEmpleado);
     return (datos as List).cast<Map<String, dynamic>>();
   }
 
@@ -72,6 +75,7 @@ class RepositorioEmpleado {
     required String diaSemana,
     required String horaInicio,
     required String horaFin,
+    bool activo = true,
   }) async {
     await _client.from('work_schedules').upsert({
       'employee_id': idEmpleado,
@@ -79,7 +83,7 @@ class RepositorioEmpleado {
       'day_of_week': diaSemana,
       'start_time': horaInicio,
       'end_time': horaFin,
-      'is_active': true,
+      'is_active': activo,
     }, onConflict: 'employee_id,day_of_week');
   }
 

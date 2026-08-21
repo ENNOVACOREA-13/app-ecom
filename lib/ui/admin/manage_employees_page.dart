@@ -382,13 +382,17 @@ class _DialogoHorariosState extends State<_DialogoHorarios> {
   Future<void> _guardar() async {
     setState(() => _guardando = true);
     try {
+      // Se manda TODOS los días, no solo los activos — si se salta un día
+      // desactivado nunca se escribe is_active=false, así que al reabrir el
+      // diálogo (sin fila en la BD) vuelve a mostrarse activo por default,
+      // pareciendo que la desactivación "no se guardó" (bug real 2026-08-21).
       for (final dia in _dias) {
-        if (!dia.activo) continue;
         await widget.repo.upsertDiaHorario(
           idEmpleado: widget.empleado.id,
           diaSemana: dia.clave,
           horaInicio: _fmt(dia.inicio),
           horaFin: _fmt(dia.fin),
+          activo: dia.activo,
         );
       }
       if (mounted) {

@@ -11,6 +11,12 @@ import '../common/toast.dart';
 final _fmtFecha = DateFormat("d 'de' MMM, HH:mm", 'es_ES');
 final _fmtDinero = NumberFormat('#,##0', 'en_US');
 
+/// El primer corte que se genere siempre arranca "desde el inicio" (sin
+/// corte anterior) — el modelo lo representa con la época 1970, así que
+/// se muestra como texto en vez de una fecha sin sentido.
+String _fmtInicioPeriodo(DateTime fecha) =>
+    fecha.year <= 1970 ? 'Desde el inicio' : _fmtFecha.format(fecha.toLocal());
+
 class PaginaReportes extends StatefulWidget {
   const PaginaReportes({super.key});
 
@@ -209,7 +215,7 @@ class _FilaCorte extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '${_fmtFecha.format(corte.periodoDesde.toLocal())} — ${_fmtFecha.format(corte.periodoHasta.toLocal())}',
+                        '${_fmtInicioPeriodo(corte.periodoDesde)} — ${_fmtFecha.format(corte.periodoHasta.toLocal())}',
                         style: const TextStyle(
                             color: Color(0xFF1C1C1E), fontWeight: FontWeight.w600, fontSize: 13),
                       ),
@@ -277,7 +283,7 @@ class _PaginaDetalleCorteState extends State<PaginaDetalleCorte> {
             padding: const EdgeInsets.all(20),
             children: [
               Text(
-                '${_fmtFecha.format(c.periodoDesde.toLocal())} — ${_fmtFecha.format(c.periodoHasta.toLocal())}',
+                '${_fmtInicioPeriodo(c.periodoDesde)} — ${_fmtFecha.format(c.periodoHasta.toLocal())}',
                 style: const TextStyle(
                     color: Color(0xFF1C1C1E), fontWeight: FontWeight.w700, fontSize: 16),
               ),

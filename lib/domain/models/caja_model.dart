@@ -1,3 +1,15 @@
+/// Postgres puede devolver 'infinity'/'-infinity' para un timestamptz (es
+/// el valor real de period_start cuando nunca se ha generado un corte
+/// antes, y ese primer corte lo guarda tal cual para siempre) —
+/// DateTime.parse no entiende esos literales y truena, así que se mapean
+/// a un sentinel (época 1970 / año 9999) en vez de dejar que la excepción
+/// tumbe silenciosamente el resumen completo.
+DateTime _parsearFechaPeriodo(String valor) {
+  if (valor == '-infinity') return DateTime.utc(1970);
+  if (valor == 'infinity') return DateTime.utc(9999);
+  return DateTime.parse(valor);
+}
+
 /// Resumen de un periodo (en vivo, "desde el último corte" — o desde
 /// siempre si nunca se ha hecho uno) o de un corte ya guardado.
 class ResumenPeriodo {
@@ -35,7 +47,7 @@ class ResumenPeriodo {
         serviciosCompletados: map['servicios_completados'] as int,
         pedidosTotal: map['pedidos_total'] as int,
         pedidosPendientes: map['pedidos_pendientes'] as int,
-        periodoDesde: DateTime.parse(map['period_start'] as String),
+        periodoDesde: _parsearFechaPeriodo(map['period_start'] as String),
       );
 }
 
@@ -99,7 +111,7 @@ class CorteCaja {
 
   factory CorteCaja.fromMap(Map<String, dynamic> map) => CorteCaja(
         id: map['id'] as String,
-        periodoDesde: DateTime.parse(map['period_start'] as String),
+        periodoDesde: _parsearFechaPeriodo(map['period_start'] as String),
         periodoHasta: DateTime.parse(map['period_end'] as String),
         ingresosServicios: (map['ingresos_servicios'] as num).toDouble(),
         ingresosTienda: (map['ingresos_tienda'] as num).toDouble(),

@@ -89,14 +89,30 @@ class ProveedorAuth extends ChangeNotifier {
       if (_perfil != null) {
         final rol = _perfil!.rol.name;
         // Para no-sysadmin, verificar si la sesión fue cerrada remotamente
+        // — pero solo si el login NO es reciente. tieneSesionActiva() lee
+        // la última fila de session_logs para este dispositivo, y esa fila
+        // sigue en is_active=false hasta que iniciarSesion() (más abajo)
+        // alcanza a crear/reactivar una nueva — eso es NORMAL después de
+        // cualquier logout previo (propio o por login en otro dispositivo),
+        // no un cierre por admin. Sin este filtro, CUALQUIER login nuevo
+        // que no fuera el primerísimo en el dispositivo mostraba "sesión
+        // cerrada por el administrador" aunque el login recién se hubiera
+        // completado con éxito (bug real reportado 2026-08-21, tras un
+        // logout normal seguido de un login con Google).
         if (rol != 'sysadmin') {
-          final tieneActiva = await ServicioActividad.instancia
-              .tieneSesionActiva(_perfil!.id);
-          if (!tieneActiva) {
-            debugPrint('[Auth] Sesión cerrada remotamente, forzando logout');
-            _sesionExpirada = true;
-            await _repo.cerrarSesion();
-            _perfil = null;
+          final ultimoIngreso = DateTime.tryParse(
+              Supabase.instance.client.auth.currentUser?.lastSignInAt ?? '');
+          final esLoginReciente = ultimoIngreso != null &&
+              DateTime.now().toUtc().difference(ultimoIngreso).inSeconds < 30;
+          if (!esLoginReciente) {
+            final tieneActiva = await ServicioActividad.instancia
+                .tieneSesionActiva(_perfil!.id);
+            if (!tieneActiva) {
+              debugPrint('[Auth] Sesión cerrada remotamente, forzando logout');
+              _sesionExpirada = true;
+              await _repo.cerrarSesion();
+              _perfil = null;
+            }
           }
         }
         // Registrar sesión al restaurar (reinicio de app con sesión activa)

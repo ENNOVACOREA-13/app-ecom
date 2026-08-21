@@ -10,6 +10,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/entrada_animada.dart';
 import '../common/app_widgets.dart';
 import '../common/skeleton.dart';
+import '../common/toast.dart';
 import '../employee/scan_qr_page.dart';
 
 class PaginaTodasReservas extends StatefulWidget {
@@ -504,6 +505,35 @@ class _TarjetaReservaAdminState extends State<_TarjetaReservaAdmin> {
                                   style: TextStyle(color: Color(0xFF34C759), fontSize: 12, fontWeight: FontWeight.w600)),
                             ),
                           ],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      // El admin, a diferencia del empleado, también puede
+                      // marcarla como pagada manualmente (sin QR) — pedido
+                      // explícito 2026-08-21.
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed: () async {
+                            try {
+                              await context
+                                  .read<ProveedorReserva>()
+                                  .actualizarEstado(r.id, EstadoReserva.completed);
+                              if (context.mounted) {
+                                mostrarToast(context, 'Reserva marcada como pagada',
+                                    tipo: TipoToast.exito);
+                              }
+                            } catch (e) {
+                              if (context.mounted) {
+                                mostrarToast(context, 'Error: $e', tipo: TipoToast.error);
+                              }
+                            }
+                          },
+                          icon: const Icon(Icons.check_circle_outline, size: 16),
+                          label: const Text('Marcar como pagada manualmente'),
+                          style: OutlinedButton.styleFrom(
+                              foregroundColor: const Color(0xFF34C759),
+                              side: const BorderSide(color: Color(0xFF34C759))),
                         ),
                       ),
                     ],

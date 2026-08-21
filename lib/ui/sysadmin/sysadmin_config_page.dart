@@ -581,11 +581,16 @@ class _BadgeRol extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (label, bg, fg) = switch (rol) {
+      'platform_admin' => ('PLATFORM ADMIN', Colors.black, Colors.white),
       'sysadmin'    => ('SYSADMIN', Colors.deepPurple, Colors.white),
       'super_admin' => ('SUPER ADMIN', color.withOpacity(0.15), color),
       'admin'       => ('ADMIN', Colors.orange.withOpacity(0.15), Colors.orange),
       'employee'    => ('EMPLEADO', Colors.blue.withOpacity(0.12), Colors.blue),
-      _             => ('CLIENTE', Colors.grey.withOpacity(0.1), Colors.grey),
+      'client'      => ('CLIENTE', Colors.grey.withOpacity(0.1), Colors.grey),
+      // Cualquier valor inesperado se muestra tal cual (en vez de caer en
+      // "CLIENTE" por default, que era engañoso — ver bug real 2026-08-21:
+      // una cuenta platform_admin aparecía marcada como cliente normal).
+      _             => (rol.toUpperCase(), Colors.grey.withOpacity(0.1), Colors.grey),
     };
 
     return Container(

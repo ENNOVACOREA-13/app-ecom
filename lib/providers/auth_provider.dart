@@ -140,8 +140,11 @@ class ProveedorAuth extends ChangeNotifier {
         try {
           _sesionExpirada = false;
           // Único lugar donde se valida el tenant para OAuth (Google/
-          // Facebook no pasan por RepositorioAuth.iniciarSesion()).
-          _perfil = await _validarTenant(await _repo.obtenerPerfilActual());
+          // Facebook no pasan por RepositorioAuth.iniciarSesion()). Usa
+          // obtenerOCrearPerfilOAuth (no obtenerPerfilActual): una cuenta
+          // de Google nueva no tiene perfil todavía (el trigger no puede
+          // fijarle tenant_id), así que lo crea aquí mismo.
+          _perfil = await _validarTenant(await _repo.obtenerOCrearPerfilOAuth());
           if (_perfil != null && !ServicioActividad.instancia.activo) {
             await ServicioActividad.instancia.iniciarSesion(_perfil!.id);
           }

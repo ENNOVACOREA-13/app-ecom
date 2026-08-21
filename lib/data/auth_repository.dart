@@ -93,6 +93,34 @@ class RepositorioAuth {
     return _obtenerPerfilConReintento(usuario.id);
   }
 
+  /// Solo para el flujo de OAuth (Google/Facebook): Google no manda
+  /// tenant_id, así que handle_new_user() ya no lo crea al vuelo (ver
+  /// 20260821000000_permite_oauth_sin_tenant_en_trigger.sql) — se crea
+  /// aquí, del lado del cliente, ya aterrizado en el dominio correcto
+  /// (kTenantIdActivo), usando la misma política RLS profiles_insert_self
+  /// que el registro normal. Si el perfil YA existe (cuenta OAuth de
+  /// alguien que ya se había registrado antes), no hace nada distinto.
+  Future<Perfil> obtenerOCrearPerfilOAuth() async {
+    final usuario = _client.auth.currentUser;
+    if (usuario == null) throw Exception('missing_session');
+    try {
+      return await _obtenerPerfilConReintento(usuario.id, reintentos: 1);
+    } catch (_) {
+      if (kTenantIdActivo == null) rethrow;
+      final metadata = usuario.userMetadata ?? {};
+      final nombre = (metadata['full_name'] ?? metadata['name'] ?? '').toString();
+      await _client.from('profiles').upsert({
+        'id': usuario.id,
+        'full_name': nombre,
+        'role': 'client',
+        'is_active': true,
+        'email_verificado': true,
+        'tenant_id': kTenantIdActivo,
+      });
+      return _obtenerPerfilConReintento(usuario.id);
+    }
+  }
+
   Future<void> cerrarSesion() async {
     await _client.auth.signOut();
   }

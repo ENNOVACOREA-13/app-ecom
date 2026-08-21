@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../providers/auth_provider.dart';
+import '../../domain/enums/user_role.dart';
 import '../../core/constants.dart';
 import '../../core/entrada_animada.dart';
 import '../../core/theme/app_theme.dart';
@@ -263,30 +264,35 @@ class _PaginaPerfilState extends State<PaginaPerfil> {
                 ],
               )
             else ...[
-              EntradaAnimada(
-                index: 1,
-                child: FilaOpcion(
-                  icono: Icons.receipt_long_outlined,
-                  titulo: 'Tickets',
-                  subtitulo: 'Historial de tus citas pagadas',
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const PaginaTickets()),
+              // Tickets y programa de lealtad son solo para clientes —
+              // empleado/admin/sysadmin no tienen historial de compras ni
+              // puntos propios, esas pantallas no les aplican.
+              if (perfil?.rol == RolUsuario.client) ...[
+                EntradaAnimada(
+                  index: 1,
+                  child: FilaOpcion(
+                    icono: Icons.receipt_long_outlined,
+                    titulo: 'Tickets',
+                    subtitulo: 'Historial de tus citas pagadas',
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const PaginaTickets()),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              EntradaAnimada(
-                index: 2,
-                child: FilaOpcion(
-                  icono: Icons.card_giftcard_outlined,
-                  titulo: 'Programa de lealtad',
-                  subtitulo: 'Acumula y consulta tus puntos',
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const PaginaLealtad()),
+                const SizedBox(height: 12),
+                EntradaAnimada(
+                  index: 2,
+                  child: FilaOpcion(
+                    icono: Icons.card_giftcard_outlined,
+                    titulo: 'Programa de lealtad',
+                    subtitulo: 'Acumula y consulta tus puntos',
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const PaginaLealtad()),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 16),
+                const SizedBox(height: 16),
+              ],
               EntradaAnimada(
                 index: 3,
                 child: TarjetaSeccion(

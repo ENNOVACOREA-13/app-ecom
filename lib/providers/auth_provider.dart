@@ -222,15 +222,19 @@ class ProveedorAuth extends ChangeNotifier {
   // tenant empezó el login — pero el "code verifier" del PKCE se guardó en
   // el localStorage del dominio ORIGINAL, así que al volver a un origen
   // distinto la app no lo encuentra (AuthException: Code verifier could
-  // not be found) y falla con flow_state_already_used. Uri.base.origin
-  // manda de vuelta al mismo dominio donde arrancó — *.prettycore.xyz ya
-  // está en la lista de redirects permitidos en Supabase.
+  // not be found) y falla con flow_state_already_used. *.prettycore.xyz ya
+  // está en la lista de redirects permitidos en Supabase, PERO el patrón
+  // ahí es "https://*.prettycore.xyz/**" — Supabase exige la barra final
+  // para que el "**" del patrón haga match (verificado directo contra
+  // auth.flow_state.referrer: sin la barra, lo ignoraba en silencio y
+  // seguía usando site_url de todos modos). Uri.base.origin en Dart NUNCA
+  // trae esa barra, hay que agregarla a mano.
   void iniciarSesionConGoogle() {
     _error = null;
     notifyListeners();
     Supabase.instance.client.auth.signInWithOAuth(
       OAuthProvider.google,
-      redirectTo: kIsWeb ? Uri.base.origin : 'io.supabase.barbershop://login-callback',
+      redirectTo: kIsWeb ? '${Uri.base.origin}/' : 'io.supabase.barbershop://login-callback',
     );
   }
 
@@ -239,7 +243,7 @@ class ProveedorAuth extends ChangeNotifier {
     notifyListeners();
     Supabase.instance.client.auth.signInWithOAuth(
       OAuthProvider.facebook,
-      redirectTo: kIsWeb ? Uri.base.origin : 'io.supabase.barbershop://login-callback',
+      redirectTo: kIsWeb ? '${Uri.base.origin}/' : 'io.supabase.barbershop://login-callback',
     );
   }
 

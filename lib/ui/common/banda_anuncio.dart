@@ -23,6 +23,7 @@ class BandaAnuncio extends StatelessWidget {
           color: cfg.bandaColorTexto,
           fontSize: 13,
           fontWeight: FontWeight.w600,
+          decoration: TextDecoration.none,
         ),
         blankSpace: 60,
         velocity: 40,

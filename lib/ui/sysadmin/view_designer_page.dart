@@ -143,7 +143,10 @@ class PaginaDisenadorVista extends StatelessWidget {
                               key: ValueKey('${ctrlTexto.text}-${colorFondo.value}-${colorTexto.value}'),
                               text: ctrlTexto.text,
                               style: TextStyle(
-                                  color: colorTexto, fontSize: 13, fontWeight: FontWeight.w600),
+                                  color: colorTexto,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  decoration: TextDecoration.none),
                               blankSpace: 60,
                               velocity: 40,
                             ),

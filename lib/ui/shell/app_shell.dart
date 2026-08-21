@@ -25,6 +25,7 @@ import '../admin/all_bookings_page.dart';
 import '../admin/admin_orders_page.dart';
 import '../admin/admin_settings_page.dart';
 import '../admin/insumos_page.dart';
+import '../admin/reportes_page.dart';
 
 // Sysadmin
 import '../sysadmin/sysadmin_dashboard_page.dart';
@@ -267,6 +268,8 @@ class _CarcasaAppState extends State<CarcasaApp> with SingleTickerProviderStateM
                 imagen: 'IMG/PEDIDOS.png', id: 'admin_pedidos'),
           _Pestana(Icons.inventory_2_outlined, 'Insumos', const PaginaInsumos(),
               imagen: 'IMG/INSUMOS.png', id: 'admin_insumos'),
+          _Pestana(Icons.summarize_outlined, 'Reportes', const PaginaReportes(),
+              imagen: 'IMG/ESTADISTICAS.png', id: 'admin_reportes'),
           if (editorVistasAdmin)
             _Pestana(Icons.dashboard_customize_outlined, 'Vista',
                 const PaginaDisenadorVista(),

@@ -114,6 +114,16 @@ class RepositorioReserva {
     return (datos as List).map((e) => Reserva.fromMap(e)).toList();
   }
 
+  /// Le avisa al admin/sysadmin que un empleado hizo un servicio sin
+  /// crear una reserva (walk-in no registrado), para que lo metan
+  /// manualmente y el corte semanal cuadre con lo cobrado de verdad.
+  Future<void> reportarServicioSinCita(String idServicio, {String? nota}) async {
+    await _client.rpc('reportar_servicio_sin_cita', params: {
+      'p_service_id': idServicio,
+      'p_nota': nota,
+    });
+  }
+
   /// Cancelar reserva (usa RPC SECURITY DEFINER para evitar bloqueo de RLS)
   Future<void> cancelarReserva(
       String idReserva, String canceladoPor, String? motivo) async {

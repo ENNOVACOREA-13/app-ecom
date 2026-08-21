@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import '../../data/booking_repository.dart';
 import '../../data/caja_repository.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/commission_provider.dart';
 import '../../providers/config_provider.dart';
+import '../../providers/service_provider.dart';
 import '../../domain/models/commission_model.dart';
 import '../../domain/models/caja_model.dart';
 import '../../core/constants.dart';
 import '../../core/entrada_animada.dart';
 import '../../core/theme/app_theme.dart';
 import '../common/app_widgets.dart';
-import 'time_off_page.dart';
+import '../common/toast.dart';
 
 class PaginaTableroEmpleado extends StatefulWidget {
   const PaginaTableroEmpleado({super.key});
@@ -22,8 +24,10 @@ class PaginaTableroEmpleado extends StatefulWidget {
 
 class PaginaTableroEmpleadoState extends State<PaginaTableroEmpleado> {
   final _repoCaja = RepositorioCaja();
+  final _repoReserva = RepositorioReserva();
   ResumenPeriodoEmpleado? _estadisticas;
   bool _cargando = true;
+  bool _enviandoSinCita = false;
 
   @override
   void initState() {
@@ -32,6 +36,93 @@ class PaginaTableroEmpleadoState extends State<PaginaTableroEmpleado> {
   }
 
   Future<void> recargar() => _cargar();
+
+  Future<void> _reportarSinCita() async {
+    final servicioProv = context.read<ProveedorServicio>();
+    if (servicioProv.servicios.isEmpty) {
+      await servicioProv.cargarServicios();
+    }
+    if (!mounted) return;
+    final servicios = servicioProv.servicios;
+
+    String? servicioId;
+    final notaCtrl = TextEditingController();
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Text('Servicio sin cita',
+              style: TextStyle(color: Color(0xFF1C1C1E))),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Le avisa al admin que hiciste un servicio sin reserva '
+                  'registrada, para que la meta manualmente y el corte '
+                  'semanal cuadre con lo cobrado.',
+                  style: TextStyle(color: Color(0xFF6E6E73), height: 1.4),
+                ),
+                const SizedBox(height: 14),
+                DropdownButtonFormField<String>(
+                  initialValue: servicioId,
+                  decoration: const InputDecoration(
+                    labelText: '¿Qué servicio hiciste?',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: servicios
+                      .map((s) => DropdownMenuItem(
+                            value: s.id,
+                            child: Text(s.nombre,
+                                style: const TextStyle(color: Color(0xFF1C1C1E))),
+                          ))
+                      .toList(),
+                  onChanged: (v) => setDialogState(() => servicioId = v),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: notaCtrl,
+                  maxLength: 140,
+                  maxLines: 2,
+                  style: const TextStyle(color: Color(0xFF1C1C1E)),
+                  decoration: const InputDecoration(
+                    labelText: 'Nota (opcional)',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Cancelar')),
+            ElevatedButton(
+              onPressed: servicioId == null ? null : () => Navigator.pop(ctx, true),
+              child: const Text('Enviar aviso'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (confirmar != true || servicioId == null || !mounted) return;
+
+    setState(() => _enviandoSinCita = true);
+    try {
+      await _repoReserva.reportarServicioSinCita(servicioId!,
+          nota: notaCtrl.text.trim().isEmpty ? null : notaCtrl.text.trim());
+      if (mounted) {
+        mostrarToast(context, 'Aviso enviado al admin', tipo: TipoToast.exito);
+      }
+    } catch (e) {
+      if (mounted) {
+        mostrarToast(context, 'Error: $e', tipo: TipoToast.error);
+      }
+    }
+    if (mounted) setState(() => _enviandoSinCita = false);
+  }
 
   Future<void> _cargar() async {
     final id = context.read<ProveedorAuth>().perfil?.id;
@@ -113,50 +204,50 @@ class PaginaTableroEmpleadoState extends State<PaginaTableroEmpleado> {
 
                   EntradaAnimada(
                     index: 1,
-                    child: Material(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(14),
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(14),
-                        onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                            builder: (_) => const PaginaDiasLibres())),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(14),
-                            boxShadow: kNeumorphicShadowsSmall,
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: context.colorPrimario.withOpacity(0.12),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(Icons.event_busy_outlined,
-                                    color: context.colorPrimario, size: 18),
+                    child: TarjetaPresionable(
+                      onTap: _enviandoSinCita ? null : _reportarSinCita,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(14),
+                          boxShadow: kNeumorphicShadowsSmall,
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: context.colorPrimario.withOpacity(0.12),
+                                shape: BoxShape.circle,
                               ),
-                              const SizedBox(width: 12),
-                              const Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text('Mis días libres',
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.w700,
-                                            fontSize: 14,
-                                            color: Color(0xFF1C1C1E))),
-                                    SizedBox(height: 2),
-                                    Text('Marca fechas en las que no estarás disponible',
-                                        style: TextStyle(fontSize: 11, color: Color(0xFF8E8E93))),
-                                  ],
-                                ),
+                              child: _enviandoSinCita
+                                  ? SizedBox(
+                                      width: 18, height: 18,
+                                      child: CircularProgressIndicator(
+                                          strokeWidth: 2, color: context.colorPrimario))
+                                  : Icon(Icons.report_gmailerrorred_outlined,
+                                      color: context.colorPrimario, size: 18),
+                            ),
+                            const SizedBox(width: 12),
+                            const Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('Sin cita',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 14,
+                                          color: Color(0xFF1C1C1E))),
+                                  SizedBox(height: 2),
+                                  Text('Avisa al admin que hiciste un servicio sin reserva',
+                                      style: TextStyle(fontSize: 11, color: Color(0xFF8E8E93))),
+                                ],
                               ),
-                              const Icon(Icons.arrow_forward_ios_rounded,
-                                  size: 14, color: Color(0xFF8E8E93)),
-                            ],
-                          ),
+                            ),
+                            const Icon(Icons.arrow_forward_ios_rounded,
+                                size: 14, color: Color(0xFF8E8E93)),
+                          ],
                         ),
                       ),
                     ),

@@ -30,8 +30,6 @@ import 'providers/tenant_provider.dart';
 import 'routing/app_router.dart';
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
   await SentryFlutter.init(
     (options) {
       options.dsn = kSentryDsn;
@@ -42,7 +40,13 @@ Future<void> main() async {
   );
 }
 
+// WidgetsFlutterBinding.ensureInitialized() debe llamarse en la MISMA zona
+// que runApp() — si se llama antes de SentryFlutter.init (que corre
+// appRunner en su propia zona vía runZonedGuarded), Flutter tira "Zone
+// mismatch" porque el binding quedó inicializado en la zona raíz.
 Future<void> _iniciarApp() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
   await initializeDateFormatting('es_ES', null);
 
   final tenant = await resolverTenant();

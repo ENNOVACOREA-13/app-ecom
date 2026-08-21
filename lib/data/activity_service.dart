@@ -95,19 +95,27 @@ class ServicioActividad {
   }
 
   /// Verifica si el usuario tiene alguna sesión activa en este dispositivo.
-  /// Retorna false si fue cerrada remotamente (por sysadmin).
+  /// Retorna false SOLO si de verdad hubo una fila y quedó cerrada (por
+  /// sysadmin) — sin fila en absoluto es "primera vez en este dispositivo"
+  /// (ej. recién llegado de un login OAuth con Google/Facebook, que hace un
+  /// reload completo de página antes de que iniciarSesion() de este mismo
+  /// servicio alcance a crear la fila), no un cierre remoto. Con el filtro
+  /// is_active=true anterior ambos casos regresaban "sin fila" por igual,
+  /// forzando un logout falso justo después de un login nuevo (bug real
+  /// encontrado 2026-08-20).
   Future<bool> tieneSesionActiva(String profileId) async {
     try {
       final dispositivo = await _obtenerModeloDispositivo();
       final existente = await _client
           .from('session_logs')
-          .select('id')
+          .select('is_active')
           .eq('profile_id', profileId)
-          .eq('is_active', true)
           .eq('device', dispositivo)
+          .order('login_at', ascending: false)
           .limit(1)
           .maybeSingle();
-      return existente != null;
+      if (existente == null) return true;
+      return existente['is_active'] == true;
     } catch (e) {
       debugPrint('[Actividad] Error verificando sesión activa: $e');
       return true; // En caso de error, no cerrar sesión

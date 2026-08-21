@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../data/booking_repository.dart';
 import '../../data/order_repository.dart';
+import '../../data/caja_repository.dart';
 import '../../domain/models/order.dart';
 import '../../domain/enums/order_status.dart';
+import '../../domain/models/caja_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/config_provider.dart';
 import '../../core/constants.dart';
@@ -25,13 +26,17 @@ class PaginaTableroAdmin extends StatefulWidget {
 class PaginaTableroAdminState extends State<PaginaTableroAdmin> {
   final _repoReserva = RepositorioReserva();
   final _repoPedido = RepositorioPedido();
-  final _client = Supabase.instance.client;
+  final _repoCaja = RepositorioCaja();
 
-  List<Map<String, dynamic>> _estEmpleados = [];
+  // "Servicios populares" (ranking histórico) y "Pedidos recientes"
+  // (vista previa de la lista) se quedan tal cual como antes — no son
+  // "totales del periodo" en el mismo sentido, no los toca el corte de
+  // caja. Todo lo demás (ingresos, ganancias, comisiones, insumos,
+  // conteos) viene del periodo actual (desde el último corte de caja).
   List<Map<String, dynamic>> _serviciosPopulares = [];
   List<Pedido> _pedidos = [];
-  double _totalComisiones = 0;
-  double _totalInsumos = 0;
+  List<EmpleadoCorte> _resumenEmpleados = [];
+  ResumenPeriodo? _resumen;
   bool _cargando = true;
 
   @override
@@ -46,26 +51,16 @@ class PaginaTableroAdminState extends State<PaginaTableroAdmin> {
     setState(() => _cargando = true);
     try {
       final resultados = await Future.wait([
-        _repoReserva.obtenerTodasEstadisticasEmpleados(),
         _repoReserva.obtenerServiciosPopulares(),
         _repoPedido.obtenerTodosPedidos(),
-        _client.from('commission_entries').select('commission_amount'),
-        _client.from('supplies').select('price, stock'),
+        _repoCaja.obtenerResumenActual(),
+        _repoCaja.obtenerResumenActualPorEmpleado(),
       ]);
-      final comisiones = resultados[3] as List;
-      final comprasInsumos = resultados[4] as List;
       setState(() {
-        _estEmpleados = resultados[0] as List<Map<String, dynamic>>;
-        _serviciosPopulares = resultados[1] as List<Map<String, dynamic>>;
-        _pedidos = resultados[2] as List<Pedido>;
-        _totalComisiones = comisiones.fold<double>(0,
-            (s, c) => s + (((c as Map)['commission_amount'] as num?)?.toDouble() ?? 0));
-        _totalInsumos = comprasInsumos.fold<double>(0, (s, c) {
-          final m = c as Map;
-          final precio = (m['price'] as num?)?.toDouble() ?? 0;
-          final cantidad = (m['stock'] as num?)?.toDouble() ?? 0;
-          return s + (precio * cantidad);
-        });
+        _serviciosPopulares = resultados[0] as List<Map<String, dynamic>>;
+        _pedidos = resultados[1] as List<Pedido>;
+        _resumen = resultados[2] as ResumenPeriodo;
+        _resumenEmpleados = resultados[3] as List<EmpleadoCorte>;
         _cargando = false;
       });
     } catch (_) {
@@ -81,22 +76,18 @@ class PaginaTableroAdminState extends State<PaginaTableroAdmin> {
     final nombre = perfil?.nombreCompleto.split(' ').first ?? 'Admin';
     final hoy = DateFormat("EEEE d 'de' MMMM", 'es_ES').format(DateTime.now());
 
-    // ── Cálculos ──────────────────────────────────────────────
-    final ingresosServicios = _estEmpleados.fold<double>(
-        0, (s, e) => s + ((e['ingresos_totales'] as num?)?.toDouble() ?? 0));
-    final totalCompletadas = _estEmpleados.fold<int>(
-        0, (s, e) => s + ((e['total_completadas'] as int?) ?? 0));
-
-    final pedidosActivos = _pedidos
-        .where((p) => p.estado != EstadoPedido.cancelled)
-        .toList();
-    final ingresosTienda = pedidosActivos.fold<double>(
-        0, (s, p) => s + p.total);
-    final pedidosPendientes = _pedidos
-        .where((p) => p.estado == EstadoPedido.pending)
-        .length;
-    final ingresosTotales = ingresosServicios + ingresosTienda;
-    final gananciasNetas = ingresosTotales - _totalComisiones - _totalInsumos;
+    // ── Cálculos: todo del periodo actual (desde el último corte
+    // de caja, o desde siempre si nunca se ha hecho uno) ────────
+    final resumen = _resumen;
+    final ingresosServicios = resumen?.ingresosServicios ?? 0;
+    final ingresosTienda = resumen?.ingresosTienda ?? 0;
+    final ingresosTotales = resumen?.ingresosTotales ?? 0;
+    final totalComisiones = resumen?.comisionesPendientes ?? 0;
+    final totalInsumos = resumen?.insumosComprados ?? 0;
+    final gananciasNetas = resumen?.gananciasNetas ?? 0;
+    final totalCompletadas = resumen?.serviciosCompletados ?? 0;
+    final pedidosTotalPeriodo = resumen?.pedidosTotal ?? 0;
+    final pedidosPendientes = resumen?.pedidosPendientes ?? 0;
 
     return Scaffold(
       backgroundColor: kBackground,
@@ -320,7 +311,7 @@ class PaginaTableroAdminState extends State<PaginaTableroAdmin> {
                                           icono: Icons.shopping_bag_rounded,
                                           color: const Color(0xFF34C759),
                                           subtitulo:
-                                              '${pedidosActivos.length} pedidos',
+                                              '$pedidosTotalPeriodo pedidos',
                                         ),
                                       ),
                                     ],
@@ -341,8 +332,8 @@ class PaginaTableroAdminState extends State<PaginaTableroAdmin> {
                                 const SizedBox(height: 12),
                                 _TarjetaGanancias(
                                   ingresos: ingresosTotales,
-                                  comisiones: _totalComisiones,
-                                  insumos: _totalInsumos,
+                                  comisiones: totalComisiones,
+                                  insumos: totalInsumos,
                                   ganancias: gananciasNetas,
                                 ),
                                 const SizedBox(height: 24),
@@ -376,7 +367,7 @@ class PaginaTableroAdminState extends State<PaginaTableroAdmin> {
                                     ),
                                     _TarjetaStat(
                                       etiqueta: 'Empleados\nactivos',
-                                      valor: '${_estEmpleados.length}',
+                                      valor: '${_resumenEmpleados.length}',
                                       icono: Icons.people_outline_rounded,
                                       color: const Color(0xFF007AFF),
                                     ),
@@ -435,7 +426,7 @@ class PaginaTableroAdminState extends State<PaginaTableroAdmin> {
                             ),
 
                           // ── Rendimiento empleados ────────────
-                          if (_estEmpleados.isNotEmpty)
+                          if (_resumenEmpleados.isNotEmpty)
                             EntradaAnimada(
                               index: 7,
                               child: Column(
@@ -443,7 +434,7 @@ class PaginaTableroAdminState extends State<PaginaTableroAdmin> {
                                 children: [
                                   const _SeccionTitulo('Rendimiento por empleado'),
                                   const SizedBox(height: 12),
-                                  ..._estEmpleados.map(
+                                  ..._resumenEmpleados.map(
                                         (e) => _FilaEmpleado(data: e),
                                       ),
                                 ],
@@ -817,7 +808,7 @@ class _FilaServicio extends StatelessWidget {
 }
 
 class _FilaEmpleado extends StatelessWidget {
-  final Map<String, dynamic> data;
+  final EmpleadoCorte data;
   const _FilaEmpleado({required this.data});
 
   @override
@@ -832,21 +823,21 @@ class _FilaEmpleado extends StatelessWidget {
       ),
       child: Row(
         children: [
-          AvatarRed(nombre: data['full_name'] as String?, radio: 20),
+          AvatarRed(nombre: data.nombreEmpleado, radio: 20),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  data['full_name'] as String? ?? '',
+                  data.nombreEmpleado,
                   style: const TextStyle(
                       color: Color(0xFF1C1C1E),
                       fontWeight: FontWeight.w600,
                       fontSize: 13),
                 ),
                 Text(
-                  '${data['total_completadas'] ?? 0} servicios completados',
+                  '${data.serviciosCompletados} servicios completados',
                   style:
                       const TextStyle(color: Color(0xFF8E8E93), fontSize: 11),
                 ),
@@ -854,7 +845,7 @@ class _FilaEmpleado extends StatelessWidget {
             ),
           ),
           Text(
-            '\$${(data['ingresos_totales'] as num?)?.toStringAsFixed(0) ?? '0'}',
+            '\$${data.ingresos.toStringAsFixed(0)}',
             style: TextStyle(
                 color: context.colorPrimario,
                 fontWeight: FontWeight.w800,

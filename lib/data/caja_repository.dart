@@ -19,6 +19,17 @@ class RepositorioCaja {
     return ResumenPeriodoEmpleado.fromMap(filas.first as Map<String, dynamic>);
   }
 
+  /// Desglose por empleado del periodo actual EN VIVO (para "Rendimiento
+  /// por empleado" del dashboard de admin) — mismas columnas que
+  /// EmpleadoCorte, así que se reusa el mismo modelo.
+  Future<List<EmpleadoCorte>> obtenerResumenActualPorEmpleado() async {
+    final filas =
+        await _client.rpc('obtener_resumen_periodo_actual_por_empleado') as List;
+    return filas
+        .map((e) => EmpleadoCorte.fromMap(e as Map<String, dynamic>))
+        .toList();
+  }
+
   /// Genera un corte real: guarda el snapshot del periodo actual como
   /// historial y hace que el periodo siguiente arranque en 0. No borra ni
   /// modifica ningún dato real (reservas, pedidos, comisiones, compras).

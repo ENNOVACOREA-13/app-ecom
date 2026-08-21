@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import '../../data/booking_repository.dart';
+import '../../data/caja_repository.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/commission_provider.dart';
 import '../../providers/config_provider.dart';
 import '../../domain/models/commission_model.dart';
+import '../../domain/models/caja_model.dart';
 import '../../core/constants.dart';
 import '../../core/entrada_animada.dart';
 import '../../core/theme/app_theme.dart';
@@ -20,8 +21,8 @@ class PaginaTableroEmpleado extends StatefulWidget {
 }
 
 class PaginaTableroEmpleadoState extends State<PaginaTableroEmpleado> {
-  final _repo = RepositorioReserva();
-  Map<String, dynamic> _estadisticas = {};
+  final _repoCaja = RepositorioCaja();
+  ResumenPeriodoEmpleado? _estadisticas;
   bool _cargando = true;
 
   @override
@@ -36,7 +37,9 @@ class PaginaTableroEmpleadoState extends State<PaginaTableroEmpleado> {
     final id = context.read<ProveedorAuth>().perfil?.id;
     if (id == null) return;
     try {
-      final estadisticas = await _repo.obtenerEstadisticasEmpleado(id);
+      // Periodo actual (desde el último corte de caja) — antes era la
+      // vista employee_stats, de toda la vida.
+      final estadisticas = await _repoCaja.obtenerResumenActualEmpleado();
       if (mounted) {
         setState(() {
           _estadisticas = estadisticas;
@@ -199,25 +202,25 @@ class PaginaTableroEmpleadoState extends State<PaginaTableroEmpleado> {
                           children: [
                             TarjetaEstadistica(
                               etiqueta: 'Completadas',
-                              valor: '${_estadisticas['total_completadas'] ?? 0}',
+                              valor: '${_estadisticas?.serviciosCompletados ?? 0}',
                               icono: Icons.check_circle_outline,
                               color: Colors.green,
                             ),
                             TarjetaEstadistica(
                               etiqueta: 'Pendientes',
-                              valor: '${_estadisticas['total_pendientes'] ?? 0}',
+                              valor: '${_estadisticas?.serviciosPendientes ?? 0}',
                               icono: Icons.hourglass_empty_outlined,
                               color: Colors.orange,
                             ),
                             TarjetaEstadistica(
                               etiqueta: 'Canceladas',
-                              valor: '${_estadisticas['total_canceladas'] ?? 0}',
+                              valor: '${_estadisticas?.serviciosCancelados ?? 0}',
                               icono: Icons.cancel_outlined,
                               color: Colors.red,
                             ),
                             TarjetaEstadistica(
                               etiqueta: 'Ingresos',
-                              valor: '\$${(_estadisticas['ingresos_totales'] ?? 0).toStringAsFixed(0)}',
+                              valor: '\$${(_estadisticas?.ingresos ?? 0).toStringAsFixed(0)}',
                               icono: Icons.attach_money,
                               color: context.colorPrimario,
                             ),

@@ -12,6 +12,11 @@ import '../../core/entrada_animada.dart';
 import '../../core/theme/app_theme.dart';
 import '../common/toast.dart';
 
+// Pago con tarjeta (Stripe) y transferencia bancaria en pausa por ahora —
+// solo efectivo mientras se retoman. Cambiar a true reactiva el selector
+// completo (_mostrarSelectorPago ya tiene las 3 opciones listas).
+const bool kPagosCardTransferHabilitados = false;
+
 class PaginaCarrito extends StatelessWidget {
   const PaginaCarrito({super.key});
 
@@ -318,7 +323,7 @@ class _ResumenPedidoState extends State<_ResumenPedido> {
       context.go('/login');
       return;
     }
-    final metodo = await _mostrarSelectorPago();
+    final metodo = kPagosCardTransferHabilitados ? await _mostrarSelectorPago() : 'cash';
     if (metodo == null || !mounted) return;
 
     setState(() => _procesando = true);

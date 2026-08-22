@@ -291,8 +291,12 @@ class _CarcasaAppState extends State<CarcasaApp> with SingleTickerProviderStateM
         ];
       case RolUsuario.client:
         return [
-          _Pestana(Icons.home_outlined, 'Inicio', const PaginaInicio(),
-              imagen: 'IMG/INICIO.png', id: 'client_inicio'),
+          // Inicio muestra secciones de tienda y/o reservas — si ambas
+          // están apagadas no queda nada real que mostrar ahí, así que
+          // se oculta por completo en vez de dejar una pantalla vacía/rota.
+          if (tiendaHabilitada || reservasHabilitadas)
+            _Pestana(Icons.home_outlined, 'Inicio', const PaginaInicio(),
+                imagen: 'IMG/INICIO.png', id: 'client_inicio'),
           if (reservasHabilitadas)
             _Pestana(Icons.calendar_today_outlined, 'Mis Reservas',
                 const PaginaMisReservas(),

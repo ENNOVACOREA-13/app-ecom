@@ -111,6 +111,21 @@ class RepositorioConfig {
   Future<bool> actualizarReservasHabilitadas(bool habilitada) =>
       _upsert({'bookings_enabled': habilitada});
 
+  Future<bool> obtenerLealtadHabilitada() async {
+    try {
+      final data = await _db
+          .from('app_config')
+          .select('loyalty_enabled')
+          .single();
+      return data['loyalty_enabled'] as bool? ?? true;
+    } catch (_) {
+      return true;
+    }
+  }
+
+  Future<bool> actualizarLealtadHabilitada(bool habilitada) =>
+      _upsert({'loyalty_enabled': habilitada});
+
   Future<({bool habilitada, String texto, Color colorFondo, Color colorTexto})>
       obtenerBandaAnuncio() async {
     try {

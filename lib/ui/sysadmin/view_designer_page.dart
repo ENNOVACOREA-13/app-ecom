@@ -47,6 +47,20 @@ class PaginaDisenadorVista extends StatelessWidget {
     }
   }
 
+  Future<void> _toggleLealtad(BuildContext context, bool valor) async {
+    final cfg = context.read<ProveedorConfig>();
+    final exito = await cfg.actualizarLealtadHabilitada(valor);
+    if (context.mounted) {
+      mostrarToast(
+        context,
+        exito
+            ? (valor ? 'Programa de lealtad activado' : 'Programa de lealtad desactivado')
+            : 'Error al guardar el cambio',
+        tipo: exito ? TipoToast.exito : TipoToast.error,
+      );
+    }
+  }
+
   Future<void> _toggleBanda(BuildContext context, bool valor) async {
     final cfg = context.read<ProveedorConfig>();
     final exito = await cfg.actualizarBandaAnuncio(
@@ -917,6 +931,7 @@ class PaginaDisenadorVista extends StatelessWidget {
     final cfg = context.watch<ProveedorConfig>();
     final tiendaHabilitada = cfg.tiendaHabilitada;
     final reservasHabilitadas = cfg.reservasHabilitadas;
+    final lealtadHabilitada = cfg.lealtadHabilitada;
     final bandaHabilitada = cfg.bandaHabilitada;
     final editorVistasAdmin = cfg.editorVistasAdmin;
     final esSysadmin = context.watch<ProveedorAuth>().perfil?.rol == RolUsuario.sysadmin;
@@ -1167,6 +1182,69 @@ class PaginaDisenadorVista extends StatelessWidget {
                       child: Text(
                         'Las reservas están desactivadas: clientes, empleados y admins '
                         'no verán la pestaña de reservas ni el aviso de "Reservar ahora".',
+                        style: TextStyle(fontSize: 12, color: Color(0xFF8E8E93)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            const SizedBox(height: 12),
+            TarjetaSeccion(
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: context.colorPrimario.withOpacity(0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.card_giftcard_outlined, color: context.colorPrimario),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Programa de lealtad',
+                            style: TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 14,
+                                color: Color(0xFF1C1C1E))),
+                        const SizedBox(height: 2),
+                        Text(
+                          lealtadHabilitada
+                              ? 'Puntos y "Programa de lealtad" visibles para clientes'
+                              : 'Puntos y "Programa de lealtad" ocultos para clientes',
+                          style: const TextStyle(fontSize: 11, color: Color(0xFF8E8E93)),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Switch(
+                    value: lealtadHabilitada,
+                    activeColor: context.colorPrimario,
+                    onChanged: (v) => _toggleLealtad(context, v),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            if (!lealtadHabilitada)
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.info_outline, color: Colors.orange, size: 18),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'El programa de lealtad está desactivado: los clientes no verán '
+                        '"Programa de lealtad" en su perfil ni acumularán puntos visibles.',
                         style: TextStyle(fontSize: 12, color: Color(0xFF8E8E93)),
                       ),
                     ),

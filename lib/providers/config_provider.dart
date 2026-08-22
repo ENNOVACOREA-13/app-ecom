@@ -20,6 +20,7 @@ class ProveedorConfig extends ChangeNotifier {
   String? _logoUrl;
   bool _tiendaHabilitada = true;
   bool _reservasHabilitadas = true;
+  bool _lealtadHabilitada = true;
   bool _bandaHabilitada = false;
   String _bandaTexto = '';
   Color _bandaColorFondo = const Color(0xFFFF3B30);
@@ -66,6 +67,7 @@ class ProveedorConfig extends ChangeNotifier {
   String? get bannerBotonLink => _bannerBotonLink;
   bool get tiendaHabilitada => _tiendaHabilitada;
   bool get reservasHabilitadas => _reservasHabilitadas;
+  bool get lealtadHabilitada => _lealtadHabilitada;
   bool get bandaHabilitada => _bandaHabilitada;
   String get bandaTexto => _bandaTexto;
   Color get bandaColorFondo => _bandaColorFondo;
@@ -159,6 +161,7 @@ class ProveedorConfig extends ChangeNotifier {
     final banner = await _repo.obtenerBannerConfig();
     final tienda = await _repo.obtenerTiendaHabilitada();
     final reservas = await _repo.obtenerReservasHabilitadas();
+    final lealtad = await _repo.obtenerLealtadHabilitada();
     final banda = await _repo.obtenerBandaAnuncio();
     final editorVistasAdmin = await _repo.obtenerEditorVistasAdmin();
     final categorias = await _repo.obtenerSeccionCategorias();
@@ -179,6 +182,7 @@ class ProveedorConfig extends ChangeNotifier {
     _bannerBotonLink = banner.botonLink;
     _tiendaHabilitada = tienda;
     _reservasHabilitadas = reservas;
+    _lealtadHabilitada = lealtad;
     _bandaHabilitada = banda.habilitada;
     _bandaTexto = banda.texto;
     _bandaColorFondo = banda.colorFondo;
@@ -380,6 +384,15 @@ class ProveedorConfig extends ChangeNotifier {
     final exito = await _repo.actualizarReservasHabilitadas(habilitada);
     if (exito) {
       _reservasHabilitadas = habilitada;
+      notifyListeners();
+    }
+    return exito;
+  }
+
+  Future<bool> actualizarLealtadHabilitada(bool habilitada) async {
+    final exito = await _repo.actualizarLealtadHabilitada(habilitada);
+    if (exito) {
+      _lealtadHabilitada = habilitada;
       notifyListeners();
     }
     return exito;

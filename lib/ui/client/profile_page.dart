@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/config_provider.dart';
 import '../../domain/enums/user_role.dart';
 import '../../core/constants.dart';
 import '../../core/entrada_animada.dart';
@@ -183,6 +184,7 @@ class _PaginaPerfilState extends State<PaginaPerfil> {
   @override
   Widget build(BuildContext context) {
     final perfil = context.watch<ProveedorAuth>().perfil;
+    final cfg = context.watch<ProveedorConfig>();
 
     return Scaffold(
       appBar: AppBar(
@@ -266,8 +268,13 @@ class _PaginaPerfilState extends State<PaginaPerfil> {
             else ...[
               // Tickets y programa de lealtad son solo para clientes —
               // empleado/admin/sysadmin no tienen historial de compras ni
-              // puntos propios, esas pantallas no les aplican.
-              if (perfil?.rol == RolUsuario.client) ...[
+              // puntos propios, esas pantallas no les aplican. Además,
+              // cada una respeta su propio toggle de "Diseñador de vista":
+              // Tickets es historial de CITAS, así que depende de
+              // reservasHabilitadas (si se apagan reservas, no hay nada
+              // que listar ahí); Lealtad tiene su propio toggle
+              // independiente (loyalty_enabled).
+              if (perfil?.rol == RolUsuario.client && cfg.reservasHabilitadas) ...[
                 EntradaAnimada(
                   index: 1,
                   child: FilaOpcion(
@@ -280,6 +287,8 @@ class _PaginaPerfilState extends State<PaginaPerfil> {
                   ),
                 ),
                 const SizedBox(height: 12),
+              ],
+              if (perfil?.rol == RolUsuario.client && cfg.lealtadHabilitada) ...[
                 EntradaAnimada(
                   index: 2,
                   child: FilaOpcion(

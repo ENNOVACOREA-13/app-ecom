@@ -34,3 +34,4 @@ cp confirmar-cuenta.html build/web/confirmar-cuenta.html
 cp restablecer-contrasena.html build/web/restablecer-contrasena.html
 cp delete_account.html build/web/delete_account.html
 cp privacy_policy.html build/web/privacy_policy.html
+cp membresias.html build/web/membresias.html
